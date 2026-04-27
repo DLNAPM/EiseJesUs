@@ -30,9 +30,10 @@ import InquiryDetails from './components/InquiryDetails';
 import HelpModal from './components/HelpModal';
 import PrivacyModal from './components/PrivacyModal';
 import Reports from './components/Reports';
-import { FileText } from 'lucide-react';
+import ProfileSettings from './components/ProfileSettings';
+import { FileText, User as UserIcon } from 'lucide-react';
 
-type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports';
+type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports' | 'profile';
 
 export default function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -218,6 +219,7 @@ export default function App() {
             { id: 'inquiry', label: 'Seek the Word', icon: Search },
             { id: 'groups', label: 'My Study Groups', icon: Users },
             { id: 'reports', label: 'Reports Menu', icon: FileText },
+            { id: 'profile', label: 'Pilgrim Profile', icon: UserIcon },
           ].map((item) => (
             <button
               key={item.id}
@@ -273,6 +275,7 @@ export default function App() {
             {currentPage === 'inquiry' && <InquiryTool onComplete={(id) => navigateToDetails(id)} />}
             {currentPage === 'groups' && <GroupsList onSelectInquiry={navigateToDetails} />}
             {currentPage === 'reports' && <Reports />}
+            {currentPage === 'profile' && <ProfileSettings />}
             {currentPage === 'details' && selectedInquiryId && <InquiryDetails inquiryId={selectedInquiryId} onBack={() => setCurrentPage('dashboard')} />}
           </motion.div>
         </AnimatePresence>
@@ -292,6 +295,9 @@ export default function App() {
         </button>
         <button onClick={() => setCurrentPage('reports')} className={cn("p-2 transition-colors", currentPage === 'reports' ? "text-accent" : "text-text-secondary")}>
           <FileText className="w-6 h-6" />
+        </button>
+        <button onClick={() => setCurrentPage('profile')} className={cn("p-2 transition-colors", currentPage === 'profile' ? "text-accent" : "text-text-secondary")}>
+          <UserIcon className="w-6 h-6" />
         </button>
         <button onClick={toggleTheme} className="p-2 text-text-secondary">
           {theme === 'modern' ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6 text-accent" />}

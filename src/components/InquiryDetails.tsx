@@ -20,6 +20,44 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
   const [myGroups, setMyGroups] = useState<BibleGroup[]>([]);
   const [sharing, setSharing] = useState<string | null>(null); // groupId or 'individual'
   const [shareSuccess, setShareSuccess] = useState(false);
+  const [bibleWebsite, setBibleWebsite] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserPreferences = async () => {
+      const auth = getAuthService();
+      if (!auth.currentUser) return;
+      try {
+        const userDoc = await getDoc(doc(getDbService(), 'users', auth.currentUser.uid));
+        if (userDoc.exists()) {
+          setBibleWebsite(userDoc.data().bibleWebsite || null);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchUserPreferences();
+  }, []);
+
+  const getBibleLink = (ref: string) => {
+    if (!bibleWebsite) return null;
+    const cleanRef = encodeURIComponent(ref.trim());
+    
+    // Handle BibleGateway specifically if they just put the domain
+    if (bibleWebsite.toLowerCase().includes('biblegateway.com') && !bibleWebsite.includes('search=')) {
+      return `https://www.biblegateway.com/passage/?search=${cleanRef}`;
+    }
+    
+    // Handle Blue Letter Bible
+    if (bibleWebsite.toLowerCase().includes('blueletterbible.org') && !bibleWebsite.includes('Criteria=')) {
+      return `https://www.blueletterbible.org/search/preSearch.cfm?Criteria=${cleanRef}`;
+    }
+
+    // Generic fallback
+    if (bibleWebsite.endsWith('=') || bibleWebsite.endsWith('/')) {
+      return `${bibleWebsite}${cleanRef}`;
+    }
+    return `${bibleWebsite}${bibleWebsite.includes('?') ? '&' : '?'}search=${cleanRef}`;
+  };
 
   useEffect(() => {
     const fetchInquiry = async () => {
@@ -127,7 +165,19 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
         {/* Left Column: Headers and Navigation */}
         <div className="lg:col-span-1 space-y-8">
           <div>
-            <span className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.2em] block mb-2">{inquiry.scripture}</span>
+            {getBibleLink(inquiry.scripture) ? (
+              <a 
+                href={getBibleLink(inquiry.scripture)!} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.2em] block mb-2 hover:underline inline-flex items-center gap-1"
+              >
+                {inquiry.scripture}
+                <ExternalLink className="w-2.5 h-2.5" />
+              </a>
+            ) : (
+              <span className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.2em] block mb-2">{inquiry.scripture}</span>
+            )}
             <h1 className="text-4xl font-serif text-text-primary leading-tight mb-4 italic font-bold">{inquiry.query}</h1>
             <div className="text-[10px] text-text-secondary font-sans uppercase tracking-widest opacity-60">Seeked on {new Date(inquiry.createdAt?.toDate()).toLocaleDateString()}</div>
           </div>
@@ -187,12 +237,29 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
                     <div className="pt-10 border-t border-ui-border">
                       <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Cross References</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {inquiry.crossReferences.map((ref, idx) => (
-                          <div key={idx} className="p-6 bg-ui-sidebar/30 rounded-2xl flex items-start gap-4 border border-ui-border">
-                            <BookOpen className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
-                            <span className="text-sm italic font-serif leading-relaxed text-text-secondary">{ref}</span>
-                          </div>
-                        ))}
+                        {inquiry.crossReferences.map((ref, idx) => {
+                          const link = getBibleLink(ref);
+                          return (
+                            <div key={idx} className="p-6 bg-ui-sidebar/30 rounded-2xl flex items-start gap-4 border border-ui-border group/ref">
+                              <BookOpen className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
+                              <div className="flex flex-col gap-1">
+                                {link ? (
+                                  <a 
+                                    href={link} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="text-sm italic font-serif leading-relaxed text-accent hover:underline flex items-center gap-2"
+                                  >
+                                    {ref}
+                                    <ExternalLink className="w-3 h-3 opacity-0 group-hover/ref:opacity-100 transition-opacity" />
+                                  </a>
+                                ) : (
+                                  <span className="text-sm italic font-serif leading-relaxed text-text-secondary">{ref}</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

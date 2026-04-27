@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getDbService, getAuthService, collection, query, where, orderBy, getDocs, handleFirestoreError, OperationType } from '../lib/firebase';
+import { getDbService, getAuthService, collection, query, where, orderBy, getDocs, handleFirestoreError, OperationType, doc, getDoc } from '../lib/firebase';
 import { Inquiry } from '../types';
 import { FileText, Download, Printer, Loader2, ChevronRight, BookOpen, Clock, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -12,7 +12,39 @@ export default function Reports() {
   const [loading, setLoading] = useState(true);
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [bibleWebsite, setBibleWebsite] = useState<string | null>(null);
   const reportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchUserPreferences = async () => {
+      const auth = getAuthService();
+      if (!auth.currentUser) return;
+      try {
+        const userDoc = await getDoc(doc(getDbService(), 'users', auth.currentUser.uid));
+        if (userDoc.exists()) {
+          setBibleWebsite(userDoc.data().bibleWebsite || null);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchUserPreferences();
+  }, []);
+
+  const getBibleLink = (ref: string) => {
+    if (!bibleWebsite) return null;
+    const cleanRef = encodeURIComponent(ref.trim());
+    if (bibleWebsite.toLowerCase().includes('biblegateway.com') && !bibleWebsite.includes('search=')) {
+      return `https://www.biblegateway.com/passage/?search=${cleanRef}`;
+    }
+    if (bibleWebsite.toLowerCase().includes('blueletterbible.org') && !bibleWebsite.includes('Criteria=')) {
+      return `https://www.blueletterbible.org/search/preSearch.cfm?Criteria=${cleanRef}`;
+    }
+    if (bibleWebsite.endsWith('=') || bibleWebsite.endsWith('/')) {
+      return `${bibleWebsite}${cleanRef}`;
+    }
+    return `${bibleWebsite}${bibleWebsite.includes('?') ? '&' : '?'}search=${cleanRef}`;
+  };
 
   useEffect(() => {
     const fetchInquiries = async () => {
@@ -206,7 +238,18 @@ export default function Reports() {
                       <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Subject Identification</h2>
                       <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner">
                         <div className="text-[10px] text-accent/60 uppercase font-bold tracking-widest mb-2">Canonical Reference</div>
-                        <div className="text-2xl font-black italic mb-4">{selectedInquiry.scripture}</div>
+                        {getBibleLink(selectedInquiry.scripture) ? (
+                          <a 
+                            href={getBibleLink(selectedInquiry.scripture)!} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-2xl font-black italic mb-4 block text-accent hover:underline"
+                          >
+                            {selectedInquiry.scripture}
+                          </a>
+                        ) : (
+                          <div className="text-2xl font-black italic mb-4">{selectedInquiry.scripture}</div>
+                        )}
                         <div className="text-[10px] text-accent/60 uppercase font-bold tracking-widest mb-2">Primary Inquiry</div>
                         <div className="text-xl italic leading-relaxed text-slate-800">"{selectedInquiry.query}"</div>
                       </div>
@@ -264,11 +307,24 @@ export default function Reports() {
                   <section className="mb-12">
                     <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Cross-Referenced Canons</h2>
                     <div className="flex flex-wrap gap-3">
-                      {selectedInquiry.crossReferences.map((ref, i) => (
-                        <span key={i} className="px-4 py-2 bg-slate-100 rounded-full text-xs font-bold text-accent border border-slate-200">
-                          {ref}
-                        </span>
-                      ))}
+                      {selectedInquiry.crossReferences.map((ref, i) => {
+                        const link = getBibleLink(ref);
+                        return link ? (
+                          <a 
+                            key={i} 
+                            href={link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-slate-100 rounded-full text-xs font-bold text-accent border border-slate-200 hover:bg-slate-200 transition-colors"
+                          >
+                            {ref}
+                          </a>
+                        ) : (
+                          <span key={i} className="px-4 py-2 bg-slate-100 rounded-full text-xs font-bold text-accent border border-slate-200">
+                            {ref}
+                          </span>
+                        );
+                      })}
                     </div>
                   </section>
 
