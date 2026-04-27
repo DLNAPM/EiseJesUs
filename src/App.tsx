@@ -10,7 +10,7 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  auth, 
+  getAuthService, 
   googleProvider, 
   signInWithPopup, 
   signOut, 
@@ -42,6 +42,11 @@ export default function App() {
 
   useEffect(() => {
     testConnection();
+    const auth = getAuthService();
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
@@ -50,6 +55,11 @@ export default function App() {
   }, []);
 
   const handleLogin = async () => {
+    const auth = getAuthService();
+    if (!auth) {
+      alert("Firebase is not configured. Please set environment variables in the Settings menu.");
+      return;
+    }
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
@@ -58,7 +68,10 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
+    const auth = getAuthService();
+    if (auth) {
+      await signOut(auth);
+    }
     setCurrentPage('dashboard');
   };
 
@@ -126,6 +139,13 @@ export default function App() {
             Enter the Sanctuary
             <ChevronRight className="w-5 h-5 text-natural-secondary" />
           </button>
+
+          {!getAuthService() && (
+            <div className="mt-8 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm font-sans flex items-center gap-3 animate-pulse">
+              <LogOut className="w-5 h-5 rotate-180" />
+              <span>Firebase is unconfigured. Please add variables to <strong>Settings</strong>.</span>
+            </div>
+          )}
           
           <div className="mt-12 text-natural-text/60 text-xs font-sans max-w-md mx-auto leading-relaxed uppercase tracking-widest">
             Leading out the author's original meaning through analytical historical context, grammar, and literary genre.

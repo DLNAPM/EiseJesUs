@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { db, auth, collection, addDoc, handleFirestoreError, OperationType, serverTimestamp } from '../lib/firebase';
+import { getDbService, getAuthService, collection, addDoc, handleFirestoreError, OperationType, serverTimestamp } from '../lib/firebase';
 import { generateExegesis } from '../lib/gemini';
 import { Search, Loader2, Sparkles, BookOpen } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -16,6 +16,7 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const auth = getAuthService();
     if (!scripture || !queryText || !auth.currentUser) return;
 
     setLoading(true);
@@ -25,7 +26,7 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
       const exegesis = await generateExegesis(scripture, queryText);
       
       const inquiriesPath = 'inquiries';
-      const docRef = await addDoc(collection(db, inquiriesPath), {
+      const docRef = await addDoc(collection(getDbService(), inquiriesPath), {
         userId: auth.currentUser.uid,
         scripture,
         query: queryText,

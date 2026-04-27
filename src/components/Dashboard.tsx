@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { db, auth, collection, query, where, orderBy, getDocs, handleFirestoreError, OperationType, getDoc, doc } from '../lib/firebase';
+import { getDbService, getAuthService, collection, query, where, orderBy, getDocs, handleFirestoreError, OperationType, getDoc, doc } from '../lib/firebase';
 import { Inquiry } from '../types';
 import { BookOpen, Clock, ChevronRight, PlusCircle, Share2 } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -16,12 +16,13 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
 
   useEffect(() => {
     const fetchInquiries = async () => {
+      const auth = getAuthService();
       if (!auth.currentUser) return;
       
       const inquiriesPath = 'inquiries';
       try {
         const q = query(
-          collection(db, inquiriesPath),
+          collection(getDbService(), inquiriesPath),
           where('userId', '==', auth.currentUser.uid),
           orderBy('createdAt', 'desc')
         );
@@ -32,11 +33,11 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
         // Fetch Shared with Me
         if (auth.currentUser.email) {
           const sharesQ = query(
-            collection(db, 'direct_shares'),
+            collection(getDbService(), 'direct_shares'),
             where('recipientEmail', '==', auth.currentUser.email.toLowerCase())
           );
           const shareSnap = await getDocs(sharesQ);
-          const inquiryPromises = shareSnap.docs.map(s => getDoc(doc(db, 'inquiries', s.data().inquiryId)));
+          const inquiryPromises = shareSnap.docs.map(s => getDoc(doc(getDbService(), 'inquiries', s.data().inquiryId)));
           const inqSnaps = await Promise.all(inquiryPromises);
           setSharedInquiries(inqSnaps.filter(s => s.exists()).map(s => ({ id: s.id, ...s.data() } as Inquiry)));
         }

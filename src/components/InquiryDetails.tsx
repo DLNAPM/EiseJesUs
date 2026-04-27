@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { db, doc, getDoc, handleFirestoreError, OperationType, collection, getDocs, query, where, addDoc, serverTimestamp } from '../lib/firebase';
+import { getDbService, doc, getDoc, handleFirestoreError, OperationType, collection, getDocs, query, where, addDoc, serverTimestamp, getAuthService } from '../lib/firebase';
 import { Inquiry, BibleGroup } from '../types';
 import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, MessageSquare, ExternalLink, Share2, Users, Loader2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
-import { auth } from '../lib/firebase';
 
 interface InquiryDetailsProps {
   inquiryId: string;
@@ -26,7 +25,7 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
     const fetchInquiry = async () => {
       const docPath = `inquiries/${inquiryId}`;
       try {
-        const snapshot = await getDoc(doc(db, docPath));
+        const snapshot = await getDoc(doc(getDbService(), docPath));
         if (snapshot.exists()) {
           setInquiry({ id: snapshot.id, ...snapshot.data() } as Inquiry);
         }
@@ -42,12 +41,12 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
 
   const handleShareClick = async () => {
     setShowShareModal(true);
-    if (!auth.currentUser) return;
+    if (!getAuthService().currentUser) return;
     
     // In a real app we'd query groups/members, but for now we'll just query all groups
     const groupsPath = 'groups';
     try {
-      const q = query(collection(db, groupsPath));
+      const q = query(collection(getDbService(), groupsPath));
       const snapshot = await getDocs(q);
       setMyGroups(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as BibleGroup)));
     } catch (e) {
@@ -59,10 +58,10 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
     setSharing(groupId);
     try {
       const discussionsPath = `groups/${groupId}/discussions`;
-      await addDoc(collection(db, discussionsPath), {
+      await addDoc(collection(getDbService(), discussionsPath), {
         groupId,
         inquiryId,
-        sharedBy: auth.currentUser?.uid,
+        sharedBy: getAuthService().currentUser?.uid,
         createdAt: serverTimestamp()
       });
       setShareSuccess(true);
@@ -79,13 +78,13 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
 
   const shareToIndividual = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.currentUser || !recipientEmail) return;
+    if (!getAuthService().currentUser || !recipientEmail) return;
     
     setSharing('individual');
     try {
       const sharesPath = 'direct_shares';
-      await addDoc(collection(db, sharesPath), {
-        senderId: auth.currentUser?.uid,
+      await addDoc(collection(getDbService(), sharesPath), {
+        senderId: getAuthService().currentUser?.uid,
         recipientEmail: recipientEmail.toLowerCase().trim(),
         inquiryId,
         createdAt: serverTimestamp()

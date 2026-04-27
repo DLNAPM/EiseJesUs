@@ -4,19 +4,52 @@ import { getFirestore, doc, getDocFromServer, collection, getDocs, onSnapshot, s
 
 export { initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, FirebaseUser, getFirestore, doc, getDocFromServer, collection, getDocs, onSnapshot, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, Timestamp, getDoc, serverTimestamp };
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+// Singleton instances
+let appInstance: any = null;
+let authInstance: any = null;
+let dbInstance: any = null;
+
+const getFirebaseApp = () => {
+  if (!appInstance) {
+    const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+    if (!apiKey) {
+      console.warn('Firebase configuration is missing. Please set environment variables in the Settings menu.');
+      return null;
+    }
+
+    const firebaseConfig = {
+      apiKey: apiKey,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID,
+      measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+    };
+    appInstance = initializeApp(firebaseConfig);
+  }
+  return appInstance;
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app, import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID);
+export const getAuthService = () => {
+  if (!authInstance) {
+    const app = getFirebaseApp();
+    if (!app) return null;
+    authInstance = getAuth(app);
+  }
+  return authInstance;
+};
+
+export const getDbService = () => {
+  if (!dbInstance) {
+    const app = getFirebaseApp();
+    if (!app) return null;
+    const dbId = import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID;
+    dbInstance = getFirestore(app, dbId);
+  }
+  return dbInstance;
+};
+
 export const googleProvider = new GoogleAuthProvider();
 
 export enum OperationType {
@@ -46,6 +79,7 @@ export interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const auth = getAuthService();
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -54,7 +88,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
       emailVerified: auth.currentUser?.emailVerified,
       isAnonymous: auth.currentUser?.isAnonymous,
       tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData?.map(provider => ({
+      providerInfo: auth.currentUser?.providerData?.map((provider: any) => ({
         providerId: provider.providerId,
         email: provider.email,
       })) || []
@@ -68,13 +102,15 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 
 export async function testConnection() {
   try {
+    const db = getDbService();
     const docContext = doc(db, 'test', 'connection');
     await getDocFromServer(docContext);
     console.log("Firebase connection successful");
   } catch (error: any) {
     if (error?.message?.includes('the client is offline')) {
       console.error("Please check your Firebase configuration.");
+    } else {
+      console.warn("Firebase connection inactive (check config in Settings):", error.message);
     }
-    // We don't throw here to avoid crashing the app on startup if it's just a connection test
   }
 }

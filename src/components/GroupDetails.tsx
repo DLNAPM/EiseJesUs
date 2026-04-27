@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { db, auth, collection, query, orderBy, getDocs, doc, getDoc, handleFirestoreError, OperationType, addDoc, serverTimestamp, deleteDoc } from '../lib/firebase';
+import { getDbService, getAuthService, collection, query, orderBy, getDocs, doc, getDoc, handleFirestoreError, OperationType, addDoc, serverTimestamp, deleteDoc } from '../lib/firebase';
 import { BibleGroup, Discussion, Inquiry, GroupMember } from '../types';
 import { ChevronLeft, MessageSquare, BookOpen, User, Clock, ArrowRight, UserPlus, Trash2, Shield, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -22,22 +22,22 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
   const fetchGroupData = async () => {
     const groupPath = `groups/${groupId}`;
     try {
-      const groupSnap = await getDoc(doc(db, groupPath));
+      const groupSnap = await getDoc(doc(getDbService(), groupPath));
       if (groupSnap.exists()) {
         const groupData = { id: groupSnap.id, ...groupSnap.data() } as BibleGroup;
         setGroup(groupData);
         
         // Members
-        const membersSnap = await getDocs(collection(db, `groups/${groupId}/members`));
+        const membersSnap = await getDocs(collection(getDbService(), `groups/${groupId}/members`));
         setMembers(membersSnap.docs.map(d => ({ id: d.id, ...d.data() } as GroupMember)));
 
         const discussionsPath = `groups/${groupId}/discussions`;
-        const discQuery = query(collection(db, discussionsPath), orderBy('createdAt', 'desc'));
+        const discQuery = query(collection(getDbService(), discussionsPath), orderBy('createdAt', 'desc'));
         const discSnap = await getDocs(discQuery);
         
         const discData = await Promise.all(discSnap.docs.map(async (d) => {
           const disc = { id: d.id, ...d.data() } as Discussion;
-          const inqSnap = await getDoc(doc(db, `inquiries/${disc.inquiryId}`));
+          const inqSnap = await getDoc(doc(getDbService(), `inquiries/${disc.inquiryId}`));
           return { ...disc, inquiry: inqSnap.exists() ? { id: inqSnap.id, ...inqSnap.data() } as Inquiry : undefined };
         }));
         
@@ -59,7 +59,7 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
     if (!inviteEmail || inviting) return;
     setInviting(true);
     try {
-      await addDoc(collection(db, `groups/${groupId}/members`), {
+      await addDoc(collection(getDbService(), `groups/${groupId}/members`), {
         email: inviteEmail.toLowerCase().trim(),
         role: 'member',
         joinedAt: serverTimestamp(),
@@ -77,7 +77,7 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
   const handeRemoveMember = async (memberId: string) => {
     if (!confirm('Remove this member from the communion?')) return;
     try {
-      await deleteDoc(doc(db, `groups/${groupId}/members`, memberId));
+      await deleteDoc(doc(getDbService(), `groups/${groupId}/members`, memberId));
       await fetchGroupData();
     } catch (e) {
       console.error(e);
@@ -87,7 +87,7 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
   if (loading) return <div className="animate-pulse flex flex-col items-center py-20"><Clock className="animate-spin mb-4" /> Loading Group...</div>;
   if (!group) return <div>Group not found.</div>;
 
-  const isOwner = auth.currentUser?.uid === group.ownerId;
+  const isOwner = getAuthService().currentUser?.uid === group.ownerId;
 
   return (
     <div className="max-w-4xl mx-auto pb-20">

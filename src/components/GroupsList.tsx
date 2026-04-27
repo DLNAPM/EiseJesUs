@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { db, auth, collection, query, orderBy, getDocs, addDoc, handleFirestoreError, OperationType, setDoc, doc, serverTimestamp } from '../lib/firebase';
+import { getDbService, getAuthService, collection, query, orderBy, getDocs, addDoc, handleFirestoreError, OperationType, setDoc, doc, serverTimestamp } from '../lib/firebase';
 import { BibleGroup, Discussion, Inquiry } from '../types';
 import { Users, Plus, MessageSquare, ChevronRight, UserPlus, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -22,7 +22,7 @@ export default function GroupsList({ onSelectInquiry }: GroupsListProps) {
     const fetchGroups = async () => {
       const groupsPath = 'groups';
       try {
-        const q = query(collection(db, groupsPath), orderBy('createdAt', 'desc'));
+        const q = query(collection(getDbService(), groupsPath), orderBy('createdAt', 'desc'));
         const snapshot = await getDocs(q);
         setGroups(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BibleGroup)));
       } catch (error) {
@@ -36,11 +36,12 @@ export default function GroupsList({ onSelectInquiry }: GroupsListProps) {
 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
+    const auth = getAuthService();
     if (!auth.currentUser || !newGroupName) return;
 
     const groupsPath = 'groups';
     try {
-      const groupRef = await addDoc(collection(db, groupsPath), {
+      const groupRef = await addDoc(collection(getDbService(), groupsPath), {
         name: newGroupName,
         description: newGroupDesc,
         ownerId: auth.currentUser.uid,
@@ -48,7 +49,7 @@ export default function GroupsList({ onSelectInquiry }: GroupsListProps) {
       });
 
       // Add owner as member
-      await setDoc(doc(db, `groups/${groupRef.id}/members`, auth.currentUser.uid), {
+      await setDoc(doc(getDbService(), `groups/${groupRef.id}/members`, auth.currentUser.uid), {
         email: auth.currentUser.email,
         role: 'owner',
         joinedAt: serverTimestamp()
@@ -61,7 +62,7 @@ export default function GroupsList({ onSelectInquiry }: GroupsListProps) {
           // We add them as membership docs with email as reference. 
           // In a real app, you'd resolve these to UIDs if they exist, or trigger email invites.
           // For now, we store them in the members collection.
-          await addDoc(collection(db, `groups/${groupRef.id}/members`), {
+          await addDoc(collection(getDbService(), `groups/${groupRef.id}/members`), {
             email: email,
             role: 'member',
             joinedAt: serverTimestamp(),
@@ -75,7 +76,7 @@ export default function GroupsList({ onSelectInquiry }: GroupsListProps) {
       setNewGroupEmails('');
       setShowCreateModal(false);
       // Refresh list
-      const q = query(collection(db, groupsPath), orderBy('createdAt', 'desc'));
+      const q = query(collection(getDbService(), groupsPath), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(q);
       setGroups(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BibleGroup)));
     } catch (error) {
