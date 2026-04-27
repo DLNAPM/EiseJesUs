@@ -1,0 +1,135 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Inquiry": {
+      "title": "Inquiry",
+      "description": "A scripture interpretation inquiry",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "query": { "type": "string" },
+        "scripture": { "type": "string" },
+        "interpretation": { "type": "string" },
+        "historicalContext": { "type": "string" },
+        "grammarAnalysis": { "type": "string" },
+        "literaryGenre": { "type": "string" },
+        "crossReferences": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "geography": {
+          "type": "object",
+          "properties": {
+            "location": { "type": "string" },
+            "thenDesc": { "type": "string" },
+            "nowDesc": { "type": "string" },
+            "thenImageUrl": { "type": "string" },
+            "nowImageUrl": { "type": "string" }
+          }
+        },
+        "videoClips": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "url": { "type": "string" },
+              "thumbnail": { "type": "string" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "query", "scripture", "interpretation", "createdAt"]
+    },
+    "Group": {
+      "title": "Group",
+      "description": "A Bible Study or Small Group",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "ownerId", "createdAt"]
+    },
+    "Discussion": {
+      "title": "Discussion",
+      "description": "A discussion around a shared inquiry",
+      "type": "object",
+      "properties": {
+        "groupId": { "type": "string" },
+        "inquiryId": { "type": "string" },
+        "sharedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["groupId", "inquiryId", "sharedBy", "createdAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A message in a discussion",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "text", "createdAt"]
+    },
+    "DirectShare": {
+      "title": "Direct Share",
+      "description": "An inquiry shared directly with a user email",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "recipientEmail": { "type": "string" },
+        "inquiryId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderId", "recipientEmail", "inquiryId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": "Inquiry",
+      "description": "Saved scripture interpretations"
+    },
+    "/direct_shares/{shareId}": {
+      "schema": "DirectShare",
+      "description": "Direct sharing between users"
+    },
+    "/groups/{groupId}": {
+      "schema": "Group",
+      "description": "Study groups"
+    },
+    "/groups/{groupId}/members/{memberId}": {
+      "schema": { "type": "object", "properties": { "role": { "type": "string" } } },
+      "description": "Group membership"
+    },
+    "/groups/{groupId}/discussions/{discussionId}": {
+      "schema": "Discussion",
+      "description": "Shared inquiries within a group"
+    },
+    "/groups/{groupId}/discussions/{discussionId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Conversation messages"
+    }
+  }
+}

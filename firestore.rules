@@ -1,0 +1,116 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isVerified() { return request.auth.token.email_verified == true; }
+
+    // Group Helpers
+    function isGroupMember(groupId) {
+      return exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+    }
+    function isGroupOwner(groupId) {
+      return get(/databases/$(database)/documents/groups/$(groupId)).data.ownerId == request.auth.uid;
+    }
+
+    // --- Test Connection ---
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // --- Users ---
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId);
+      
+      function isValidUser(data) {
+        return data.keys().hasAll(['uid', 'email'])
+          && data.uid is string && data.uid == userId
+          && data.email is string && data.email.size() <= 256;
+      }
+    }
+
+    // --- Direct Shares ---
+    match /direct_shares/{shareId} {
+      allow read: if isSignedIn() && (resource.data.recipientEmail == request.auth.token.email || resource.data.senderId == request.auth.uid);
+      allow create: if isSignedIn() && incoming().senderId == request.auth.uid;
+    }
+
+    // --- Inquiries ---
+    match /inquiries/{inquiryId} {
+      allow get: if isSignedIn(); // Allow individual fetch if ID is known (shared)
+      allow list: if isOwner(resource.data.userId); // Only own inquiries in lists
+      allow create: if isSignedIn() && isValidInquiry(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isOwner(existing().userId) && incoming().userId == existing().userId && isValidInquiry(incoming());
+      allow delete: if isOwner(existing().userId);
+
+      function isValidInquiry(data) {
+        return data.keys().hasAll(['userId', 'query', 'scripture', 'interpretation', 'createdAt'])
+          && data.userId is string
+          && data.query is string && data.query.size() <= 2000
+          && data.scripture is string && data.scripture.size() <= 500
+          && data.interpretation is string && data.interpretation.size() <= 20000
+          && (data.createdAt == request.time || data.createdAt is timestamp);
+      }
+    }
+
+    // --- Groups ---
+    match /groups/{groupId} {
+      allow read: if isSignedIn(); // Public discovery of groups
+      allow create: if isSignedIn() && isValidGroup(incoming()) && incoming().ownerId == request.auth.uid;
+      allow update: if isGroupOwner(groupId) && incoming().ownerId == existing().ownerId && isValidGroup(incoming());
+      allow delete: if isGroupOwner(groupId);
+
+      function isValidGroup(data) {
+        return data.keys().hasAll(['name', 'ownerId', 'createdAt'])
+          && data.name is string && data.name.size() <= 100
+          && data.ownerId is string
+          && (data.createdAt == request.time || data.createdAt is timestamp);
+      }
+
+      // Group Members
+      match /members/{memberId} {
+        allow read: if isGroupMember(groupId) || isGroupOwner(groupId);
+        allow create: if isGroupOwner(groupId) || (isOwner(memberId) && isSignedIn()); // Join OR Invite
+        allow delete: if isGroupOwner(groupId) || isOwner(memberId); // Leave OR Kick
+      }
+
+      // Discussions
+      match /discussions/{discussionId} {
+        allow read: if isGroupMember(groupId);
+        allow create: if isGroupMember(groupId) && isValidDiscussion(incoming());
+        allow delete: if isGroupOwner(groupId) || isOwner(existing().sharedBy);
+
+        function isValidDiscussion(data) {
+          return data.keys().hasAll(['groupId', 'inquiryId', 'sharedBy', 'createdAt'])
+            && data.groupId == groupId
+            && data.sharedBy == request.auth.uid
+            && (data.createdAt == request.time || data.createdAt is timestamp);
+        }
+
+        // Messages
+        match /messages/{messageId} {
+          allow read: if isGroupMember(groupId);
+          allow create: if isGroupMember(groupId) && isValidMessage(incoming());
+          allow delete: if isGroupOwner(groupId) || isOwner(existing().userId);
+
+          function isValidMessage(data) {
+            return data.keys().hasAll(['userId', 'text', 'createdAt'])
+              && data.userId == request.auth.uid
+              && data.text is string && data.text.size() <= 2000
+              && data.createdAt == request.time;
+          }
+        }
+      }
+    }
+  }
+}

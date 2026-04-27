@@ -1,0 +1,68 @@
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL: string;
+}
+
+export interface Inquiry {
+  id?: string;
+  userId: string;
+  query: string;
+  scripture: string;
+  interpretation: string;
+  historicalContext: string;
+  grammarAnalysis: string;
+  literaryGenre: string;
+  godIntent: string;
+  crossReferences: string[];
+  geography: {
+    location: string;
+    thenDesc: string;
+    nowDesc: string;
+    thenImageUrl?: string;
+    nowImageUrl?: string;
+  };
+  videoClipQuery?: string;
+  createdAt: any;
+}
+
+export interface BibleGroup {
+  id?: string;
+  name: string;
+  description: string;
+  ownerId: string;
+  createdAt: any;
+}
+
+export interface GroupMember {
+  id?: string; // document id
+  role: 'owner' | 'member';
+  email: string;
+  joinedAt: any;
+  status?: 'active' | 'invited';
+}
+
+export interface DirectShare {
+  id?: string;
+  senderId: string;
+  recipientEmail: string;
+  inquiryId: string;
+  createdAt: any;
+}
+
+export interface Discussion {
+  id?: string;
+  groupId: string;
+  inquiryId: string;
+  sharedBy: string;
+  createdAt: any;
+}
+
+export interface Message {
+  id?: string;
+  userId: string;
+  userName: string;
+  text: string;
+  createdAt: any;
+}
