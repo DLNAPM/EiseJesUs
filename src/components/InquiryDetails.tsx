@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { getDbService, doc, getDoc, handleFirestoreError, OperationType, collection, getDocs, query, where, addDoc, serverTimestamp, getAuthService } from '../lib/firebase';
 import { Inquiry, BibleGroup } from '../types';
-import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, MessageSquare, ExternalLink, Share2, Users, Loader2, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, MessageSquare, ExternalLink, Share2, Users, Loader2, Check, X, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
+import { fetchDefinition } from '../lib/gemini';
 
 interface InquiryDetailsProps {
   inquiryId: string;
@@ -21,6 +22,67 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
   const [sharing, setSharing] = useState<string | null>(null); // groupId or 'individual'
   const [shareSuccess, setShareSuccess] = useState(false);
   const [bibleWebsite, setBibleWebsite] = useState<string | null>(null);
+  
+  // Glossary Selection State
+  const [selectedText, setSelectedText] = useState('');
+  const [selectionPosition, setSelectionPosition] = useState<{ x: number, y: number } | null>(null);
+  const [isDefining, setIsDefining] = useState(false);
+  const [definitionResult, setDefinitionResult] = useState<{ word: string, definition: string } | null>(null);
+
+  const handleMouseUp = () => {
+    const selection = window.getSelection();
+    const text = selection?.toString().trim();
+    
+    if (text && text.length > 1 && text.length < 50) {
+      const range = selection?.getRangeAt(0);
+      const rect = range?.getBoundingClientRect();
+      if (rect) {
+        setSelectedText(text);
+        setSelectionPosition({
+          x: rect.left + rect.width / 2,
+          y: rect.top + window.scrollY
+        });
+      }
+    } else {
+      if (!isDefining && !definitionResult) {
+        setSelectionPosition(null);
+      }
+    }
+  };
+
+  const askForMeaning = async () => {
+    if (!selectedText) return;
+    setIsDefining(true);
+    try {
+      const context = `Biblical study of ${inquiry?.scripture}. Query: ${inquiry?.query}`;
+      const definition = await fetchDefinition(selectedText, context);
+      setDefinitionResult({ word: selectedText, definition });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsDefining(false);
+    }
+  };
+
+  const addToGlossary = async () => {
+    if (!definitionResult) return;
+    const auth = getAuthService();
+    if (!auth.currentUser) return;
+
+    try {
+      await addDoc(collection(getDbService(), `users/${auth.currentUser.uid}/glossary`), {
+        userId: auth.currentUser.uid,
+        word: definitionResult.word,
+        definition: definitionResult.definition,
+        createdAt: serverTimestamp()
+      });
+      setDefinitionResult(null);
+      setSelectionPosition(null);
+      setSelectedText('');
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   useEffect(() => {
     const fetchUserPreferences = async () => {
@@ -219,7 +281,7 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
         </div>
 
         {/* Right Column: Content Area */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2" onMouseUp={handleMouseUp}>
           <div className="bg-ui-card rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-ui-border min-h-[600px] relative overflow-hidden">
              {activeTab === 'faith' && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
@@ -485,6 +547,57 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
               )}
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Selection Floating Menu */}
+      <AnimatePresence>
+        {selectionPosition && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+            className="fixed z-[100] bg-text-primary text-bg-primary p-2 rounded-xl shadow-2xl border border-white/10 flex items-center gap-2"
+            style={{ 
+              left: Math.min(window.innerWidth - 200, Math.max(20, selectionPosition.x - 100)),
+              top: selectionPosition.y - 60 
+            }}
+          >
+            {isDefining ? (
+              <div className="flex items-center gap-2 px-3 py-1">
+                <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                <span className="text-[10px] font-bold uppercase tracking-widest italic">Defining...</span>
+              </div>
+            ) : definitionResult ? (
+              <div className="flex flex-col gap-3 p-4 w-72 max-w-[90vw]">
+                <div className="flex justify-between items-start">
+                  <h4 className="text-sm font-serif italic font-bold text-accent">{definitionResult.word}</h4>
+                  <button onClick={() => { setDefinitionResult(null); setSelectionPosition(null); }} className="text-bg-primary/40 hover:text-bg-primary">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-xs font-serif leading-relaxed opacity-80">{definitionResult.definition}</p>
+                <button 
+                  onClick={addToGlossary}
+                  className="w-full bg-accent text-bg-primary py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all"
+                >
+                  <GraduationCap className="w-3 h-3" />
+                  Add to Lexicon
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={askForMeaning}
+                className="flex items-center gap-2 px-4 py-2 hover:bg-white/10 rounded-lg transition-colors group"
+              >
+                <Sparkles className="w-4 h-4 text-accent group-hover:rotate-12 transition-transform" />
+                <span className="text-[10px] font-bold uppercase tracking-widest">Ask for Meaning</span>
+              </button>
+            )}
+            
+            {/* Arrow pointing down */}
+            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-text-primary rotate-45 border-r border-b border-white/10" />
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

@@ -13,6 +13,18 @@
       },
       "required": ["uid", "email"]
     },
+    "GlossaryEntry": {
+      "title": "Glossary Entry",
+      "description": "A theological or biblical term saved by the user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "word": { "type": "string" },
+        "definition": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "word", "definition"]
+    },
     "Inquiry": {
       "title": "Inquiry",
       "description": "A scripture interpretation inquiry",

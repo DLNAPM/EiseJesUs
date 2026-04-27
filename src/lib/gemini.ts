@@ -98,3 +98,25 @@ export async function generateExegesis(scripture: string, queryText: string) {
     throw error;
   }
 }
+
+export async function fetchDefinition(word: string, context: string): Promise<string> {
+  const prompt = `
+    Define the following word or phrase in a biblical, theological, or historical context related to the study of the Bible:
+    "${word}"
+    
+    Context of the document where this was found: "${context}"
+    
+    Provide a concise, academic, yet accessible definition. Do not use formatting like bold or headers, just the text of the definition.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: prompt
+    });
+    return response.text.trim();
+  } catch (error) {
+    console.error("Fetch Definition Error:", error);
+    throw error;
+  }
+}
