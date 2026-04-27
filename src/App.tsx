@@ -29,8 +29,10 @@ import GroupsList from './components/GroupsList';
 import InquiryDetails from './components/InquiryDetails';
 import HelpModal from './components/HelpModal';
 import PrivacyModal from './components/PrivacyModal';
+import Reports from './components/Reports';
+import { FileText } from 'lucide-react';
 
-type Page = 'dashboard' | 'inquiry' | 'groups' | 'details';
+type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports';
 
 export default function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -215,6 +217,7 @@ export default function App() {
             { id: 'dashboard', label: 'Exegesis Library', icon: BookOpen },
             { id: 'inquiry', label: 'Seek the Word', icon: Search },
             { id: 'groups', label: 'My Study Groups', icon: Users },
+            { id: 'reports', label: 'Reports Menu', icon: FileText },
           ].map((item) => (
             <button
               key={item.id}
@@ -269,6 +272,7 @@ export default function App() {
             {currentPage === 'dashboard' && <Dashboard onSelectInquiry={navigateToDetails} onNewInquiry={() => setCurrentPage('inquiry')} />}
             {currentPage === 'inquiry' && <InquiryTool onComplete={(id) => navigateToDetails(id)} />}
             {currentPage === 'groups' && <GroupsList onSelectInquiry={navigateToDetails} />}
+            {currentPage === 'reports' && <Reports />}
             {currentPage === 'details' && selectedInquiryId && <InquiryDetails inquiryId={selectedInquiryId} onBack={() => setCurrentPage('dashboard')} />}
           </motion.div>
         </AnimatePresence>
@@ -285,6 +289,9 @@ export default function App() {
         </button>
         <button onClick={() => setCurrentPage('inquiry')} className={cn("p-2 transition-colors", currentPage === 'inquiry' ? "text-accent" : "text-text-secondary")}>
           <Search className="w-6 h-6" />
+        </button>
+        <button onClick={() => setCurrentPage('reports')} className={cn("p-2 transition-colors", currentPage === 'reports' ? "text-accent" : "text-text-secondary")}>
+          <FileText className="w-6 h-6" />
         </button>
         <button onClick={toggleTheme} className="p-2 text-text-secondary">
           {theme === 'modern' ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6 text-accent" />}
