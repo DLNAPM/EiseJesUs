@@ -117,19 +117,19 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
     <div className="max-w-5xl mx-auto">
       <button 
         onClick={onBack}
-        className="flex items-center gap-2 text-natural-text/60 hover:text-natural-accent mb-8 group transition-colors"
+        className="flex items-center gap-2 text-text-secondary hover:text-accent mb-8 group transition-colors"
       >
         <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-        <span className="font-sans font-bold text-sm tracking-wide">Back to Library</span>
+        <span className="font-sans font-bold text-sm tracking-wide uppercase">Back to Library</span>
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Left Column: Headers and Navigation */}
         <div className="lg:col-span-1 space-y-8">
           <div>
-            <span className="text-[10px] font-sans font-bold text-natural-accent uppercase tracking-[0.2em] block mb-2">{inquiry.scripture}</span>
-            <h1 className="text-4xl font-serif text-natural-dark leading-tight mb-4 italic">{inquiry.query}</h1>
-            <div className="text-[10px] text-natural-text/40 font-sans uppercase tracking-widest">Seeked on {new Date(inquiry.createdAt?.toDate()).toLocaleDateString()}</div>
+            <span className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.2em] block mb-2">{inquiry.scripture}</span>
+            <h1 className="text-4xl font-serif text-text-primary leading-tight mb-4 italic font-bold">{inquiry.query}</h1>
+            <div className="text-[10px] text-text-secondary font-sans uppercase tracking-widest opacity-60">Seeked on {new Date(inquiry.createdAt?.toDate()).toLocaleDateString()}</div>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -142,10 +142,10 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-4 px-6 py-4 rounded-xl transition-all text-left font-sans text-sm font-semibold ${
+                className={`flex items-center gap-4 px-6 py-4 rounded-xl transition-all text-left font-sans text-sm font-semibold border ${
                   activeTab === tab.id 
-                    ? 'bg-natural-dark text-white shadow-lg' 
-                    : 'bg-white hover:bg-natural-card/50 text-natural-text/70 border border-natural-sidebar'
+                    ? 'bg-text-primary text-bg-primary shadow-lg border-text-primary' 
+                    : 'bg-ui-card hover:bg-ui-sidebar text-text-secondary border-ui-border'
                 }`}
               >
                 <span className="text-lg">{tab.emoji}</span>
@@ -154,14 +154,14 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
             ))}
           </div>
 
-          <div className="p-8 bg-natural-card/50 rounded-[2rem] border border-natural-sidebar shadow-sm">
-            <h3 className="text-[10px] font-sans font-bold text-natural-accent uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+          <div className="p-8 bg-ui-card rounded-[2rem] border border-ui-border shadow-sm">
+            <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
               <Share2 className="w-4 h-4" />
               Community Study
             </h3>
             <button 
               onClick={handleShareClick}
-              className="w-full py-4 bg-white border border-natural-sidebar text-natural-dark rounded-xl text-xs font-sans font-bold shadow-sm hover:bg-natural-accent hover:text-white transition-all flex items-center justify-center gap-2"
+              className="w-full py-4 bg-bg-primary border border-ui-border text-text-primary rounded-xl text-xs font-sans font-bold shadow-sm hover:bg-accent hover:text-white transition-all flex items-center justify-center gap-2"
             >
               Share with Group
             </button>
@@ -170,27 +170,27 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
 
         {/* Right Column: Content Area */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-natural-sidebar min-h-[600px] relative overflow-hidden">
+          <div className="bg-ui-card rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-ui-border min-h-[600px] relative overflow-hidden">
              {activeTab === 'faith' && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-10">
-                  <div className="p-10 bg-natural-bg/50 rounded-3xl border-l-4 border-natural-accent italic font-serif text-3xl leading-relaxed text-natural-text/90 shadow-inner">
+                  <div className="p-10 bg-bg-primary/50 rounded-3xl border-l-4 border-accent italic font-serif text-3xl leading-relaxed text-text-primary shadow-inner">
                     "{inquiry.godIntent}"
                   </div>
-                  <div className="prose prose-slate max-w-none">
-                    <h3 className="font-serif text-2xl text-natural-dark italic mb-6">Detailed Interpretation</h3>
-                    <div className="markdown-body font-serif text-xl leading-relaxed space-y-6 text-natural-text/80">
+                  <div className="prose prose-invert max-w-none">
+                    <h3 className="font-serif text-2xl text-text-primary italic mb-6 font-bold">Detailed Interpretation</h3>
+                    <div className="markdown-body font-serif text-xl leading-relaxed space-y-6 text-text-secondary">
                       <Markdown>{inquiry.interpretation}</Markdown>
                     </div>
                   </div>
                   
                   {inquiry.crossReferences && inquiry.crossReferences.length > 0 && (
-                    <div className="pt-10 border-t border-natural-sidebar">
-                      <h3 className="text-[10px] font-sans font-bold text-natural-accent uppercase tracking-[0.4em] mb-6">Cross References</h3>
+                    <div className="pt-10 border-t border-ui-border">
+                      <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Cross References</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {inquiry.crossReferences.map((ref, idx) => (
-                          <div key={idx} className="p-6 bg-natural-sidebar/30 rounded-2xl flex items-start gap-4 border border-natural-sidebar">
-                            <BookOpen className="w-5 h-5 text-natural-earth/50 flex-shrink-0 mt-1" />
-                            <span className="text-sm italic font-serif leading-relaxed">{ref}</span>
+                          <div key={idx} className="p-6 bg-ui-sidebar/30 rounded-2xl flex items-start gap-4 border border-ui-border">
+                            <BookOpen className="w-5 h-5 text-accent flex-shrink-0 mt-1" />
+                            <span className="text-sm italic font-serif leading-relaxed text-text-secondary">{ref}</span>
                           </div>
                         ))}
                       </div>
@@ -202,23 +202,23 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
              {activeTab === 'academic' && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
                   <section>
-                    <h3 className="text-[10px] font-sans font-bold text-natural-accent uppercase tracking-[0.4em] mb-6">Exegesis & Historical Context</h3>
-                    <div className="text-xl leading-relaxed text-natural-text/80 font-serif space-y-4">
+                    <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Exegesis & Historical Context</h3>
+                    <div className="text-xl leading-relaxed text-text-secondary font-serif space-y-4">
                        <Markdown>{inquiry.historicalContext}</Markdown>
                     </div>
                   </section>
 
                   <div className="grid md:grid-cols-2 gap-12">
                     <section>
-                      <h3 className="text-[10px] font-sans font-bold text-natural-accent uppercase tracking-[0.4em] mb-6">Literary Genre</h3>
-                      <div className="p-8 bg-natural-card/50 rounded-3xl border border-natural-sidebar italic text-natural-text/70 text-lg shadow-sm">
+                      <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Literary Genre</h3>
+                      <div className="p-8 bg-bg-primary/50 rounded-3xl border border-ui-border italic text-text-secondary/80 text-lg shadow-sm">
                          {inquiry.literaryGenre}
                       </div>
                     </section>
 
                     <section>
-                      <h3 className="text-[10px] font-sans font-bold text-natural-accent uppercase tracking-[0.4em] mb-6">Grammatical Analysis</h3>
-                      <div className="text-lg leading-relaxed text-natural-text/80 italic border-l-2 border-natural-secondary/20 pl-6">
+                      <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Grammatical Analysis</h3>
+                      <div className="text-lg leading-relaxed text-text-secondary italic border-l-2 border-accent/20 pl-6">
                          <Markdown>{inquiry.grammarAnalysis}</Markdown>
                       </div>
                     </section>
@@ -228,53 +228,51 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
 
              {activeTab === 'geo' && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-                  <header className="flex justify-between items-end border-b border-natural-sidebar pb-6">
+                  <header className="flex justify-between items-end border-b border-ui-border pb-6">
                     <div>
-                      <h3 className="text-4xl font-serif text-natural-dark italic">{inquiry.geography.location}</h3>
-                      <p className="text-natural-text/60 italic font-serif mt-2 text-lg">Connecting the Holy Land across the ages</p>
+                      <h3 className="text-4xl font-serif text-text-primary italic font-bold">{inquiry.geography.location}</h3>
+                      <p className="text-text-secondary opacity-60 italic font-serif mt-2 text-lg">Connecting the Holy Land across the ages</p>
                     </div>
-                    <Map className="w-12 h-12 text-natural-accent/20" />
+                    <Map className="w-12 h-12 text-accent/20" />
                   </header>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    {/* Biblical Times */}
                     <div className="space-y-6">
-                      <div className="aspect-[4/3] bg-natural-sidebar rounded-[2rem] overflow-hidden relative group shadow-sm border border-natural-sidebar">
+                      <div className="aspect-[4/3] bg-ui-sidebar rounded-[2rem] overflow-hidden relative group shadow-sm border border-ui-border">
                         <img 
                           src={`https://images.unsplash.com/photo-1548625361-91e84fc11993?auto=format&fit=crop&q=80&w=800`} 
                           alt="Historical Region"
                           className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
                           referrerPolicy="no-referrer"
                         />
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-natural-dark/60 to-transparent p-8 flex items-end">
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-8 flex items-end">
                           <span className="text-white font-serif italic text-xl">In Biblical Times</span>
                         </div>
                       </div>
-                      <div className="p-8 bg-natural-bg/50 rounded-3xl border border-natural-sidebar italic text-lg leading-relaxed text-natural-text/80 shadow-inner">
+                      <div className="p-8 bg-bg-primary/50 rounded-3xl border border-ui-border italic text-lg leading-relaxed text-text-secondary shadow-inner">
                         {inquiry.geography.thenDesc}
                       </div>
                     </div>
 
-                    {/* Today */}
                     <div className="space-y-6">
-                      <div className="aspect-[4/3] bg-natural-sidebar rounded-[2rem] overflow-hidden relative group shadow-sm border border-natural-sidebar">
+                      <div className="aspect-[4/3] bg-ui-sidebar rounded-[2rem] overflow-hidden relative group shadow-sm border border-ui-border">
                         <img 
                           src={`https://images.unsplash.com/photo-1544971510-91a787a7187e?auto=format&fit=crop&q=80&w=800`} 
                           alt="Modern Region"
                           className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
                           referrerPolicy="no-referrer"
                         />
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-natural-dark/60 to-transparent p-8 flex items-end">
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-8 flex items-end">
                           <span className="text-white font-serif italic text-xl">Region Today</span>
                         </div>
                       </div>
-                      <div className="p-8 bg-natural-bg/50 rounded-3xl border border-natural-sidebar italic text-lg leading-relaxed text-natural-text/80 shadow-inner">
+                      <div className="p-8 bg-bg-primary/50 rounded-3xl border border-ui-border italic text-lg leading-relaxed text-text-secondary shadow-inner">
                         {inquiry.geography.nowDesc}
                       </div>
                     </div>
                   </div>
 
-                  <div className="p-6 bg-natural-card/30 rounded-2xl text-center text-[10px] text-natural-text/30 uppercase tracking-[0.4em] font-sans">
+                  <div className="p-6 bg-bg-primary/30 rounded-2xl text-center text-[10px] text-text-secondary/40 uppercase tracking-[0.4em] font-sans">
                     Images are illustrative of the historical region and its modern atmosphere
                   </div>
                </motion.div>
@@ -282,33 +280,33 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
 
              {activeTab === 'video' && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-                  <div className="text-center p-16 bg-natural-dark text-natural-bg rounded-[3rem] shadow-2xl relative overflow-hidden">
+                  <div className="text-center p-16 bg-text-primary text-bg-primary rounded-[3rem] shadow-2xl relative overflow-hidden border border-ui-border/10">
                     <div className="absolute top-0 right-0 p-12 opacity-5 rotate-12">
                       <Video className="w-64 h-64" />
                     </div>
-                    <Video className="w-20 h-20 text-natural-secondary mx-auto mb-8 relative z-10" />
-                    <h3 className="text-4xl font-serif mb-6 relative z-10 italic">Living Word Commentary</h3>
-                    <p className="text-natural-bg/60 mb-10 max-w-sm mx-auto font-sans text-sm tracking-wide relative z-10 leading-relaxed">Explore academic TEACHINGS and geographical archaeological series curated for this passage.</p>
+                    <Video className="w-20 h-20 text-accent mx-auto mb-8 relative z-10" />
+                    <h3 className="text-4xl font-serif mb-6 relative z-10 italic font-bold">Living Word Media</h3>
+                    <p className="opacity-70 mb-10 max-w-sm mx-auto font-sans text-sm tracking-wide relative z-10 leading-relaxed italic">Explore academic TEACHINGS and geographical archaeological series curated for this passage.</p>
                     
                     <a 
                       href={`https://www.youtube.com/results?search_query=${encodeURIComponent(inquiry.videoClipQuery || inquiry.scripture + ' exegesis')}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-10 py-5 bg-white text-natural-dark rounded-2xl font-sans font-bold flex items-center justify-center gap-3 mx-auto w-fit hover:bg-natural-secondary hover:text-white transition-all shadow-xl relative z-10 group"
+                      className="px-10 py-5 bg-bg-primary text-text-primary rounded-2xl font-sans font-bold flex items-center justify-center gap-3 mx-auto w-fit hover:opacity-90 transition-all shadow-xl relative z-10 group border border-ui-border/20"
                     >
                       <ExternalLink className="w-5 h-5 group-hover:scale-110 transition-transform" />
                       <span>Depart to YouTube</span>
                     </a>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 opacity-40">
-                     <div className="p-8 bg-natural-sidebar rounded-3xl flex flex-col items-center justify-center text-center gap-4">
-                        <div className="w-12 h-12 rounded-full border border-natural-accent/30 flex items-center justify-center font-bold text-natural-accent">BP</div>
-                        <p className="italic text-sm font-serif">Curated: The Bible Project</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 opacity-60">
+                     <div className="p-8 bg-ui-sidebar/50 rounded-3xl flex flex-col items-center justify-center text-center gap-4 border border-ui-border">
+                        <div className="w-12 h-12 rounded-full border border-accent/30 flex items-center justify-center font-bold text-accent">BP</div>
+                        <p className="italic text-sm font-serif text-text-secondary">Curated: The Bible Project</p>
                      </div>
-                     <div className="p-8 bg-natural-sidebar rounded-3xl flex flex-col items-center justify-center text-center gap-4">
-                        <div className="w-12 h-12 rounded-full border border-natural-accent/30 flex items-center justify-center font-bold text-natural-accent">MW</div>
-                        <p className="italic text-sm font-serif">Deep Dive: Mike Winger</p>
+                     <div className="p-8 bg-ui-sidebar/50 rounded-3xl flex flex-col items-center justify-center text-center gap-4 border border-ui-border">
+                        <div className="w-12 h-12 rounded-full border border-accent/30 flex items-center justify-center font-bold text-accent">MW</div>
+                        <p className="italic text-sm font-serif text-text-secondary">Deep Dive: Mike Winger</p>
                      </div>
                   </div>
                </motion.div>
@@ -320,38 +318,38 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
       {/* Share Modal */}
       <AnimatePresence>
         {showShareModal && (
-          <div className="fixed inset-0 bg-natural-dark/60 backdrop-blur-md flex items-center justify-center p-6 z-[100]">
+          <div className="fixed inset-0 bg-text-primary/60 backdrop-blur-md flex items-center justify-center p-6 z-[100]">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-natural-bg w-full max-w-md rounded-[2.5rem] p-10 relative overflow-hidden border border-natural-secondary/20 shadow-2xl"
+              className="bg-bg-primary w-full max-w-md rounded-[2.5rem] p-10 relative overflow-hidden border border-ui-border shadow-2xl"
             >
               {shareSuccess && (
-                 <div className="absolute inset-0 bg-natural-accent/95 z-10 flex flex-col items-center justify-center text-white p-8 text-center">
+                 <div className="absolute inset-0 bg-accent/95 z-20 flex flex-col items-center justify-center text-white p-8 text-center">
                    <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mb-6 backdrop-blur-sm">
                      <Check className="w-10 h-10" />
                    </div>
-                   <h3 className="text-3xl font-serif italic mb-2">Covenant Shared</h3>
+                   <h3 className="text-3xl font-serif italic mb-2 font-bold">Covenant Shared</h3>
                    <p className="font-serif opacity-80 text-lg">Your seeking has been shared with the community.</p>
                  </div>
               )}
             
               <button 
                 onClick={() => setShowShareModal(false)}
-                className="absolute top-8 right-8 text-natural-text/40 hover:text-natural-text"
+                className="absolute top-8 right-8 text-text-secondary hover:text-text-primary z-30"
               >
                 ✕
               </button>
               
-              <h2 className="text-3xl font-serif text-natural-dark mb-2 text-center italic">Share Communion</h2>
-              <p className="text-sm text-natural-text text-center mb-8 italic opacity-60">Spread the light of your findings.</p>
+              <h2 className="text-3xl font-serif text-text-primary mb-2 text-center italic font-bold">Share Communion</h2>
+              <p className="text-sm text-text-secondary text-center mb-8 italic opacity-60">Spread the light of your findings.</p>
 
-              <div className="flex bg-natural-sidebar/30 p-1 rounded-xl mb-8">
+              <div className="flex bg-ui-sidebar/30 p-1 rounded-xl mb-8 border border-ui-border">
                 <button 
                   onClick={() => setShareMode('groups')}
                   className={`flex-1 py-2 text-[10px] font-sans font-bold uppercase tracking-widest rounded-lg transition-all ${
-                    shareMode === 'groups' ? 'bg-white text-natural-accent shadow-sm' : 'text-natural-text/40'
+                    shareMode === 'groups' ? 'bg-bg-primary text-accent shadow-sm' : 'text-text-secondary/40'
                   }`}
                 >
                   Small Groups
@@ -359,7 +357,7 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
                 <button 
                   onClick={() => setShareMode('individual')}
                   className={`flex-1 py-2 text-[10px] font-sans font-bold uppercase tracking-widest rounded-lg transition-all ${
-                    shareMode === 'individual' ? 'bg-white text-natural-accent shadow-sm' : 'text-natural-text/40'
+                    shareMode === 'individual' ? 'bg-bg-primary text-accent shadow-sm' : 'text-text-secondary/40'
                   }`}
                 >
                   Direct Reveal
@@ -367,10 +365,10 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
               </div>
               
               {shareMode === 'groups' ? (
-                <div className="space-y-3 max-h-[350px] overflow-y-auto mb-2 pr-2 scrollbar-thin scrollbar-thumb-natural-sidebar">
+                <div className="space-y-3 max-h-[350px] overflow-y-auto mb-2 pr-2 scrollbar-thin scrollbar-thumb-ui-border">
                   {myGroups.length === 0 ? (
-                    <div className="text-center py-10 bg-white/30 rounded-2xl border border-dashed border-natural-sidebar">
-                      <p className="text-xs text-natural-text/40 italic font-serif">No study groups found. Join a communion first.</p>
+                    <div className="text-center py-10 bg-ui-card rounded-2xl border border-dashed border-ui-border">
+                      <p className="text-xs text-text-secondary/40 italic font-serif">No study groups found. Join a communion first.</p>
                     </div>
                   ) : (
                     myGroups.map(group => (
@@ -378,18 +376,18 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
                         key={group.id}
                         disabled={sharing !== null}
                         onClick={() => shareToGroup(group.id!)}
-                        className="w-full flex items-center justify-between p-5 bg-white hover:bg-natural-card border border-natural-sidebar rounded-2xl transition-all group"
+                        className="w-full flex items-center justify-between p-5 bg-ui-card hover:bg-ui-sidebar border border-ui-border rounded-2xl transition-all group"
                       >
                         <div className="flex items-center gap-4">
-                           <div className="w-10 h-10 rounded-full bg-natural-sidebar flex items-center justify-center text-natural-dark font-bold font-sans text-xs">
+                           <div className="w-10 h-10 rounded-full bg-ui-sidebar flex items-center justify-center text-text-primary font-bold font-sans text-xs">
                              {group.name.charAt(0)}
                            </div>
-                           <span className="font-bold text-natural-dark font-sans text-sm tracking-tight">{group.name}</span>
+                           <span className="font-bold text-text-primary font-sans text-sm tracking-tight">{group.name}</span>
                         </div>
                         {sharing === group.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin text-natural-accent" />
+                          <Loader2 className="w-4 h-4 animate-spin text-accent" />
                         ) : (
-                          <ChevronRight className="w-4 h-4 text-natural-secondary opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                          <ChevronRight className="w-4 h-4 text-accent opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                         )}
                       </button>
                     ))
@@ -398,22 +396,22 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
               ) : (
                 <form onSubmit={shareToIndividual} className="space-y-6">
                   <div>
-                    <label className="block text-[10px] font-sans font-bold uppercase tracking-widest text-natural-accent mb-3">Gmail Account</label>
+                    <label className="block text-[10px] font-sans font-bold uppercase tracking-widest text-accent mb-3">Gmail Account</label>
                     <input 
                       type="email"
                       required
                       value={recipientEmail}
                       onChange={(e) => setRecipientEmail(e.target.value)}
                       placeholder="believer@gmail.com"
-                      className="w-full px-5 py-4 bg-white border border-natural-sidebar rounded-2xl font-serif focus:outline-none focus:border-natural-accent transition-all"
+                      className="w-full px-5 py-4 bg-ui-card border border-ui-border rounded-2xl font-serif text-text-primary focus:outline-none focus:border-accent transition-all"
                     />
                   </div>
                   <button 
                     type="submit"
                     disabled={sharing === 'individual'}
-                    className="w-full py-4 bg-natural-dark text-white rounded-2xl font-sans font-bold text-xs uppercase tracking-[0.2em] hover:bg-natural-earth transition-all shadow-lg flex items-center justify-center gap-3"
+                    className="w-full py-4 bg-text-primary text-bg-primary rounded-2xl font-sans font-bold text-xs uppercase tracking-[0.2em] hover:opacity-90 transition-all shadow-lg flex items-center justify-center gap-3"
                   >
-                    {sharing === 'individual' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4 text-natural-secondary" />}
+                    {sharing === 'individual' ? <Loader2 className="w-4 h-4 animate-spin text-accent" /> : <Share2 className="w-4 h-4 text-accent" />}
                     Reveal Individual
                   </button>
                 </form>

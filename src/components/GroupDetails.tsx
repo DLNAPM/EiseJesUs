@@ -91,22 +91,22 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
 
   return (
     <div className="max-w-4xl mx-auto pb-20">
-      <button onClick={onBack} className="flex items-center gap-2 text-natural-text/50 hover:text-natural-accent mb-8 group transition-colors">
+      <button onClick={onBack} className="flex items-center gap-2 text-text-secondary hover:text-accent mb-8 group transition-colors">
         <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
         <span className="font-sans font-bold text-sm tracking-wide uppercase">Back to Community</span>
       </button>
 
-      <div className="bg-natural-dark text-natural-bg p-12 rounded-[2.5rem] mb-12 shadow-2xl relative overflow-hidden border border-natural-secondary/10">
+      <div className="bg-text-primary text-bg-primary p-12 rounded-[2.5rem] mb-12 shadow-2xl relative overflow-hidden border border-ui-border/10">
         <div className="absolute top-0 right-0 p-12 opacity-5 rotate-12">
           <BookOpen className="w-64 h-64" />
         </div>
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-5xl font-serif text-natural-secondary italic tracking-tight">{group.name}</h1>
+            <h1 className="text-5xl font-serif text-bg-primary italic tracking-tight font-bold">{group.name}</h1>
             {isOwner && (
               <button 
                 onClick={() => setShowMembersModal(true)}
-                className="bg-natural-secondary/10 hover:bg-natural-secondary/20 text-natural-secondary px-6 py-3 rounded-xl flex items-center gap-2 transition-all border border-natural-secondary/20 shadow-sm"
+                className="bg-accent/10 hover:bg-accent/20 text-accent px-6 py-3 rounded-xl flex items-center gap-2 transition-all border border-accent/20 shadow-sm"
               >
                 <UserPlus className="w-4 h-4" />
                 <span className="font-sans font-bold text-[10px] uppercase tracking-widest">Manage Communion</span>
@@ -118,14 +118,14 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
       </div>
 
       <section>
-        <h2 className="text-[10px] font-sans font-bold text-natural-accent uppercase tracking-[0.4em] mb-8 flex items-center gap-3">
+        <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-8 flex items-center gap-3">
           <MessageSquare className="w-5 h-5 opacity-40" />
           Recent Communions
         </h2>
 
         {discussions.length === 0 ? (
-          <div className="text-center py-24 bg-white/30 rounded-[2rem] border-2 border-dashed border-natural-sidebar">
-            <p className="text-natural-text opacity-40 italic font-serif text-lg">No inquiries shared here yet. Be the first to share a seeking!</p>
+          <div className="text-center py-24 bg-ui-card/30 rounded-[2rem] border-2 border-dashed border-ui-border">
+            <p className="text-text-secondary italic font-serif text-lg">No inquiries shared here yet. Be the first to share a seeking!</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -133,33 +133,33 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
               <motion.div
                 key={disc.id}
                 whileHover={{ y: -2 }}
-                className="bg-white p-8 rounded-3xl shadow-sm border border-natural-sidebar flex flex-col md:flex-row gap-8 items-start md:items-center justify-between group transition-all hover:shadow-md"
+                className="bg-ui-card p-8 rounded-3xl shadow-sm border border-ui-border flex flex-col md:flex-row gap-8 items-start md:items-center justify-between group transition-all hover:shadow-md"
               >
                 <div className="flex-1">
                   {disc.inquiry ? (
                     <>
                       <div className="flex items-center gap-3 mb-3">
-                        <span className="text-[10px] font-sans font-bold text-natural-accent uppercase tracking-[0.2em]">{disc.inquiry.scripture}</span>
-                        <span className="w-1 h-1 rounded-full bg-natural-sidebar"></span>
-                        <span className="text-[10px] text-natural-text/40 italic font-serif">Deep seeking shared in faith</span>
+                        <span className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.2em]">{disc.inquiry.scripture}</span>
+                        <span className="w-1 h-1 rounded-full bg-ui-border"></span>
+                        <span className="text-[10px] text-text-secondary italic font-serif">Deep seeking shared in faith</span>
                       </div>
-                      <h3 className="text-2xl font-serif text-natural-dark mb-2 italic">{disc.inquiry.query}</h3>
+                      <h3 className="text-2xl font-serif text-text-primary mb-2 italic font-bold">{disc.inquiry.query}</h3>
                     </>
                   ) : (
-                    <p className="text-natural-text opacity-40 italic font-serif">This inquiry has returned to the silence of the archives.</p>
+                    <p className="text-text-secondary opacity-40 italic font-serif">This inquiry has returned to the silence of the archives.</p>
                   )}
                 </div>
                 
                 <div className="flex gap-3 w-full md:w-auto">
                    <button 
                      onClick={() => disc.inquiryId && onSelectInquiry(disc.inquiryId)}
-                     className="flex-1 md:flex-none px-8 py-3 bg-natural-bg text-natural-dark rounded-xl font-sans font-bold text-xs uppercase tracking-widest border border-natural-sidebar hover:bg-natural-accent hover:text-white transition-all flex items-center justify-center gap-2"
+                     className="flex-1 md:flex-none px-8 py-3 bg-bg-primary text-text-primary rounded-xl font-sans font-bold text-xs uppercase tracking-widest border border-ui-border hover:bg-accent hover:text-white transition-all flex items-center justify-center gap-2"
                    >
                      Inspect Scroll
                      <ArrowRight className="w-4 h-4 opacity-50" />
                    </button>
-                   <button className="flex-1 md:flex-none px-8 py-3 bg-natural-dark text-white rounded-xl font-sans font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-natural-earth transition-colors">
-                     <MessageSquare className="w-4 h-4 text-natural-secondary" />
+                   <button className="flex-1 md:flex-none px-8 py-3 bg-text-primary text-bg-primary rounded-xl font-sans font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-colors">
+                     <MessageSquare className="w-4 h-4 text-accent" />
                      Enter Discussion
                    </button>
                 </div>
@@ -172,22 +172,22 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
       {/* Members Management Modal */}
       <AnimatePresence>
         {showMembersModal && (
-          <div className="fixed inset-0 bg-natural-dark/60 backdrop-blur-md flex items-center justify-center p-6 z-[100]">
+          <div className="fixed inset-0 bg-text-primary/60 backdrop-blur-md flex items-center justify-center p-6 z-[100]">
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-natural-bg w-full max-w-lg rounded-[2.5rem] p-10 shadow-2xl relative border border-natural-secondary/20 max-h-[90vh] overflow-hidden flex flex-col"
+              className="bg-bg-primary w-full max-w-lg rounded-[2.5rem] p-10 shadow-2xl relative border border-ui-border max-h-[90vh] overflow-hidden flex flex-col"
             >
               <button 
                 onClick={() => setShowMembersModal(false)}
-                className="absolute top-8 right-8 text-natural-text/40 hover:text-natural-text"
+                className="absolute top-8 right-8 text-text-secondary hover:text-text-primary"
               >
                 ✕
               </button>
               
-              <h2 className="text-3xl font-serif text-natural-dark mb-2 italic text-center">Communion Members</h2>
-              <p className="text-sm text-natural-text opacity-60 mb-8 font-serif text-center">Manage the gatherers in this study sanctuary.</p>
+              <h2 className="text-3xl font-serif text-text-primary mb-2 italic text-center font-bold">Communion Members</h2>
+              <p className="text-sm text-text-secondary mb-8 font-serif text-center italic">Manage the gatherers in this study sanctuary.</p>
 
               <form onSubmit={handleInvite} className="mb-8 flex gap-3">
                 <input 
@@ -195,34 +195,34 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
                   placeholder="Invite by Gmail account..."
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  className="flex-1 px-5 py-4 bg-white border border-natural-sidebar rounded-2xl font-serif focus:outline-none focus:border-natural-accent transition-all text-sm"
+                  className="flex-1 px-5 py-4 bg-ui-card border border-ui-border rounded-2xl font-serif text-text-primary focus:outline-none focus:border-accent transition-all text-sm"
                   required
                 />
                 <button 
                   type="submit"
                   disabled={inviting}
-                  className="bg-natural-dark text-white px-6 rounded-xl font-sans font-bold text-xs uppercase tracking-widest hover:bg-natural-earth transition-all shadow-md flex items-center gap-2"
+                  className="bg-text-primary text-bg-primary px-6 rounded-xl font-sans font-bold text-xs uppercase tracking-widest hover:opacity-90 transition-all shadow-md flex items-center gap-2"
                 >
-                  {inviting ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4 text-natural-secondary" />}
+                  {inviting ? <Loader2 className="w-4 h-4 animate-spin text-accent" /> : <UserPlus className="w-4 h-4 text-accent" />}
                   Invite
                 </button>
               </form>
 
-              <div className="flex-1 overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-natural-sidebar">
+              <div className="flex-1 overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-ui-border">
                 {members.map((member) => (
-                  <div key={member.id} className="bg-white p-5 rounded-2xl border border-natural-sidebar flex items-center justify-between group">
+                  <div key={member.id} className="bg-ui-card p-5 rounded-2xl border border-ui-border flex items-center justify-between group">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-natural-sidebar flex items-center justify-center text-natural-dark">
+                      <div className="w-10 h-10 rounded-full bg-ui-sidebar flex items-center justify-center text-accent">
                         <User className="w-5 h-5 opacity-40" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-bold text-natural-dark text-sm font-sans tracking-tight">{member.email}</p>
+                          <p className="font-bold text-text-primary text-sm font-sans tracking-tight">{member.email}</p>
                           {member.role === 'owner' && (
-                            <Shield className="w-3 h-3 text-natural-accent" />
+                            <Shield className="w-3 h-3 text-accent" />
                           )}
                         </div>
-                        <p className="text-[9px] text-natural-text/40 uppercase tracking-widest font-bold">
+                        <p className="text-[9px] text-text-secondary uppercase tracking-widest font-bold">
                           {member.role} {member.status === 'invited' ? '• Pending Invite' : ''}
                         </p>
                       </div>
@@ -231,7 +231,7 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
                     {isOwner && member.role !== 'owner' && (
                       <button 
                         onClick={() => member.id && handeRemoveMember(member.id)}
-                        className="p-3 text-natural-text/20 hover:text-red-400 hover:bg-red-50 rounded-xl transition-all"
+                        className="p-3 text-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

@@ -1,30 +1,63 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Inter:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Cormorant Garamond", serif;
+  --font-mono: "JetBrains Mono", monospace;
   
-  --color-natural-bg: #F9F6F1;
-  --color-natural-text: #3D2B1F;
-  --color-natural-accent: #B8860B;
-  --color-natural-secondary: #D4A373;
-  --color-natural-sidebar: #EAE3D6;
-  --color-natural-card: #F0EAE0;
-  --color-natural-dark: #4A3728;
-  --color-natural-earth: #8B5E3C;
+  --color-bg-primary: var(--bg-primary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-ui-card: var(--ui-card);
+  --color-ui-border: var(--ui-border);
+  --color-ui-sidebar: var(--ui-sidebar);
+}
+
+:root {
+  /* Default: Modern Sanctuary (Clean & Technical) */
+  --bg-primary: #f8fafc;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --accent: #3b82f6;
+  --accent-soft: #dbeafe;
+  --ui-card: #ffffff;
+  --ui-border: #e2e8f0;
+  --ui-sidebar: #f1f5f9;
+}
+
+[data-theme='midnight'] {
+  /* Midnight Exegesis (Dark Mode) */
+  --bg-primary: #020617;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --accent: #f59e0b;
+  --accent-soft: #451a03;
+  --ui-card: #0f172a;
+  --ui-border: #1e293b;
+  --ui-sidebar: #020617;
 }
 
 @layer base {
   body {
-    @apply bg-natural-bg text-natural-text font-serif;
+    @apply bg-bg-primary text-text-primary font-sans transition-colors duration-300;
   }
   
   h1, h2, h3, h4, .serif {
-    @apply font-serif font-bold;
+    @apply font-serif font-bold italic;
   }
 
-  .sans {
-    @apply font-sans;
+  .mono {
+    @apply font-mono;
   }
+}
+
+.card-sanctuary {
+  @apply bg-ui-card border border-ui-border rounded-xl shadow-sm p-6 transition-all;
+}
+
+.btn-primary {
+  @apply bg-accent text-bg-primary px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity;
 }

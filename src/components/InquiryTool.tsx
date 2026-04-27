@@ -51,26 +51,26 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
   return (
     <div className="max-w-3xl mx-auto">
       <header className="mb-12 text-center">
-        <h1 className="text-4xl font-serif text-natural-dark mb-4">Seek the Word</h1>
-        <p className="text-natural-text opacity-70 italic max-w-lg mx-auto">
+        <h1 className="text-4xl font-serif text-text-primary mb-4">Seek the Word</h1>
+        <p className="text-text-secondary italic max-w-lg mx-auto">
           "Ask, and it shall be given you; seek, and ye shall find; knock, and it shall be opened unto you."
         </p>
       </header>
 
-      <div className="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-natural-sidebar relative overflow-hidden">
+      <div className="bg-ui-card p-8 md:p-12 rounded-3xl shadow-xl border border-ui-border relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-5">
-           <Search className="w-48 h-48" />
+           <Search className="w-48 h-48 text-accent" />
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
           <div>
-            <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-natural-accent mb-3">Scripture Reference</label>
+            <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-accent mb-3">Scripture Reference</label>
             <div className="relative">
-              <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-natural-accent/40" />
+              <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-accent/40" />
               <input
                 type="text"
                 placeholder="e.g., John 3:16, Revelation 1:14-15"
-                className="w-full bg-natural-bg/50 border border-natural-sidebar rounded-xl pl-12 pr-6 py-4 font-serif text-lg focus:outline-none focus:border-natural-accent focus:bg-white transition-all shadow-inner"
+                className="w-full bg-bg-primary/50 border border-ui-border rounded-xl pl-12 pr-6 py-4 font-serif text-lg focus:outline-none focus:border-accent focus:bg-ui-card transition-all shadow-inner text-text-primary"
                 value={scripture}
                 onChange={(e) => setScripture(e.target.value)}
                 required
@@ -79,10 +79,10 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
           </div>
 
           <div>
-            <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-natural-accent mb-3">Your Seeking</label>
+            <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-accent mb-3">Your Seeking</label>
             <textarea
               placeholder="What do you seek to understand about this passage?"
-              className="w-full bg-natural-bg/50 border border-natural-sidebar rounded-xl px-6 py-4 font-serif text-lg focus:outline-none focus:border-natural-accent focus:bg-white transition-all shadow-inner min-h-[150px]"
+              className="w-full bg-bg-primary/50 border border-ui-border rounded-xl px-6 py-4 font-serif text-lg focus:outline-none focus:border-accent focus:bg-ui-card transition-all shadow-inner min-h-[150px] text-text-primary"
               value={queryText}
               onChange={(e) => setQueryText(e.target.value)}
               required
@@ -93,7 +93,7 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
             <motion.div 
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="p-4 bg-red-50 border-l-4 border-red-400 text-red-700 text-sm italic font-serif"
+              className="p-4 bg-red-500/10 border-l-4 border-red-500 text-red-500 text-sm italic font-serif"
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-bold">Interpretation Error:</span>
@@ -105,24 +105,24 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-natural-dark text-white py-5 rounded-2xl font-sans font-bold text-lg hover:bg-natural-earth disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg flex items-center justify-center gap-3 relative overflow-hidden group"
+            className="w-full bg-text-primary text-bg-primary py-5 rounded-2xl font-sans font-bold text-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg flex items-center justify-center gap-3 relative overflow-hidden group"
           >
             {loading ? (
               <>
-                <Loader2 className="w-6 h-6 animate-spin text-natural-secondary" />
+                <Loader2 className="w-6 h-6 animate-spin text-accent" />
                 <span className="italic">Interpretation in Progress...</span>
               </>
             ) : (
               <>
                 <span>Perform Exegesis</span>
-                <Sparkles className="w-5 h-5 text-natural-secondary group-hover:rotate-12 transition-transform" />
+                <Sparkles className="w-5 h-5 text-accent group-hover:rotate-12 transition-transform" />
               </>
             )}
           </button>
         </form>
       </div>
 
-      <p className="mt-8 text-center text-xs text-natural-text/40 font-serif italic max-w-md mx-auto">
+      <p className="mt-8 text-center text-xs text-text-secondary font-serif italic max-w-md mx-auto">
         Exegesis results are generated using AI-powered scholarship and cross-referenced with historic biblical contexts.
       </p>
     </div>
