@@ -37,6 +37,20 @@ service cloud.firestore {
           && data.uid is string && data.uid == userId
           && data.email is string && data.email.size() <= 256;
       }
+
+      // Glossary
+      match /glossary/{entryId} {
+        allow read, write: if isOwner(userId);
+        
+        function isValidGlossary(data) {
+          return data.keys().hasAll(['userId', 'word', 'definition'])
+            && data.userId == userId
+            && data.word is string && data.word.size() <= 200
+            && data.definition is string && data.definition.size() <= 5000;
+        }
+        
+        allow create, update: if isValidGlossary(incoming());
+      }
     }
 
     // --- Direct Shares ---

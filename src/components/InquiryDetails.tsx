@@ -69,8 +69,9 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
     const auth = getAuthService();
     if (!auth.currentUser) return;
 
+    const path = `users/${auth.currentUser.uid}/glossary`;
     try {
-      await addDoc(collection(getDbService(), `users/${auth.currentUser.uid}/glossary`), {
+      await addDoc(collection(getDbService(), path), {
         userId: auth.currentUser.uid,
         word: definitionResult.word,
         definition: definitionResult.definition,
@@ -80,7 +81,7 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
       setSelectionPosition(null);
       setSelectedText('');
     } catch (e) {
-      console.error(e);
+      handleFirestoreError(e, OperationType.WRITE, path);
     }
   };
 

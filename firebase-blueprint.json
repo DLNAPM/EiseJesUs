@@ -120,6 +120,10 @@
       "schema": "User",
       "description": "User profiles"
     },
+    "/users/{userId}/glossary/{entryId}": {
+      "schema": "GlossaryEntry",
+      "description": "Personal theological lexicon"
+    },
     "/inquiries/{inquiryId}": {
       "schema": "Inquiry",
       "description": "Saved scripture interpretations"
