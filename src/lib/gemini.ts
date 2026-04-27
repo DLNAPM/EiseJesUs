@@ -111,7 +111,7 @@ export async function fetchDefinition(word: string, context: string): Promise<st
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: MODELS.TEXT,
       contents: prompt
     });
     return response.text.trim();
