@@ -40,16 +40,20 @@ service cloud.firestore {
 
       // Glossary
       match /glossary/{entryId} {
-        allow read, write: if isOwner(userId);
+        allow get, list: if isOwner(userId);
+        allow delete: if isOwner(userId);
         
         function isValidGlossary(data) {
-          return data.keys().hasAll(['userId', 'word', 'definition'])
+          return data.keys().hasAll(['userId', 'word', 'definition', 'createdAt'])
             && data.userId == userId
             && data.word is string && data.word.size() <= 200
-            && data.definition is string && data.definition.size() <= 5000;
+            && data.definition is string && data.definition.size() <= 5000
+            && (data.createdAt == request.time || data.createdAt is timestamp);
         }
         
-        allow create, update: if isValidGlossary(incoming());
+        allow create: if isOwner(userId) && isVerified() && isValidGlossary(incoming());
+        allow update: if isOwner(userId) && isVerified() && isValidGlossary(incoming())
+          && incoming().word == existing().word; // Word is immutable in this app's context
       }
     }
 
