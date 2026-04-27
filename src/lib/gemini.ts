@@ -22,6 +22,12 @@ export async function generateExegesis(scripture: string, queryText: string) {
     User Question: ${queryText}
     
     Provide a deep analytical analysis including historical context, grammar, and literary genre.
+    For the geography section:
+    - "location": The name of the specific place.
+    - "thenDesc": Description of the place in biblical/historical times.
+    - "nowDesc": Description of the place as it is today.
+    - "thenImageUrl": Provide a short descriptive prompt for generating an image of a historical biblical map of this specific location.
+    - "nowImageUrl": Provide a short descriptive prompt for generating a modern geographical or drone-shot image of this specific location.
   `;
 
   try {
@@ -47,9 +53,11 @@ export async function generateExegesis(scripture: string, queryText: string) {
               properties: {
                 location: { type: Type.STRING },
                 thenDesc: { type: Type.STRING },
-                nowDesc: { type: Type.STRING }
+                nowDesc: { type: Type.STRING },
+                thenImageUrl: { type: Type.STRING },
+                nowImageUrl: { type: Type.STRING }
               },
-              required: ["location", "thenDesc", "nowDesc"]
+              required: ["location", "thenDesc", "nowDesc", "thenImageUrl", "nowImageUrl"]
             },
             videoClipQuery: { type: Type.STRING }
           },
@@ -70,7 +78,21 @@ export async function generateExegesis(scripture: string, queryText: string) {
     const text = response.text;
     if (!text) throw new Error("No response from AI");
     
-    return JSON.parse(text.trim());
+    // Process response to format image URLs if they are just prompts
+    const data = JSON.parse(text.trim());
+    
+    // Ensure URLs are valid image generation URLs
+    if (data.geography) {
+      const formatPrompt = (p: string) => `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=800&height=600&nologo=true`;
+      if (!data.geography.thenImageUrl.startsWith('http')) {
+        data.geography.thenImageUrl = formatPrompt(`historical biblical map of ${data.geography.location}, ancient style, parchment texture, high detail, ${data.geography.thenImageUrl}`);
+      }
+      if (!data.geography.nowImageUrl.startsWith('http')) {
+        data.geography.nowImageUrl = formatPrompt(`modern geographical view or drone shot of ${data.geography.location} Israel, high resolution, realistic, ${data.geography.nowImageUrl}`);
+      }
+    }
+
+    return data;
   } catch (error) {
     console.error("Gemini Error:", error);
     throw error;

@@ -240,7 +240,7 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
                     <div className="space-y-6">
                       <div className="aspect-[4/3] bg-ui-sidebar rounded-[2rem] overflow-hidden relative group shadow-sm border border-ui-border">
                         <img 
-                          src={`https://images.unsplash.com/photo-1548625361-91e84fc11993?auto=format&fit=crop&q=80&w=800`} 
+                          src={inquiry.geography.thenImageUrl || `https://images.unsplash.com/photo-1548625361-91e84fc11993?auto=format&fit=crop&q=80&w=800`} 
                           alt="Historical Region"
                           className="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
                           referrerPolicy="no-referrer"
@@ -257,7 +257,7 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
                     <div className="space-y-6">
                       <div className="aspect-[4/3] bg-ui-sidebar rounded-[2rem] overflow-hidden relative group shadow-sm border border-ui-border">
                         <img 
-                          src={`https://images.unsplash.com/photo-1544971510-91a787a7187e?auto=format&fit=crop&q=80&w=800`} 
+                          src={inquiry.geography.nowImageUrl || `https://images.unsplash.com/photo-1544971510-91a787a7187e?auto=format&fit=crop&q=80&w=800`} 
                           alt="Modern Region"
                           className="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
                           referrerPolicy="no-referrer"
