@@ -168,7 +168,7 @@ export default function App() {
             EiseJesUs
           </h1>
           <p className="text-xl md:text-2xl text-text-secondary font-serif italic mb-12 opacity-80 uppercase tracking-widest text-xs leading-tight">
-            Giving Power to the Christian Faith through understanding the Words of the Gospels
+            The divine synthesis of Eisegesis and the name of Our Savior, Jesus Christ
           </p>
           
           <button 
@@ -187,7 +187,7 @@ export default function App() {
           )}
           
           <div className="mt-12 text-natural-text/60 text-xs font-sans max-w-md mx-auto leading-relaxed uppercase tracking-widest">
-            Leading out the author's original meaning through analytical historical context, grammar, and literary genre.
+            Our purpose is to travel through the text to discover Jesus' true intentions for Us today.
           </div>
         </motion.div>
 
