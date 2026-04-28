@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { getDbService, getAuthService, doc, getDoc, setDoc, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Shield, Globe, Save, Loader2, Check } from 'lucide-react';
+import { Shield, Globe, Save, Loader2, Check, Palette, Sun, Moon, BookOpen } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function ProfileSettings() {
   const [bibleWebsite, setBibleWebsite] = useState('');
+  const [theme, setTheme] = useState('modern');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -18,6 +19,7 @@ export default function ProfileSettings() {
         const userDoc = await getDoc(doc(getDbService(), 'users', auth.currentUser.uid));
         if (userDoc.exists()) {
           setBibleWebsite(userDoc.data().bibleWebsite || '');
+          setTheme(userDoc.data().theme || 'modern');
         }
       } catch (error) {
         handleFirestoreError(error, OperationType.GET, `users/${auth.currentUser.uid}`);
@@ -40,9 +42,13 @@ export default function ProfileSettings() {
         email: auth.currentUser.email,
         displayName: auth.currentUser.displayName,
         photoURL: auth.currentUser.photoURL,
-        bibleWebsite: bibleWebsite
+        bibleWebsite: bibleWebsite,
+        theme: theme
       }, { merge: true });
       
+      // Update theme in real-time
+      document.documentElement.setAttribute('data-theme', theme === 'modern' ? '' : theme);
+
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
@@ -72,7 +78,49 @@ export default function ProfileSettings() {
            <Globe className="w-48 h-48 text-accent" />
         </div>
 
-        <div className="relative z-10 space-y-8">
+        <div className="relative z-10 space-y-12">
+          {/* Theme Support */}
+          <section>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent">
+                <Palette className="w-5 h-5" />
+              </div>
+              <h2 className="text-xl font-serif text-text-primary italic font-bold">Sanctuary Atmosphere</h2>
+            </div>
+            
+            <p className="text-sm text-text-secondary mb-8 leading-relaxed font-serif italic">
+              Choose the visual environment that best supports your focus and spiritual reflection.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[
+                { id: 'modern', name: 'Modern Sanctuary', icon: Sun, desc: 'Clean & Technical' },
+                { id: 'midnight', name: 'Midnight Exegesis', icon: Moon, desc: 'Dark & Serene' },
+                { id: 'parchment', name: 'Traditional Parchment', icon: BookOpen, desc: 'Enhanced Classics' }
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTheme(t.id)}
+                  className={`p-6 rounded-2xl border-2 transition-all text-left flex flex-col gap-3 group ${
+                    theme === t.id 
+                      ? 'border-accent bg-accent/5 shadow-md scale-[1.02]' 
+                      : 'border-ui-border bg-ui-card hover:border-accent/50 hover:bg-bg-primary/50'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                    theme === t.id ? 'bg-accent text-bg-primary' : 'bg-ui-sidebar text-text-secondary group-hover:bg-accent/20 group-hover:text-accent'
+                  }`}>
+                    <t.icon className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-text-primary uppercase tracking-tight">{t.name}</h3>
+                    <p className="text-[10px] text-text-secondary opacity-60 italic">{t.desc}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+
           <section>
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent">

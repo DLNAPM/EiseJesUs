@@ -40,6 +40,18 @@
   --ui-sidebar: #020617;
 }
 
+[data-theme='parchment'] {
+  /* Traditional Parchment (Enhanced Classics) */
+  --bg-primary: #f9f4e8;
+  --text-primary: #1a1a1a;
+  --text-secondary: #5c5c5c;
+  --accent: #b08d57;
+  --accent-soft: #ede0c8;
+  --ui-card: #fcfaf2;
+  --ui-border: #e2dcc3;
+  --ui-sidebar: #f2ebd9;
+}
+
 @layer base {
   body {
     @apply bg-bg-primary text-text-primary font-sans transition-colors duration-300;

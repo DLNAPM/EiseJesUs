@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { HelpCircle, X, BookOpen, Search, Users, Sparkles, AlertTriangle, FileText, GraduationCap, Globe, Clock } from 'lucide-react';
+import { HelpCircle, X, BookOpen, Search, Users, Sparkles, AlertTriangle, FileText, GraduationCap, Globe, Clock, Palette } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -7,6 +7,18 @@ interface HelpModalProps {
 }
 
 const UPDATES = [
+  {
+    version: "v2.3",
+    date: "April 2028",
+    title: "Sanctuary Environments",
+    changes: [
+      { 
+        icon: Palette, 
+        name: "Multi-Theme Support", 
+        desc: "Switch between Modern Sanctuary, Midnight Exegesis, and Traditional Parchment in your Pilgrim Profile for a customized study atmosphere." 
+      }
+    ]
+  },
   {
     version: "v2.2",
     date: "April 2026",

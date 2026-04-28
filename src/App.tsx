@@ -16,7 +16,10 @@ import {
   signOut, 
   onAuthStateChanged, 
   FirebaseUser,
-  testConnection
+  testConnection,
+  getDbService,
+  doc,
+  getDoc
 } from './lib/firebase';
 import { Home, Search, Users, LogOut, ChevronRight, BookOpen, Map, Video, MessageSquare, Share2, HelpCircle, Moon, Sun, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -43,18 +46,22 @@ export default function App() {
   const [selectedInquiryId, setSelectedInquiryId] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
-  const [theme, setTheme] = useState<'modern' | 'midnight'>(() => {
+  const [theme, setTheme] = useState<'modern' | 'midnight' | 'parchment'>(() => {
     const saved = localStorage.getItem('eisejesus-theme');
-    return (saved as 'modern' | 'midnight') || 'modern';
+    return (saved as 'modern' | 'midnight' | 'parchment') || 'modern';
   });
 
   useEffect(() => {
     localStorage.setItem('eisejesus-theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-theme', theme === 'modern' ? '' : theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'modern' ? 'midnight' : 'modern');
+    setTheme(prev => {
+      if (prev === 'modern') return 'midnight';
+      if (prev === 'midnight') return 'parchment';
+      return 'modern';
+    });
   };
 
   useEffect(() => {
@@ -64,7 +71,18 @@ export default function App() {
       setLoading(false);
       return;
     }
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
+      if (u) {
+        // Fetch theme from user profile
+        try {
+          const userDoc = await getDoc(doc(getDbService(), 'users', u.uid));
+          if (userDoc.exists() && userDoc.data().theme) {
+            setTheme(userDoc.data().theme);
+          }
+        } catch (e) {
+          console.error("Error fetching user theme", e);
+        }
+      }
       setUser(u);
       setLoading(false);
     });
