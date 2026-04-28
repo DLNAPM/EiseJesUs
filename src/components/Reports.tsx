@@ -76,7 +76,8 @@ export default function Reports() {
     
     setIsGenerating(true);
     try {
-      const canvas = await html2canvas(reportRef.current, {
+      const container = reportRef.current;
+      const canvas = await html2canvas(container, {
         scale: 2,
         useCORS: true,
         logging: false,
@@ -84,13 +85,35 @@ export default function Reports() {
       });
       
       const imgData = canvas.toDataURL('image/png');
+      const pdfWidth = canvas.width / 2;
+      const pdfHeight = canvas.height / 2;
+      
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'px',
-        format: [canvas.width / 2, canvas.height / 2]
+        format: [pdfWidth, pdfHeight]
       });
       
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+      // Manually add links for all <a> tags
+      const links = container.querySelectorAll('a');
+      const containerRect = container.getBoundingClientRect();
+
+      links.forEach((link) => {
+        const linkRect = link.getBoundingClientRect();
+        const url = link.getAttribute('href');
+        if (url) {
+          // Calculate coordinates relative to the container
+          const x = linkRect.left - containerRect.left;
+          const y = linkRect.top - containerRect.top;
+          const w = linkRect.width;
+          const h = linkRect.height;
+          
+          pdf.link(x, y, w, h, { url });
+        }
+      });
+      
       pdf.save(`EiseJesUs-Report-${selectedInquiry.scripture.replace(/\s+/g, '-')}.pdf`);
     } catch (error) {
       console.error("PDF Generation failed:", error);
