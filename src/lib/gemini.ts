@@ -120,3 +120,41 @@ export async function fetchDefinition(word: string, context: string): Promise<st
     throw error;
   }
 }
+
+export async function searchScriptureBySubject(subject: string): Promise<{reference: string, reason: string}[]> {
+  const prompt = `
+    Find relevant biblical scripture references for the following subject: "${subject}".
+    Return a JSON array of objects, each containing:
+    - "reference": The canonical reference (e.g., "Psalm 23:1").
+    - "reason": A very brief explanation of why this verse is relevant to the subject.
+    Provide at most 5 highly relevant suggestions.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODELS.TEXT,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              reference: { type: Type.STRING },
+              reason: { type: Type.STRING }
+            },
+            required: ["reference", "reason"]
+          }
+        }
+      }
+    });
+
+    const text = response.text;
+    if (!text) return [];
+    return JSON.parse(text.trim());
+  } catch (error) {
+    console.error("Search Scripture Error:", error);
+    return [];
+  }
+}

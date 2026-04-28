@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { getDbService, getAuthService, collection, addDoc, handleFirestoreError, OperationType, serverTimestamp } from '../lib/firebase';
-import { generateExegesis } from '../lib/gemini';
-import { Search, Loader2, Sparkles, BookOpen } from 'lucide-react';
-import { motion } from 'motion/react';
+import { generateExegesis, searchScriptureBySubject } from '../lib/gemini';
+import { Search, Loader2, Sparkles, BookOpen, Fingerprint } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface InquiryToolProps {
   onComplete: (id: string) => void;
@@ -13,6 +13,30 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
   const [queryText, setQueryText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSubjectSearch, setShowSubjectSearch] = useState(false);
+  const [subject, setSubject] = useState('');
+  const [searchingSubject, setSearchingSubject] = useState(false);
+  const [suggestions, setSuggestions] = useState<{reference: string, reason: string}[]>([]);
+
+  const handleSubjectSearch = async () => {
+    if (!subject.trim()) return;
+    setSearchingSubject(true);
+    setSuggestions([]);
+    try {
+      const results = await searchScriptureBySubject(subject);
+      setSuggestions(results);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSearchingSubject(false);
+    }
+  };
+
+  const selectSuggestion = (ref: string) => {
+    setScripture(ref);
+    setShowSubjectSearch(false);
+    setSuggestions([]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +88,71 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
         
         <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
           <div>
-            <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-accent mb-3">Scripture Reference</label>
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-accent">Scripture Reference</label>
+              <button
+                type="button"
+                onClick={() => setShowSubjectSearch(!showSubjectSearch)}
+                className="text-[10px] font-sans font-black uppercase tracking-widest text-text-secondary hover:text-accent flex items-center gap-2 transition-colors border-b border-transparent hover:border-accent"
+              >
+                <Fingerprint className="w-3 h-3" />
+                {showSubjectSearch ? "Hide Subject Search" : "Don't know the scripture?"}
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {showSubjectSearch && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="mb-6 overflow-hidden"
+                >
+                  <div className="bg-ui-sidebar/30 p-6 rounded-2xl border border-ui-border space-y-4">
+                    <p className="text-xs text-text-secondary italic font-serif">Enter a subject or theme, and the AI registry will find relevant canonical references for you.</p>
+                    <div className="flex gap-2">
+                       <input
+                         type="text"
+                         placeholder="e.g., Anxiety, Redemption, Stewardship..."
+                         className="flex-1 bg-bg-primary/50 border border-ui-border rounded-xl px-4 py-3 font-serif text-base focus:outline-none focus:border-accent transition-all text-text-primary"
+                         value={subject}
+                         onChange={(e) => setSubject(e.target.value)}
+                         onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleSubjectSearch())}
+                       />
+                       <button
+                         type="button"
+                         onClick={handleSubjectSearch}
+                         disabled={searchingSubject}
+                         className="bg-accent text-bg-primary px-6 rounded-xl font-sans font-bold text-xs uppercase tracking-widest hover:opacity-90 disabled:opacity-50 transition-all flex items-center justify-center min-w-[120px]"
+                       >
+                         {searchingSubject ? <Loader2 className="w-4 h-4 animate-spin text-bg-primary" /> : "Search"}
+                       </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {suggestions.map((s, idx) => (
+                        <motion.button
+                          key={idx}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.1 }}
+                          type="button"
+                          onClick={() => selectSuggestion(s.reference)}
+                          className="w-full text-left p-3 rounded-lg border border-ui-border hover:border-accent bg-ui-card group transition-all"
+                        >
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-sm font-bold text-accent italic">{s.reference}</span>
+                            <BookOpen className="w-3 h-3 text-ui-border group-hover:text-accent transition-colors" />
+                          </div>
+                          <p className="text-[10px] text-text-secondary leading-relaxed line-clamp-1 italic">{s.reason}</p>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="relative">
               <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-accent/40" />
               <input
