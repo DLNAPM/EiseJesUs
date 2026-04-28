@@ -8,6 +8,18 @@ interface HelpModalProps {
 
 const UPDATES = [
   {
+    version: "v2.6",
+    date: "April 2031",
+    title: "The Scholar's Stability",
+    changes: [
+      { 
+        icon: Sparkles, 
+        name: "Enhanced PDF Compatibility", 
+        desc: "Upgraded the Exegesis Export engine with a legacy color parser, ensuring reports generate correctly across all pilgrimage devices." 
+      }
+    ]
+  },
+  {
     version: "v2.5",
     date: "April 2030",
     title: "Pilgrim Tools & Stability",

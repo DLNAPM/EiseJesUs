@@ -227,17 +227,20 @@ export default function Reports() {
                   </div>
 
                   {/* Header */}
-                  <header className="border-b-2 border-accent/20 pb-12 mb-12 flex justify-between items-start">
+                  <header 
+                    className="pb-12 mb-12 flex justify-between items-start"
+                    style={{ borderBottom: '2px solid rgba(59, 130, 246, 0.2)' }}
+                  >
                     <div>
-                      <div className="flex items-center gap-2 text-accent mb-4">
-                        <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-bold italic">EJ</div>
+                      <div className="flex items-center gap-2 mb-4" style={{ color: '#3b82f6' }}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold italic" style={{ backgroundColor: '#3b82f6' }}>EJ</div>
                         <span className="font-sans font-black uppercase tracking-[0.3em] text-xs">EiseJesUs Registry</span>
                       </div>
                       <h1 className="text-4xl font-black italic tracking-tight mb-2">Technical Exegesis Report</h1>
                       <p className="text-sm font-sans font-medium text-[#64748b] uppercase tracking-[0.2em]">Formal Scriptural Analysis & Academic Registry</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-[10px] font-sans font-bold text-accent uppercase tracking-widest mb-1">Date Created</div>
+                      <div className="text-[10px] font-sans font-bold uppercase tracking-widest mb-1" style={{ color: '#3b82f6' }}>Date Created</div>
                       <div className="text-sm font-sans font-bold text-[#0f172a]">
                         {new Date(selectedInquiry.createdAt?.toDate()).toLocaleDateString('en-US', { 
                           year: 'numeric', 
@@ -250,27 +253,28 @@ export default function Reports() {
 
                   <div className="grid grid-cols-3 gap-12 mb-12">
                     <div className="col-span-2">
-                      <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Subject Identification</h2>
+                      <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Subject Identification</h2>
                       <div className="bg-[#f8fafc] p-6 rounded-2xl border border-[#f1f5f9] shadow-inner">
-                        <div className="text-[10px] text-accent/60 uppercase font-bold tracking-widest mb-2">Canonical Reference</div>
+                        <div className="text-[10px] uppercase font-bold tracking-widest mb-2" style={{ color: 'rgba(59, 130, 246, 0.6)' }}>Canonical Reference</div>
                         {getBibleLink(selectedInquiry.scripture) ? (
                           <a 
                             href={getBibleLink(selectedInquiry.scripture)!} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="text-2xl font-black italic mb-4 block text-accent hover:underline"
+                            className="text-2xl font-black italic mb-4 block hover:underline"
+                            style={{ color: '#3b82f6' }}
                           >
                             {selectedInquiry.scripture}
                           </a>
                         ) : (
                           <div className="text-2xl font-black italic mb-4">{selectedInquiry.scripture}</div>
                         )}
-                        <div className="text-[10px] text-accent/60 uppercase font-bold tracking-widest mb-2">Primary Inquiry</div>
+                        <div className="text-[10px] uppercase font-bold tracking-widest mb-2" style={{ color: 'rgba(59, 130, 246, 0.6)' }}>Primary Inquiry</div>
                         <div className="text-xl italic leading-relaxed text-[#1e293b]">"{selectedInquiry.query}"</div>
                       </div>
                     </div>
                     <div className="col-span-1">
-                      <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Classifications</h2>
+                      <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Classifications</h2>
                       <div className="space-y-4">
                         <div>
                           <div className="text-[9px] text-[#94a3b8] uppercase font-bold mb-1">Literary Genre</div>
@@ -285,33 +289,33 @@ export default function Reports() {
                   </div>
 
                   <section className="mb-12">
-                    <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6 flex items-center gap-3">
-                      <span className="w-8 h-[2px] bg-accent/20"></span>
+                    <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-6 flex items-center gap-3" style={{ color: '#3b82f6' }}>
+                      <span className="w-8 h-[2px]" style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)' }}></span>
                       Theological Intent
                     </h2>
                     <div className="p-10 bg-[#0f172a] text-white rounded-3xl italic text-2xl leading-relaxed shadow-lg relative">
-                      <div className="absolute top-4 left-4 text-accent opacity-20 text-6xl font-serif">“</div>
+                      <div className="absolute top-4 left-4 opacity-20 text-6xl font-serif" style={{ color: '#3b82f6' }}>“</div>
                       {selectedInquiry.godIntent}
                     </div>
                   </section>
 
                   <div className="space-y-12 mb-12">
                     <section>
-                      <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Analytical Interpretation</h2>
-                      <div className="prose prose-slate max-w-none text-[#334155] leading-relaxed font-serif text-lg">
+                      <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Analytical Interpretation</h2>
+                      <div className="max-w-none text-[#334155] leading-loose font-serif text-lg space-y-6">
                         <Markdown>{selectedInquiry.interpretation}</Markdown>
                       </div>
                     </section>
 
                     <div className="grid grid-cols-2 gap-12">
                       <section>
-                        <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Historical Context</h2>
+                        <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Historical Context</h2>
                         <div className="text-[#475569] leading-relaxed italic border-l-4 border-[#f1f5f9] pl-6 text-base">
                           <Markdown>{selectedInquiry.historicalContext}</Markdown>
                         </div>
                       </section>
                       <section>
-                        <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Grammatical Analysis</h2>
+                        <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Grammatical Analysis</h2>
                         <div className="text-[#475569] leading-relaxed text-base bg-[#f8fafc] p-6 rounded-2xl border border-[#f1f5f9]">
                           <Markdown>{selectedInquiry.grammarAnalysis}</Markdown>
                         </div>
@@ -320,7 +324,7 @@ export default function Reports() {
                   </div>
 
                   <section className="mb-12">
-                    <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Cross-Referenced Canons</h2>
+                    <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Cross-Referenced Canons</h2>
                     <div className="flex flex-wrap gap-3">
                       {selectedInquiry.crossReferences.map((ref, i) => {
                         const link = getBibleLink(ref);
@@ -330,12 +334,13 @@ export default function Reports() {
                             href={link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-4 py-2 bg-[#f1f5f9] rounded-full text-xs font-bold text-accent border border-[#e2e8f0] hover:bg-[#e2e8f0] transition-colors"
+                            className="px-4 py-2 bg-[#f1f5f9] rounded-full text-xs font-bold border border-[#e2e8f0] hover:bg-[#e2e8f0] transition-colors"
+                            style={{ color: '#3b82f6' }}
                           >
                             {ref}
                           </a>
                         ) : (
-                          <span key={i} className="px-4 py-2 bg-[#f1f5f9] rounded-full text-xs font-bold text-accent border border-[#e2e8f0]">
+                          <span key={i} className="px-4 py-2 bg-[#f1f5f9] rounded-full text-xs font-bold border border-[#e2e8f0]" style={{ color: '#3b82f6' }}>
                             {ref}
                           </span>
                         );
@@ -346,7 +351,7 @@ export default function Reports() {
                   {/* Geography Section in Report */}
                   <div className="bg-[#f8fafc] rounded-3xl p-8 border border-[#e2e8f0] grid grid-cols-4 gap-8">
                     <div className="col-span-1">
-                      <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-2">Location</h2>
+                      <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-2" style={{ color: '#3b82f6' }}>Location</h2>
                       <p className="text-lg font-black italic">{selectedInquiry.geography.location}</p>
                     </div>
                     <div className="col-span-3 grid grid-cols-2 gap-6">
