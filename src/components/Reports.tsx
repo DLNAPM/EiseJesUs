@@ -218,7 +218,7 @@ export default function Reports() {
                 {/* The element we capture for PDF */}
                 <div 
                   ref={reportRef}
-                  className="bg-white p-12 md:p-16 rounded-[2.5rem] shadow-2xl border border-ui-border text-slate-900 font-serif overflow-hidden relative"
+                  className="bg-white p-12 md:p-16 rounded-[2.5rem] shadow-2xl border border-ui-border text-[#0f172a] font-serif overflow-hidden relative"
                   style={{ minHeight: '1000px' }}
                 >
                   {/* Watermark/Logo */}
@@ -234,11 +234,11 @@ export default function Reports() {
                         <span className="font-sans font-black uppercase tracking-[0.3em] text-xs">EiseJesUs Registry</span>
                       </div>
                       <h1 className="text-4xl font-black italic tracking-tight mb-2">Technical Exegesis Report</h1>
-                      <p className="text-sm font-sans font-medium text-slate-500 uppercase tracking-[0.2em]">Formal Scriptural Analysis & Academic Registry</p>
+                      <p className="text-sm font-sans font-medium text-[#64748b] uppercase tracking-[0.2em]">Formal Scriptural Analysis & Academic Registry</p>
                     </div>
                     <div className="text-right">
                       <div className="text-[10px] font-sans font-bold text-accent uppercase tracking-widest mb-1">Date Created</div>
-                      <div className="text-sm font-sans font-bold text-slate-900">
+                      <div className="text-sm font-sans font-bold text-[#0f172a]">
                         {new Date(selectedInquiry.createdAt?.toDate()).toLocaleDateString('en-US', { 
                           year: 'numeric', 
                           month: 'long', 
@@ -251,7 +251,7 @@ export default function Reports() {
                   <div className="grid grid-cols-3 gap-12 mb-12">
                     <div className="col-span-2">
                       <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Subject Identification</h2>
-                      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner">
+                      <div className="bg-[#f8fafc] p-6 rounded-2xl border border-[#f1f5f9] shadow-inner">
                         <div className="text-[10px] text-accent/60 uppercase font-bold tracking-widest mb-2">Canonical Reference</div>
                         {getBibleLink(selectedInquiry.scripture) ? (
                           <a 
@@ -266,19 +266,19 @@ export default function Reports() {
                           <div className="text-2xl font-black italic mb-4">{selectedInquiry.scripture}</div>
                         )}
                         <div className="text-[10px] text-accent/60 uppercase font-bold tracking-widest mb-2">Primary Inquiry</div>
-                        <div className="text-xl italic leading-relaxed text-slate-800">"{selectedInquiry.query}"</div>
+                        <div className="text-xl italic leading-relaxed text-[#1e293b]">"{selectedInquiry.query}"</div>
                       </div>
                     </div>
                     <div className="col-span-1">
                       <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Classifications</h2>
                       <div className="space-y-4">
                         <div>
-                          <div className="text-[9px] text-slate-400 uppercase font-bold mb-1">Literary Genre</div>
-                          <div className="text-sm font-bold bg-slate-100 px-3 py-2 rounded-lg text-slate-700 italic">{selectedInquiry.literaryGenre}</div>
+                          <div className="text-[9px] text-[#94a3b8] uppercase font-bold mb-1">Literary Genre</div>
+                          <div className="text-sm font-bold bg-[#f1f5f9] px-3 py-2 rounded-lg text-[#334155] italic">{selectedInquiry.literaryGenre}</div>
                         </div>
                         <div>
-                          <div className="text-[9px] text-slate-400 uppercase font-bold mb-1">Expository Tone</div>
-                          <div className="text-sm font-bold bg-slate-100 px-3 py-2 rounded-lg text-slate-700 italic">Academic & Devotional</div>
+                          <div className="text-[9px] text-[#94a3b8] uppercase font-bold mb-1">Expository Tone</div>
+                          <div className="text-sm font-bold bg-[#f1f5f9] px-3 py-2 rounded-lg text-[#334155] italic">Academic & Devotional</div>
                         </div>
                       </div>
                     </div>
@@ -289,7 +289,7 @@ export default function Reports() {
                       <span className="w-8 h-[2px] bg-accent/20"></span>
                       Theological Intent
                     </h2>
-                    <div className="p-10 bg-slate-900 text-white rounded-3xl italic text-2xl leading-relaxed shadow-lg relative">
+                    <div className="p-10 bg-[#0f172a] text-white rounded-3xl italic text-2xl leading-relaxed shadow-lg relative">
                       <div className="absolute top-4 left-4 text-accent opacity-20 text-6xl font-serif">“</div>
                       {selectedInquiry.godIntent}
                     </div>
@@ -298,7 +298,7 @@ export default function Reports() {
                   <div className="space-y-12 mb-12">
                     <section>
                       <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Analytical Interpretation</h2>
-                      <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed font-serif text-lg">
+                      <div className="prose prose-slate max-w-none text-[#334155] leading-relaxed font-serif text-lg">
                         <Markdown>{selectedInquiry.interpretation}</Markdown>
                       </div>
                     </section>
@@ -306,13 +306,13 @@ export default function Reports() {
                     <div className="grid grid-cols-2 gap-12">
                       <section>
                         <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Historical Context</h2>
-                        <div className="text-slate-600 leading-relaxed italic border-l-4 border-slate-100 pl-6 text-base">
+                        <div className="text-[#475569] leading-relaxed italic border-l-4 border-[#f1f5f9] pl-6 text-base">
                           <Markdown>{selectedInquiry.historicalContext}</Markdown>
                         </div>
                       </section>
                       <section>
                         <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Grammatical Analysis</h2>
-                        <div className="text-slate-600 leading-relaxed text-base bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                        <div className="text-[#475569] leading-relaxed text-base bg-[#f8fafc] p-6 rounded-2xl border border-[#f1f5f9]">
                           <Markdown>{selectedInquiry.grammarAnalysis}</Markdown>
                         </div>
                       </section>
@@ -330,12 +330,12 @@ export default function Reports() {
                             href={link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-4 py-2 bg-slate-100 rounded-full text-xs font-bold text-accent border border-slate-200 hover:bg-slate-200 transition-colors"
+                            className="px-4 py-2 bg-[#f1f5f9] rounded-full text-xs font-bold text-accent border border-[#e2e8f0] hover:bg-[#e2e8f0] transition-colors"
                           >
                             {ref}
                           </a>
                         ) : (
-                          <span key={i} className="px-4 py-2 bg-slate-100 rounded-full text-xs font-bold text-accent border border-slate-200">
+                          <span key={i} className="px-4 py-2 bg-[#f1f5f9] rounded-full text-xs font-bold text-accent border border-[#e2e8f0]">
                             {ref}
                           </span>
                         );
@@ -344,30 +344,30 @@ export default function Reports() {
                   </section>
 
                   {/* Geography Section in Report */}
-                  <div className="bg-slate-50 rounded-3xl p-8 border border-slate-200 grid grid-cols-4 gap-8">
+                  <div className="bg-[#f8fafc] rounded-3xl p-8 border border-[#e2e8f0] grid grid-cols-4 gap-8">
                     <div className="col-span-1">
                       <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-2">Location</h2>
                       <p className="text-lg font-black italic">{selectedInquiry.geography.location}</p>
                     </div>
                     <div className="col-span-3 grid grid-cols-2 gap-6">
                        <div>
-                         <p className="text-[9px] text-slate-400 uppercase font-bold mb-1">Historical Status</p>
-                         <p className="text-xs text-slate-600 leading-relaxed italic">{selectedInquiry.geography.thenDesc}</p>
+                         <p className="text-[9px] text-[#94a3b8] uppercase font-bold mb-1">Historical Status</p>
+                         <p className="text-xs text-[#475569] leading-relaxed italic">{selectedInquiry.geography.thenDesc}</p>
                        </div>
                        <div>
-                         <p className="text-[9px] text-slate-400 uppercase font-bold mb-1">Modern Status</p>
-                         <p className="text-xs text-slate-600 leading-relaxed italic">{selectedInquiry.geography.nowDesc}</p>
+                         <p className="text-[9px] text-[#94a3b8] uppercase font-bold mb-1">Modern Status</p>
+                         <p className="text-xs text-[#475569] leading-relaxed italic">{selectedInquiry.geography.nowDesc}</p>
                        </div>
                     </div>
                   </div>
 
                   {/* Footer Seal */}
-                  <footer className="mt-20 pt-10 border-t border-slate-100 flex justify-between items-end">
-                    <div className="text-[9px] text-slate-300 font-sans uppercase tracking-[0.5em] font-bold">
+                  <footer className="mt-20 pt-10 border-t border-[#f1f5f9] flex justify-between items-end">
+                    <div className="text-[9px] text-[#cbd5e1] font-sans uppercase tracking-[0.5em] font-bold">
                        Official Registry of EiseJesUs • Sanctuary Study Archives
                     </div>
                     <div className="opacity-10 grayscale brightness-0">
-                       <span className="text-4xl font-serif italic text-slate-900">Truth.</span>
+                       <span className="text-4xl font-serif italic text-[#0f172a]">Truth.</span>
                     </div>
                   </footer>
                 </div>

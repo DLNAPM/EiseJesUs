@@ -8,6 +8,23 @@ interface HelpModalProps {
 
 const UPDATES = [
   {
+    version: "v2.5",
+    date: "April 2030",
+    title: "Pilgrim Tools & Stability",
+    changes: [
+      { 
+        icon: Sparkles, 
+        name: "Legacy PDF Compatibility", 
+        desc: "Enhanced the Registry export engine to support all modern browser environments, ensuring consistent report generation." 
+      },
+      { 
+        icon: Palette, 
+        name: "Atmospheric Persistence", 
+        desc: "Themes now persist across your devices, automatically loading your preferred sanctuary environment upon entry." 
+      }
+    ]
+  },
+  {
     version: "v2.4",
     date: "April 2029",
     title: "Library Management & Registry",
