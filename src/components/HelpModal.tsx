@@ -133,7 +133,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">The Name</h3>
                 <div className="p-8 bg-text-primary text-bg-primary rounded-3xl shadow-xl border border-ui-border/10 italic font-serif text-xl leading-relaxed">
                   <span className="text-accent font-bold">EiseJesUs</span> is the divine synthesis of <span className="underline decoration-accent/40 underline-offset-4">Eisegesis</span> (leading out meaning) and the name of <span className="text-accent">Our Savior, Jesus Christ</span>.
-                  <p className="mt-4 text-base opacity-80 not-italic font-sans tracking-wide">Our purpose is to travel through the text to discover Jesus' true intentions for Us today.</p>
+                  <p className="mt-4 text-base opacity-80 not-italic font-sans tracking-wide">Our purpose is to travel through the text to discover Jesus' true intentions for <span className="text-accent italic">Us</span> today.</p>
                 </div>
               </section>
 
