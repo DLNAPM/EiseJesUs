@@ -133,25 +133,40 @@ export default function Reports() {
             ) : (
               <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-ui-border">
                 {inquiries.map((inq) => (
-                  <button
-                    key={inq.id}
-                    onClick={() => setSelectedInquiry(inq)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all flex items-center justify-between group ${
-                      selectedInquiry?.id === inq.id 
-                        ? 'bg-accent border-accent text-bg-primary shadow-md' 
-                        : 'bg-ui-sidebar/30 border-ui-border text-text-primary hover:bg-ui-sidebar'
-                    }`}
-                  >
-                    <div className="overflow-hidden">
-                      <p className={`text-[9px] uppercase tracking-widest font-bold mb-0.5 ${selectedInquiry?.id === inq.id ? 'text-bg-primary/70' : 'text-accent'}`}>
-                        {inq.scripture}
-                      </p>
-                      <p className={`font-serif text-sm truncate italic ${selectedInquiry?.id === inq.id ? 'text-bg-primary' : 'text-text-primary'}`}>
-                        {inq.query}
-                      </p>
-                    </div>
-                    <ChevronRight className={`w-4 h-4 transition-transform ${selectedInquiry?.id === inq.id ? 'translate-x-1' : 'opacity-20 group-hover:opacity-100 group-hover:translate-x-1'}`} />
-                  </button>
+                  <div key={inq.id} className="relative group/row">
+                    <button
+                      onClick={() => setSelectedInquiry(inq)}
+                      className={`w-full text-left p-4 rounded-xl border transition-all flex items-center justify-between group ${
+                        selectedInquiry?.id === inq.id 
+                          ? 'bg-accent border-accent text-bg-primary shadow-md' 
+                          : 'bg-ui-sidebar/30 border-ui-border text-text-primary hover:bg-ui-sidebar'
+                      }`}
+                    >
+                      <div className="overflow-hidden pr-8">
+                        <p className={`text-[9px] uppercase tracking-widest font-bold mb-0.5 ${selectedInquiry?.id === inq.id ? 'text-bg-primary/70' : 'text-accent'}`}>
+                          {inq.scripture}
+                        </p>
+                        <p className={`font-serif text-sm truncate italic ${selectedInquiry?.id === inq.id ? 'text-bg-primary' : 'text-text-primary'}`}>
+                          {inq.query}
+                        </p>
+                      </div>
+                      <ChevronRight className={`w-4 h-4 transition-transform ${selectedInquiry?.id === inq.id ? 'translate-x-1' : 'opacity-20 group-hover:opacity-100 group-hover:translate-x-1'}`} />
+                    </button>
+                    
+                    {selectedInquiry?.id !== inq.id && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedInquiry(inq);
+                          setTimeout(generatePDF, 100);
+                        }}
+                        className="absolute right-10 top-1/2 -translate-y-1/2 p-2 text-accent opacity-0 group-hover/row:opacity-100 transition-opacity"
+                        title="Quick Download"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             )}

@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { HelpCircle, X, BookOpen, Search, Users, Sparkles, AlertTriangle, FileText, GraduationCap, Globe, Clock, Palette } from 'lucide-react';
+import { HelpCircle, X, BookOpen, Search, Users, Sparkles, AlertTriangle, FileText, GraduationCap, Globe, Clock, Palette, Trash2, Download } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
@@ -7,6 +7,23 @@ interface HelpModalProps {
 }
 
 const UPDATES = [
+  {
+    version: "v2.4",
+    date: "April 2029",
+    title: "Library Management & Registry",
+    changes: [
+      { 
+        icon: Trash2, 
+        name: "Seeking Removal", 
+        desc: "You can now delete any previous seeking from your Exegesis Library to keep your archives focused." 
+      },
+      { 
+        icon: Download, 
+        name: "PDF Exegesis Export", 
+        desc: "Download high-quality Adobe Acrobat PDF reports of your findings directly from the Scholar's Registry." 
+      }
+    ]
+  },
   {
     version: "v2.3",
     date: "April 2028",
