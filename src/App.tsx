@@ -167,7 +167,7 @@ export default function App() {
           <h1 className="text-6xl md:text-8xl text-text-primary font-serif mb-2 tracking-tight">
             EiseJesUs
           </h1>
-          <p className="text-xl md:text-2xl text-text-secondary font-serif italic mb-12 opacity-80 uppercase tracking-widest text-[10px] leading-tight">
+          <p className="text-xl md:text-2xl text-text-secondary font-serif italic mb-12 opacity-80 uppercase tracking-widest text-xs leading-tight">
             Giving Power to the Christian Faith through understanding the Words of the Gospels
           </p>
           
@@ -193,7 +193,7 @@ export default function App() {
 
         {/* Privacy Policy Footer */}
         <div className="absolute bottom-8 left-0 right-0 text-center z-10 px-6">
-          <p className="text-[10px] font-sans font-bold text-natural-text/40 uppercase tracking-[0.2em] mb-2 leading-relaxed">
+          <p className="text-xs font-sans font-bold text-natural-text/40 uppercase tracking-[0.2em] mb-2 leading-relaxed">
             By using "EiseJesUs", you agree to the terms outlined in this <button onClick={() => setShowPrivacy(true)} className="text-natural-accent hover:underline underline-offset-4 decoration-natural-accent/30">Privacy Policy</button>.
           </p>
         </div>
@@ -229,7 +229,7 @@ export default function App() {
             <div className="absolute bottom-0 w-full h-1/2 bg-white/10 blur-sm"></div>
           </div>
           <h2 className="text-2xl font-serif text-text-primary tracking-tight italic font-bold">EiseJesUs</h2>
-          <p className="text-[10px] text-text-secondary uppercase tracking-widest leading-tight">Faith through Understanding</p>
+          <p className="text-xs text-text-secondary uppercase tracking-widest leading-tight">Faith through Understanding</p>
         </div>
         
         <div className="flex-1 space-y-1">
@@ -267,7 +267,7 @@ export default function App() {
             </div>
             <div className="overflow-hidden">
               <p className="text-xs font-bold truncate text-text-primary">{user.displayName}</p>
-              <p className="text-[10px] text-text-secondary truncate uppercase tracking-tighter">{user.email}</p>
+              <p className="text-xs text-text-secondary truncate uppercase tracking-tighter">{user.email}</p>
             </div>
           </div>
           <button 

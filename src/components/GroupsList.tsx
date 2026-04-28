@@ -138,7 +138,7 @@ export default function GroupsList({ onSelectInquiry }: GroupsListProps) {
                 </div>
                 <div>
                   <h3 className="text-2xl font-serif text-text-primary italic font-bold">{group.name}</h3>
-                  <div className="flex items-center gap-3 text-[10px] text-accent uppercase tracking-widest font-bold">
+                  <div className="flex items-center gap-3 text-xs text-accent uppercase tracking-widest font-bold">
                     <span>Active Member</span>
                   </div>
                 </div>
@@ -147,7 +147,7 @@ export default function GroupsList({ onSelectInquiry }: GroupsListProps) {
                 {group.description || "A gathering of believers seeking the truth."}
               </p>
               <div className="pt-6 border-t border-ui-border flex items-center justify-between">
-                <span className="text-[10px] text-text-secondary uppercase tracking-[0.3em] font-sans font-bold">Small Group Fellowship</span>
+                <span className="text-xs text-text-secondary uppercase tracking-[0.3em] font-sans font-bold">Small Group Fellowship</span>
                 <button 
                   onClick={() => setSelectedGroupId(group.id!)}
                   className="text-text-primary font-sans font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:text-accent transition-all"
@@ -182,7 +182,7 @@ export default function GroupsList({ onSelectInquiry }: GroupsListProps) {
               
               <div className="space-y-6">
                 <div>
-                  <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-accent mb-3">Community Name</label>
+                  <label className="block text-xs font-sans font-bold uppercase tracking-[0.2em] text-accent mb-3">Community Name</label>
                   <input
                     type="text"
                     value={newGroupName}
@@ -192,7 +192,7 @@ export default function GroupsList({ onSelectInquiry }: GroupsListProps) {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-accent mb-3">Vision & Purpose</label>
+                  <label className="block text-xs font-sans font-bold uppercase tracking-[0.2em] text-accent mb-3">Vision & Purpose</label>
                   <textarea
                     value={newGroupDesc}
                     onChange={(e) => setNewGroupDesc(e.target.value)}
@@ -201,7 +201,7 @@ export default function GroupsList({ onSelectInquiry }: GroupsListProps) {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-accent mb-3">Invite Members (Emails)</label>
+                  <label className="block text-xs font-sans font-bold uppercase tracking-[0.2em] text-accent mb-3">Invite Members (Emails)</label>
                   <input
                     type="text"
                     value={newGroupEmails}

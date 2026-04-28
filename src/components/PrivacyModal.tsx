@@ -32,7 +32,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
                 </div>
                 <div>
                   <h2 className="text-2xl font-serif text-text-primary italic font-bold">Privacy Covenant</h2>
-                  <p className="text-[9px] font-sans font-bold text-accent uppercase tracking-[0.2em] mt-0.5">Trust in your journey</p>
+                  <p className="text-xs font-sans font-bold text-accent uppercase tracking-[0.2em] mt-0.5">Trust in your journey</p>
                 </div>
               </div>
               <button 
@@ -46,14 +46,14 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-thin scrollbar-thumb-ui-border text-sm text-text-secondary font-serif leading-relaxed italic">
               <section>
-                <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-widest mb-3 not-italic">Our Commitment</h3>
+                <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-widest mb-3 not-italic">Our Commitment</h3>
                 <p>
                   Your spiritual seeking is deeply personal. We are committed to protecting your privacy and the sanctity of your study experiences within EiseJesUs.
                 </p>
               </section>
 
               <section>
-                <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-widest mb-3 not-italic">Information Gathering</h3>
+                <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-widest mb-3 not-italic">Information Gathering</h3>
                 <p>
                   We only gather data necessary to facilitate your journey: your name and email through Google Authentication, and the inquiries you choose to save and share.
                 </p>

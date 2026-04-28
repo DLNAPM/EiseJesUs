@@ -97,7 +97,7 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
            <p className="text-lg font-serif italic leading-relaxed relative z-10 opacity-90">
              "Study to shew thyself approved unto God, a workman that needeth not to be ashamed, rightly dividing the word of truth."
            </p>
-           <p className="text-[9px] text-accent/60 uppercase tracking-[0.3em] font-sans font-bold relative z-10">2 Timothy 2:15</p>
+           <p className="text-xs text-accent/60 uppercase tracking-[0.3em] font-sans font-bold relative z-10">2 Timothy 2:15</p>
         </div>
       </div>
 
@@ -133,7 +133,7 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
                   className="w-full bg-ui-card p-6 rounded-2xl shadow-sm border border-ui-border flex items-center justify-between group-hover:shadow-md transition-all text-left pr-16"
                 >
                   <div className="overflow-hidden">
-                    <span className="text-[10px] font-sans font-bold text-accent uppercase tracking-widest mb-1 block">{inquiry.scripture}</span>
+                    <span className="text-xs font-sans font-bold text-accent uppercase tracking-widest mb-1 block">{inquiry.scripture}</span>
                     <h3 className="font-serif text-lg text-text-primary line-clamp-1 italic">{inquiry.query}</h3>
                   </div>
                   <ChevronRight className="w-5 h-5 text-ui-border group-hover:text-accent transition-colors absolute right-6 top-1/2 -translate-y-1/2" />
@@ -174,7 +174,7 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
                 className="w-full bg-ui-card/30 p-6 rounded-2xl border border-ui-border flex items-center justify-between group hover:bg-ui-card transition-all text-left shadow-sm"
               >
                 <div>
-                  <span className="text-[10px] font-sans font-bold text-accent uppercase tracking-widest mb-1 block">{inquiry.scripture}</span>
+                  <span className="text-xs font-sans font-bold text-accent uppercase tracking-widest mb-1 block">{inquiry.scripture}</span>
                   <h3 className="font-serif text-lg text-text-primary line-clamp-1 italic">{inquiry.query}</h3>
                 </div>
                 <ChevronRight className="w-5 h-5 text-ui-border group-hover:text-accent transition-colors" />

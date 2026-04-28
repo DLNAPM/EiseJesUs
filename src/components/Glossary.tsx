@@ -96,7 +96,7 @@ export default function Glossary() {
               key={letter}
               onClick={() => scrollToLetter(letter)}
               disabled={!hasEntries}
-              className={`w-8 h-8 flex items-center justify-center rounded-lg text-[10px] font-bold transition-all ${
+              className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${
                 hasEntries 
                   ? 'text-accent hover:bg-accent hover:text-bg-primary' 
                   : 'text-text-secondary/20 cursor-default'

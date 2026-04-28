@@ -115,7 +115,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 </div>
                 <div>
                   <h2 className="text-3xl font-serif text-text-primary italic leading-tight font-bold">Sanctuary Guidance</h2>
-                  <p className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.2em] mt-1">Understanding EiseJesUs</p>
+                  <p className="text-xs font-sans font-bold text-accent uppercase tracking-[0.2em] mt-1">Understanding EiseJesUs</p>
                 </div>
               </div>
               <button 
@@ -130,7 +130,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
             <div className="flex-1 overflow-y-auto p-8 md:p-10 space-y-10 scrollbar-thin scrollbar-thumb-ui-border">
               {/* Meaning */}
               <section className="space-y-4">
-                <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">The Name</h3>
+                <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">The Name</h3>
                 <div className="p-8 bg-text-primary text-bg-primary rounded-3xl shadow-xl border border-ui-border/10 italic font-serif text-xl leading-relaxed">
                   <span className="text-accent font-bold">EiseJesUs</span> is the divine synthesis of <span className="underline decoration-accent/40 underline-offset-4">Eisegesis</span> (leading out meaning) and <span className="text-accent">Jesus</span>.
                   <p className="mt-4 text-base opacity-80 not-italic font-sans tracking-wide">Our purpose is to travel through the text to discover Jesus' true intentions for us today.</p>
@@ -139,7 +139,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
 
               {/* Updates Section */}
               <section className="space-y-6">
-                <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6 flex items-center gap-2">
+                <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6 flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   Divine Updates
                 </h3>
@@ -147,7 +147,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                   <div key={idx} className="space-y-4 bg-ui-sidebar/20 p-6 rounded-3xl border border-ui-border">
                     <div className="flex items-center justify-between border-b border-ui-border pb-4 mb-2">
                        <span className="text-xs font-bold font-sans text-accent uppercase tracking-widest">{update.version} • {update.title}</span>
-                       <span className="text-[10px] text-text-secondary opacity-50 uppercase font-bold">{update.date}</span>
+                       <span className="text-xs text-text-secondary opacity-50 uppercase font-bold">{update.date}</span>
                     </div>
                     <div className="grid grid-cols-1 gap-4">
                       {update.changes.map((change, cIdx) => (
@@ -157,7 +157,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                            </div>
                            <div>
                              <h4 className="text-xs font-bold text-text-primary uppercase tracking-tight">{change.name}</h4>
-                             <p className="text-[11px] text-text-secondary leading-relaxed italic">{change.desc}</p>
+                             <p className="text-xs text-text-secondary leading-relaxed italic">{change.desc}</p>
                            </div>
                         </div>
                       ))}
@@ -168,7 +168,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
 
               {/* Steps */}
               <section className="space-y-6">
-                <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Steps of Seeking</h3>
+                <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Steps of Seeking</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
                     { icon: Search, title: "Search", desc: "Enter a specific scripture verse or a question currently heavy on your heart." },
@@ -191,7 +191,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
 
               {/* Audience */}
               <section className="space-y-4">
-                <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Intended Audience</h3>
+                <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-4">Intended Audience</h3>
                 <p className="font-serif text-lg text-text-secondary leading-relaxed italic opacity-80">
                   Designed for believers seeking deep scriptural depth, theology students, small groups, and anyone who desires to hear the heartbeat of the Gospels more clearly.
                 </p>

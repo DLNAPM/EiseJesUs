@@ -233,16 +233,16 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
                 href={getBibleLink(inquiry.scripture)!} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.2em] block mb-2 hover:underline inline-flex items-center gap-1"
+                className="text-xs font-sans font-bold text-accent uppercase tracking-[0.2em] block mb-2 hover:underline inline-flex items-center gap-1"
               >
                 {inquiry.scripture}
                 <ExternalLink className="w-2.5 h-2.5" />
               </a>
             ) : (
-              <span className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.2em] block mb-2">{inquiry.scripture}</span>
+              <span className="text-xs font-sans font-bold text-accent uppercase tracking-[0.2em] block mb-2">{inquiry.scripture}</span>
             )}
             <h1 className="text-4xl font-serif text-text-primary leading-tight mb-4 italic font-bold">{inquiry.query}</h1>
-            <div className="text-[10px] text-text-secondary font-sans uppercase tracking-widest opacity-60">Seeked on {new Date(inquiry.createdAt?.toDate()).toLocaleDateString()}</div>
+            <div className="text-xs text-text-secondary font-sans uppercase tracking-widest opacity-60">Seeked on {new Date(inquiry.createdAt?.toDate()).toLocaleDateString()}</div>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -268,7 +268,7 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
           </div>
 
           <div className="p-8 bg-ui-card rounded-[2rem] border border-ui-border shadow-sm">
-            <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+            <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
               <Share2 className="w-4 h-4" />
               Community Study
             </h3>
@@ -298,7 +298,7 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
                   
                   {inquiry.crossReferences && inquiry.crossReferences.length > 0 && (
                     <div className="pt-10 border-t border-ui-border">
-                      <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Cross References</h3>
+                      <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Cross References</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {inquiry.crossReferences.map((ref, idx) => {
                           const link = getBibleLink(ref);
@@ -332,7 +332,7 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
              {activeTab === 'academic' && (
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
                   <section>
-                    <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Exegesis & Historical Context</h3>
+                    <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Exegesis & Historical Context</h3>
                     <div className="text-xl leading-relaxed text-text-secondary font-serif space-y-4">
                        <Markdown>{inquiry.historicalContext}</Markdown>
                     </div>
@@ -340,14 +340,14 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
 
                   <div className="grid md:grid-cols-2 gap-12">
                     <section>
-                      <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Literary Genre</h3>
+                      <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Literary Genre</h3>
                       <div className="p-8 bg-bg-primary/50 rounded-3xl border border-ui-border italic text-text-secondary/80 text-lg shadow-sm">
                          {inquiry.literaryGenre}
                       </div>
                     </section>
 
                     <section>
-                      <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Grammatical Analysis</h3>
+                      <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6">Grammatical Analysis</h3>
                       <div className="text-lg leading-relaxed text-text-secondary italic border-l-2 border-accent/20 pl-6">
                          <Markdown>{inquiry.grammarAnalysis}</Markdown>
                       </div>
@@ -402,7 +402,7 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
                     </div>
                   </div>
 
-                  <div className="p-6 bg-bg-primary/30 rounded-2xl text-center text-[10px] text-text-secondary/40 uppercase tracking-[0.4em] font-sans">
+                  <div className="p-6 bg-bg-primary/30 rounded-2xl text-center text-xs text-text-secondary/40 uppercase tracking-[0.4em] font-sans">
                     Images are illustrative of the historical region and its modern atmosphere
                   </div>
                </motion.div>

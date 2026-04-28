@@ -109,7 +109,7 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
                 className="bg-accent/10 hover:bg-accent/20 text-accent px-6 py-3 rounded-xl flex items-center gap-2 transition-all border border-accent/20 shadow-sm"
               >
                 <UserPlus className="w-4 h-4" />
-                <span className="font-sans font-bold text-[10px] uppercase tracking-widest">Manage Communion</span>
+                <span className="font-sans font-bold text-xs uppercase tracking-widest">Manage Communion</span>
               </button>
             )}
           </div>
@@ -118,7 +118,7 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
       </div>
 
       <section>
-        <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.4em] mb-8 flex items-center gap-3">
+        <h2 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-8 flex items-center gap-3">
           <MessageSquare className="w-5 h-5 opacity-40" />
           Recent Communions
         </h2>
@@ -139,7 +139,7 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
                   {disc.inquiry ? (
                     <>
                       <div className="flex items-center gap-3 mb-3">
-                        <span className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.2em]">{disc.inquiry.scripture}</span>
+                        <span className="text-xs font-sans font-bold text-accent uppercase tracking-[0.2em]">{disc.inquiry.scripture}</span>
                         <span className="w-1 h-1 rounded-full bg-ui-border"></span>
                         <span className="text-[10px] text-text-secondary italic font-serif">Deep seeking shared in faith</span>
                       </div>
@@ -222,7 +222,7 @@ export default function GroupDetails({ groupId, onBack, onSelectInquiry }: Group
                             <Shield className="w-3 h-3 text-accent" />
                           )}
                         </div>
-                        <p className="text-[9px] text-text-secondary uppercase tracking-widest font-bold">
+                        <p className="text-[11px] text-text-secondary uppercase tracking-widest font-bold">
                           {member.role} {member.status === 'invited' ? '• Pending Invite' : ''}
                         </p>
                       </div>

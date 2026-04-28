@@ -114,7 +114,7 @@ export default function Reports() {
         {/* Selection Sidebar */}
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-ui-card border border-ui-border rounded-[2rem] p-6 shadow-sm overflow-hidden">
-            <h2 className="text-[10px] font-sans font-bold text-accent uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
+            <h2 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.3em] mb-6 flex items-center gap-2">
               <Clock className="w-4 h-4" />
               Select a Seeking
             </h2>
@@ -143,7 +143,7 @@ export default function Reports() {
                       }`}
                     >
                       <div className="overflow-hidden pr-8">
-                        <p className={`text-[9px] uppercase tracking-widest font-bold mb-0.5 ${selectedInquiry?.id === inq.id ? 'text-bg-primary/70' : 'text-accent'}`}>
+                        <p className={`text-[11px] uppercase tracking-widest font-bold mb-0.5 ${selectedInquiry?.id === inq.id ? 'text-bg-primary/70' : 'text-accent'}`}>
                           {inq.scripture}
                         </p>
                         <p className={`font-serif text-sm truncate italic ${selectedInquiry?.id === inq.id ? 'text-bg-primary' : 'text-text-primary'}`}>
@@ -174,7 +174,7 @@ export default function Reports() {
 
           {selectedInquiry && (
             <div className="bg-text-primary text-bg-primary p-8 rounded-[2rem] shadow-xl border border-ui-border/10 space-y-4">
-              <h3 className="text-[10px] font-sans font-bold text-accent uppercase tracking-widest">Registry Actions</h3>
+              <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-widest">Registry Actions</h3>
               <button 
                 onClick={generatePDF}
                 disabled={isGenerating}
@@ -240,7 +240,7 @@ export default function Reports() {
                       <p className="text-sm font-sans font-medium text-[#64748b] uppercase tracking-[0.2em]">Formal Scriptural Analysis & Academic Registry</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-[10px] font-sans font-bold uppercase tracking-widest mb-1" style={{ color: '#3b82f6' }}>Date Created</div>
+                      <div className="text-xs font-sans font-bold uppercase tracking-widest mb-1" style={{ color: '#3b82f6' }}>Date Created</div>
                       <div className="text-sm font-sans font-bold text-[#0f172a]">
                         {new Date(selectedInquiry.createdAt?.toDate()).toLocaleDateString('en-US', { 
                           year: 'numeric', 
@@ -253,9 +253,9 @@ export default function Reports() {
 
                   <div className="grid grid-cols-3 gap-12 mb-12">
                     <div className="col-span-2">
-                      <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Subject Identification</h2>
+                      <h2 className="text-xs font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Subject Identification</h2>
                       <div className="bg-[#f8fafc] p-6 rounded-2xl border border-[#f1f5f9] shadow-inner">
-                        <div className="text-[10px] uppercase font-bold tracking-widest mb-2" style={{ color: 'rgba(59, 130, 246, 0.6)' }}>Canonical Reference</div>
+                        <div className="text-xs uppercase font-bold tracking-widest mb-2" style={{ color: 'rgba(59, 130, 246, 0.6)' }}>Canonical Reference</div>
                         {getBibleLink(selectedInquiry.scripture) ? (
                           <a 
                             href={getBibleLink(selectedInquiry.scripture)!} 
@@ -269,19 +269,19 @@ export default function Reports() {
                         ) : (
                           <div className="text-2xl font-black italic mb-4">{selectedInquiry.scripture}</div>
                         )}
-                        <div className="text-[10px] uppercase font-bold tracking-widest mb-2" style={{ color: 'rgba(59, 130, 246, 0.6)' }}>Primary Inquiry</div>
+                        <div className="text-xs uppercase font-bold tracking-widest mb-2" style={{ color: 'rgba(59, 130, 246, 0.6)' }}>Primary Inquiry</div>
                         <div className="text-xl italic leading-relaxed text-[#1e293b]">"{selectedInquiry.query}"</div>
                       </div>
                     </div>
                     <div className="col-span-1">
-                      <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Classifications</h2>
+                      <h2 className="text-xs font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Classifications</h2>
                       <div className="space-y-4">
                         <div>
-                          <div className="text-[9px] text-[#94a3b8] uppercase font-bold mb-1">Literary Genre</div>
+                          <div className="text-[11px] text-[#94a3b8] uppercase font-bold mb-1">Literary Genre</div>
                           <div className="text-sm font-bold bg-[#f1f5f9] px-3 py-2 rounded-lg text-[#334155] italic">{selectedInquiry.literaryGenre}</div>
                         </div>
                         <div>
-                          <div className="text-[9px] text-[#94a3b8] uppercase font-bold mb-1">Expository Tone</div>
+                          <div className="text-[11px] text-[#94a3b8] uppercase font-bold mb-1">Expository Tone</div>
                           <div className="text-sm font-bold bg-[#f1f5f9] px-3 py-2 rounded-lg text-[#334155] italic">Academic & Devotional</div>
                         </div>
                       </div>
@@ -289,7 +289,7 @@ export default function Reports() {
                   </div>
 
                   <section className="mb-12">
-                    <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-6 flex items-center gap-3" style={{ color: '#3b82f6' }}>
+                    <h2 className="text-xs font-sans font-bold uppercase tracking-[0.4em] mb-6 flex items-center gap-3" style={{ color: '#3b82f6' }}>
                       <span className="w-8 h-[2px]" style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)' }}></span>
                       Theological Intent
                     </h2>
@@ -301,7 +301,7 @@ export default function Reports() {
 
                   <div className="space-y-12 mb-12">
                     <section>
-                      <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Analytical Interpretation</h2>
+                      <h2 className="text-xs font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Analytical Interpretation</h2>
                       <div className="max-w-none text-[#334155] leading-loose font-serif text-lg space-y-6">
                         <Markdown>{selectedInquiry.interpretation}</Markdown>
                       </div>
@@ -309,13 +309,13 @@ export default function Reports() {
 
                     <div className="grid grid-cols-2 gap-12">
                       <section>
-                        <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Historical Context</h2>
+                        <h2 className="text-xs font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Historical Context</h2>
                         <div className="text-[#475569] leading-relaxed italic border-l-4 border-[#f1f5f9] pl-6 text-base">
                           <Markdown>{selectedInquiry.historicalContext}</Markdown>
                         </div>
                       </section>
                       <section>
-                        <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Grammatical Analysis</h2>
+                        <h2 className="text-xs font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Grammatical Analysis</h2>
                         <div className="text-[#475569] leading-relaxed text-base bg-[#f8fafc] p-6 rounded-2xl border border-[#f1f5f9]">
                           <Markdown>{selectedInquiry.grammarAnalysis}</Markdown>
                         </div>
@@ -324,7 +324,7 @@ export default function Reports() {
                   </div>
 
                   <section className="mb-12">
-                    <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Cross-Referenced Canons</h2>
+                    <h2 className="text-xs font-sans font-bold uppercase tracking-[0.4em] mb-4" style={{ color: '#3b82f6' }}>Cross-Referenced Canons</h2>
                     <div className="flex flex-wrap gap-3">
                       {selectedInquiry.crossReferences.map((ref, i) => {
                         const link = getBibleLink(ref);
@@ -351,16 +351,16 @@ export default function Reports() {
                   {/* Geography Section in Report */}
                   <div className="bg-[#f8fafc] rounded-3xl p-8 border border-[#e2e8f0] grid grid-cols-4 gap-8">
                     <div className="col-span-1">
-                      <h2 className="text-[10px] font-sans font-bold uppercase tracking-[0.4em] mb-2" style={{ color: '#3b82f6' }}>Location</h2>
+                      <h2 className="text-xs font-sans font-bold uppercase tracking-[0.4em] mb-2" style={{ color: '#3b82f6' }}>Location</h2>
                       <p className="text-lg font-black italic">{selectedInquiry.geography.location}</p>
                     </div>
                     <div className="col-span-3 grid grid-cols-2 gap-6">
                        <div>
-                         <p className="text-[9px] text-[#94a3b8] uppercase font-bold mb-1">Historical Status</p>
+                         <p className="text-[11px] text-[#94a3b8] uppercase font-bold mb-1">Historical Status</p>
                          <p className="text-xs text-[#475569] leading-relaxed italic">{selectedInquiry.geography.thenDesc}</p>
                        </div>
                        <div>
-                         <p className="text-[9px] text-[#94a3b8] uppercase font-bold mb-1">Modern Status</p>
+                         <p className="text-[11px] text-[#94a3b8] uppercase font-bold mb-1">Modern Status</p>
                          <p className="text-xs text-[#475569] leading-relaxed italic">{selectedInquiry.geography.nowDesc}</p>
                        </div>
                     </div>
@@ -368,7 +368,7 @@ export default function Reports() {
 
                   {/* Footer Seal */}
                   <footer className="mt-20 pt-10 border-t border-[#f1f5f9] flex justify-between items-end">
-                    <div className="text-[9px] text-[#cbd5e1] font-sans uppercase tracking-[0.5em] font-bold">
+                    <div className="text-[11px] text-[#cbd5e1] font-sans uppercase tracking-[0.5em] font-bold">
                        Official Registry of EiseJesUs • Sanctuary Study Archives
                     </div>
                     <div className="opacity-10 grayscale brightness-0">

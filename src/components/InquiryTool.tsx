@@ -89,11 +89,11 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
         <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-accent">Scripture Reference</label>
+              <label className="block text-xs font-sans font-bold uppercase tracking-[0.2em] text-accent">Scripture Reference</label>
               <button
                 type="button"
                 onClick={() => setShowSubjectSearch(!showSubjectSearch)}
-                className="text-[10px] font-sans font-black uppercase tracking-widest text-text-secondary hover:text-accent flex items-center gap-2 transition-colors border-b border-transparent hover:border-accent"
+                className="text-xs font-sans font-black uppercase tracking-widest text-text-secondary hover:text-accent flex items-center gap-2 transition-colors border-b border-transparent hover:border-accent"
               >
                 <Fingerprint className="w-3 h-3" />
                 {showSubjectSearch ? "Hide Subject Search" : "Don't know the scripture?"}
@@ -144,7 +144,7 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
                             <span className="text-sm font-bold text-accent italic">{s.reference}</span>
                             <BookOpen className="w-3 h-3 text-ui-border group-hover:text-accent transition-colors" />
                           </div>
-                          <p className="text-[10px] text-text-secondary leading-relaxed line-clamp-1 italic">{s.reason}</p>
+                          <p className="text-xs text-text-secondary leading-relaxed line-clamp-1 italic">{s.reason}</p>
                         </motion.button>
                       ))}
                     </div>
@@ -167,7 +167,7 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
           </div>
 
           <div>
-            <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-accent mb-3">Your Seeking</label>
+            <label className="block text-xs font-sans font-bold uppercase tracking-[0.2em] text-accent mb-3">Your Seeking</label>
             <textarea
               placeholder="What do you seek to understand about this passage?"
               className="w-full bg-bg-primary/50 border border-ui-border rounded-xl px-6 py-4 font-serif text-lg focus:outline-none focus:border-accent focus:bg-ui-card transition-all shadow-inner min-h-[150px] text-text-primary"

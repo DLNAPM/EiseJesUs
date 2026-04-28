@@ -114,7 +114,7 @@ export default function ProfileSettings() {
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-text-primary uppercase tracking-tight">{t.name}</h3>
-                    <p className="text-[10px] text-text-secondary opacity-60 italic">{t.desc}</p>
+                    <p className="text-xs text-text-secondary opacity-60 italic">{t.desc}</p>
                   </div>
                 </button>
               ))}
@@ -134,7 +134,7 @@ export default function ProfileSettings() {
             </p>
 
             <div className="space-y-4">
-              <label className="block text-[10px] font-sans font-bold uppercase tracking-[0.2em] text-accent">Website URL</label>
+              <label className="block text-xs font-sans font-bold uppercase tracking-[0.2em] text-accent">Website URL</label>
               <div className="relative">
                 <input
                   type="url"
@@ -144,12 +144,12 @@ export default function ProfileSettings() {
                   onChange={(e) => setBibleWebsite(e.target.value)}
                 />
                 {bibleWebsite && !bibleWebsite.startsWith('http') && (
-                  <p className="mt-2 text-[10px] text-red-500 font-sans font-bold tracking-widest uppercase">Please include http:// or https://</p>
+                  <p className="mt-2 text-xs text-red-500 font-sans font-bold tracking-widest uppercase">Please include http:// or https://</p>
                 )}
               </div>
               <div className="p-4 bg-ui-sidebar/50 rounded-xl border border-ui-border">
-                <p className="text-[10px] text-text-secondary/60 uppercase tracking-widest font-bold mb-2">Example Formatting</p>
-                <div className="space-y-1 font-mono text-[10px] text-text-secondary">
+                <p className="text-xs text-text-secondary/60 uppercase tracking-widest font-bold mb-2">Example Formatting</p>
+                <div className="space-y-1 font-mono text-xs text-text-secondary">
                   <p>• https://www.biblegateway.com/passage/?search=</p>
                   <p>• https://www.blueletterbible.org/search/preSearch.cfm?Criteria=</p>
                   <p>• https://biblehub.com/text/</p>

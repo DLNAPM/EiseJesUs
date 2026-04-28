@@ -53,8 +53,12 @@
 }
 
 @layer base {
+  html {
+    font-size: 115%; /* 1-2 levels up from standard 100% */
+  }
+
   body {
-    @apply bg-bg-primary text-text-primary font-sans transition-colors duration-300;
+    @apply bg-bg-primary text-text-primary font-sans transition-colors duration-300 antialiased;
   }
   
   h1, h2, h3, h4, .serif {
