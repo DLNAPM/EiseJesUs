@@ -38,7 +38,8 @@ export default function AdminDashboard() {
   const auth = getAuthService();
   const db = getDbService();
 
-  const isAdminEmail = auth.currentUser?.email === 'dlaniger.napm.consulting@gmail.com';
+  const isAdminEmail = auth.currentUser?.email?.toLowerCase() === 'dlaniger.napm.consulting@gmail.com' || 
+                      auth.currentUser?.email?.toLowerCase() === 'dlaniger.napm.cosulting@gmail.com';
 
   const fetchUsers = async () => {
     try {

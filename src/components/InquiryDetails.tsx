@@ -11,9 +11,10 @@ import { UserProfile } from '../types';
 interface InquiryDetailsProps {
   inquiryId: string;
   onBack: () => void;
+  isPremium: boolean;
 }
 
-export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProps) {
+export default function InquiryDetails({ inquiryId, onBack, isPremium }: InquiryDetailsProps) {
   const [inquiry, setInquiry] = useState<Inquiry | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'faith' | 'academic' | 'geo' | 'video'>('faith');
@@ -34,7 +35,6 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
   const [isDefining, setIsDefining] = useState(false);
   const [definitionResult, setDefinitionResult] = useState<{ word: string, definition: string } | null>(null);
   const [showPremiumModal, setShowPremiumModal] = useState<{ isOpen: boolean, feature: string }>({ isOpen: false, feature: '' });
-  const [isPremium, setIsPremium] = useState(false);
 
   const handleMouseUp = () => {
     const selection = window.getSelection();
@@ -105,7 +105,6 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
         if (userDoc.exists()) {
           const data = userDoc.data() as UserProfile;
           setBibleWebsite(data.bibleWebsite || null);
-          setIsPremium(data.tier === 'premium' || data.role === 'admin' || data.email === 'dlaniger.napm.consulting@gmail.com');
         }
       } catch (e) {
         console.error(e);

@@ -8,9 +8,10 @@ import { UserProfile } from '../types';
 
 interface InquiryToolProps {
   onComplete: (id: string) => void;
+  isPremium: boolean;
 }
 
-export default function InquiryTool({ onComplete }: InquiryToolProps) {
+export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps) {
   const [scripture, setScripture] = useState('');
   const [queryText, setQueryText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,21 +20,7 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
   const [subject, setSubject] = useState('');
   const [searchingSubject, setSearchingSubject] = useState(false);
   const [suggestions, setSuggestions] = useState<{reference: string, reason: string}[]>([]);
-  const [isPremium, setIsPremium] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
-
-  useEffect(() => {
-    const checkTier = async () => {
-      const auth = getAuthService();
-      if (!auth.currentUser) return;
-      const userDoc = await getDoc(doc(getDbService(), 'users', auth.currentUser.uid));
-      if (userDoc.exists()) {
-        const profile = userDoc.data() as UserProfile;
-        setIsPremium(profile.tier === 'premium' || profile.role === 'admin' || profile.email === 'dlaniger.napm.consulting@gmail.com');
-      }
-    };
-    checkTier();
-  }, []);
 
   const handleSubjectToggle = () => {
     if (!isPremium) {

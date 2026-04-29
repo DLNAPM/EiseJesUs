@@ -57,7 +57,9 @@ export default function App() {
     return (saved as 'modern' | 'midnight' | 'parchment') || 'modern';
   });
 
-  const isAdmin = userProfile?.role === 'admin' || user?.email === 'dlaniger.napm.consulting@gmail.com';
+  const isAdmin = userProfile?.role === 'admin' || 
+    user?.email?.toLowerCase() === 'dlaniger.napm.consulting@gmail.com' || 
+    user?.email?.toLowerCase() === 'dlaniger.napm.cosulting@gmail.com';
 
   useEffect(() => {
     localStorage.setItem('eisejesus-theme', theme);
@@ -87,7 +89,9 @@ export default function App() {
             const data = userDoc.data() as UserProfile;
             
             // Auto-provision specified admin email if not already set
-            if (u.email === 'dlaniger.napm.consulting@gmail.com' && (data.role !== 'admin' || data.tier !== 'premium')) {
+            const isTargetAdmin = u.email?.toLowerCase() === 'dlaniger.napm.consulting@gmail.com' || u.email?.toLowerCase() === 'dlaniger.napm.cosulting@gmail.com';
+            
+            if (isTargetAdmin && (data.role !== 'admin' || data.tier !== 'premium')) {
               const updatedProfile = { ...data, role: 'admin' as const, tier: 'premium' as const };
               await setDoc(doc(getDbService(), 'users', u.uid), updatedProfile);
               await setDoc(doc(getDbService(), 'admins', u.uid), { email: u.email });
@@ -100,16 +104,17 @@ export default function App() {
               setTheme(data.theme);
             }
           } else {
+            const isTargetAdmin = u.email?.toLowerCase() === 'dlaniger.napm.consulting@gmail.com' || u.email?.toLowerCase() === 'dlaniger.napm.cosulting@gmail.com';
             const newProfile: UserProfile = {
               uid: u.uid,
               email: u.email || '',
               displayName: u.displayName || '',
               photoURL: u.photoURL || '',
-              role: u.email === 'dlaniger.napm.consulting@gmail.com' ? 'admin' : 'user',
-              tier: u.email === 'dlaniger.napm.consulting@gmail.com' ? 'premium' : 'basic'
+              role: isTargetAdmin ? 'admin' : 'user',
+              tier: isTargetAdmin ? 'premium' : 'basic'
             };
             await setDoc(doc(getDbService(), 'users', u.uid), newProfile);
-            if (u.email === 'dlaniger.napm.consulting@gmail.com') {
+            if (isTargetAdmin) {
               await setDoc(doc(getDbService(), 'admins', u.uid), { email: u.email });
             }
             setUserProfile(newProfile);
@@ -365,13 +370,13 @@ export default function App() {
             className="p-4 md:p-12 pb-24 md:pb-12"
           >
             {currentPage === 'dashboard' && <Dashboard onSelectInquiry={navigateToDetails} onNewInquiry={() => setCurrentPage('inquiry')} />}
-            {currentPage === 'inquiry' && <InquiryTool onComplete={(id) => navigateToDetails(id)} />}
+            {currentPage === 'inquiry' && <InquiryTool onComplete={(id) => navigateToDetails(id)} isPremium={isPremium} />}
             {currentPage === 'groups' && <GroupsList onSelectInquiry={navigateToDetails} />}
             {currentPage === 'reports' && <Reports />}
             {currentPage === 'glossary' && <Glossary />}
             {currentPage === 'profile' && <ProfileSettings />}
             {currentPage === 'admin' && <AdminDashboard />}
-            {currentPage === 'details' && selectedInquiryId && <InquiryDetails inquiryId={selectedInquiryId} onBack={() => setCurrentPage('dashboard')} />}
+            {currentPage === 'details' && selectedInquiryId && <InquiryDetails inquiryId={selectedInquiryId} onBack={() => setCurrentPage('dashboard')} isPremium={isPremium} />}
           </motion.div>
         </AnimatePresence>
 
