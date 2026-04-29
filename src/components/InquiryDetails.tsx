@@ -23,6 +23,9 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
   const [shareSuccess, setShareSuccess] = useState(false);
   const [bibleWebsite, setBibleWebsite] = useState<string | null>(null);
   
+  // Image Magnification State
+  const [magnifiedImage, setMagnifiedImage] = useState<{ url: string, title: string, description: string } | null>(null);
+  
   // Glossary Selection State
   const [selectedText, setSelectedText] = useState('');
   const [selectionPosition, setSelectionPosition] = useState<{ x: number, y: number } | null>(null);
@@ -368,7 +371,14 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     <div className="space-y-6">
-                      <div className="aspect-[4/3] bg-ui-sidebar rounded-[2rem] overflow-hidden relative group shadow-sm border border-ui-border">
+                      <button 
+                        onClick={() => setMagnifiedImage({
+                          url: inquiry.geography.thenImageUrl || `https://images.unsplash.com/photo-1548625361-91e84fc11993?auto=format&fit=crop&q=80&w=1200`,
+                          title: "In Biblical Times",
+                          description: inquiry.geography.thenDesc
+                        })}
+                        className="w-full text-left aspect-[4/3] bg-ui-sidebar rounded-[2rem] overflow-hidden relative group shadow-sm border border-ui-border transition-all hover:shadow-xl cursor-zoom-in"
+                      >
                         <img 
                           src={inquiry.geography.thenImageUrl || `https://images.unsplash.com/photo-1548625361-91e84fc11993?auto=format&fit=crop&q=80&w=800`} 
                           alt="Historical Region"
@@ -378,14 +388,21 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-8 flex items-end">
                           <span className="text-white font-serif italic text-xl">In Biblical Times</span>
                         </div>
-                      </div>
+                      </button>
                       <div className="p-8 bg-bg-primary/50 rounded-3xl border border-ui-border italic text-lg leading-relaxed text-text-secondary shadow-inner">
                         {inquiry.geography.thenDesc}
                       </div>
                     </div>
 
                     <div className="space-y-6">
-                      <div className="aspect-[4/3] bg-ui-sidebar rounded-[2rem] overflow-hidden relative group shadow-sm border border-ui-border">
+                      <button 
+                         onClick={() => setMagnifiedImage({
+                           url: inquiry.geography.nowImageUrl || `https://images.unsplash.com/photo-1544971510-91a787a7187e?auto=format&fit=crop&q=80&w=1200`,
+                           title: "Region Today",
+                           description: inquiry.geography.nowDesc
+                         })}
+                         className="w-full text-left aspect-[4/3] bg-ui-sidebar rounded-[2rem] overflow-hidden relative group shadow-sm border border-ui-border transition-all hover:shadow-xl cursor-zoom-in"
+                      >
                         <img 
                           src={inquiry.geography.nowImageUrl || `https://images.unsplash.com/photo-1544971510-91a787a7187e?auto=format&fit=crop&q=80&w=800`} 
                           alt="Modern Region"
@@ -395,7 +412,7 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-8 flex items-end">
                           <span className="text-white font-serif italic text-xl">Region Today</span>
                         </div>
-                      </div>
+                      </button>
                       <div className="p-8 bg-bg-primary/50 rounded-3xl border border-ui-border italic text-lg leading-relaxed text-text-secondary shadow-inner">
                         {inquiry.geography.nowDesc}
                       </div>
@@ -548,6 +565,49 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
               )}
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Image Magnification Modal */}
+      <AnimatePresence>
+        {magnifiedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] bg-text-primary/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 md:p-12 overflow-y-auto"
+            onClick={() => setMagnifiedImage(null)}
+          >
+            <motion.button
+              className="absolute top-8 right-8 text-bg-primary hover:scale-110 transition-transform"
+              onClick={() => setMagnifiedImage(null)}
+            >
+              <X className="w-10 h-10" />
+            </motion.button>
+
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="max-w-6xl w-full space-y-10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="rounded-[3rem] overflow-hidden shadow-2xl border border-white/10 max-h-[70vh] flex items-center justify-center bg-black/20">
+                <img 
+                  src={magnifiedImage.url} 
+                  alt={magnifiedImage.title}
+                  className="max-w-full max-h-[70vh] object-contain"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+              <div className="text-center space-y-4 px-4 pb-12">
+                <h4 className="text-accent font-serif italic text-3xl font-bold">{magnifiedImage.title}</h4>
+                <p className="text-bg-primary text-xl font-serif leading-relaxed italic opacity-80 max-w-3xl mx-auto">
+                  {magnifiedImage.description}
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
