@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User as FirebaseUser, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User as FirebaseUser, setPersistence, browserLocalPersistence, indexedDBLocalPersistence } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer, collection, getDocs, onSnapshot, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, Timestamp, getDoc, serverTimestamp } from 'firebase/firestore';
 
 export { initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, FirebaseUser, getFirestore, doc, getDocFromServer, collection, getDocs, onSnapshot, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, Timestamp, getDoc, serverTimestamp, setPersistence, browserLocalPersistence };
@@ -37,8 +37,9 @@ export const getAuthService = () => {
     if (!app) return null;
     authInstance = getAuth(app);
     // Fix for mobile/Safari "missing initial state" error
+    // Set persistence to LOCAL to ensure state is maintained
     setPersistence(authInstance, browserLocalPersistence).catch(err => {
-      console.warn("Auth persistence could not be set to local:", err);
+      console.error("Auth persistence setup failed:", err);
     });
   }
   return authInstance;

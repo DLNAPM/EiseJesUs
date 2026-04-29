@@ -168,8 +168,17 @@ export default function App() {
     }
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed", error);
+      if (error.code === 'auth/auth-domain-config-required') {
+        alert("Firebase Auth Domain is not configured correctly.");
+      } else if (error.code === 'auth/operation-not-supported-in-this-environment' || 
+                 error.message?.includes('missing initial state') ||
+                 error.message?.includes('storage-partitioned')) {
+        alert("Login is restricted in this mobile browser view. Please tap the 'Open in New Tab' icon or use a desktop browser to complete the login.");
+      } else {
+        alert("Login failed: " + (error.message || "Unknown error"));
+      }
     }
   };
 
