@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { getDbService, getAuthService, doc, getDoc, setDoc, handleFirestoreError, OperationType } from '../lib/firebase';
-import { Shield, Globe, Save, Loader2, Check, Palette, Sun, Moon, BookOpen } from 'lucide-react';
+import { Shield, Globe, Save, Loader2, Check, Palette, Sun, Moon, BookOpen, Crown } from 'lucide-react';
 import { motion } from 'motion/react';
+import { UserProfile } from '../types';
 
 export default function ProfileSettings() {
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [bibleWebsite, setBibleWebsite] = useState('');
   const [theme, setTheme] = useState('modern');
   const [loading, setLoading] = useState(true);
@@ -18,8 +20,10 @@ export default function ProfileSettings() {
       try {
         const userDoc = await getDoc(doc(getDbService(), 'users', auth.currentUser.uid));
         if (userDoc.exists()) {
-          setBibleWebsite(userDoc.data().bibleWebsite || '');
-          setTheme(userDoc.data().theme || 'modern');
+          const data = userDoc.data() as UserProfile;
+          setProfile(data);
+          setBibleWebsite(data.bibleWebsite || '');
+          setTheme(data.theme || 'modern');
         }
       } catch (error) {
         handleFirestoreError(error, OperationType.GET, `users/${auth.currentUser.uid}`);
@@ -79,6 +83,34 @@ export default function ProfileSettings() {
         </div>
 
         <div className="relative z-10 space-y-12">
+          {/* User Info Section */}
+          {profile && (
+            <section className="flex flex-col md:flex-row items-center gap-8 pb-12 border-b border-ui-border">
+              <img 
+                src={profile.photoURL} 
+                alt="" 
+                className="w-24 h-24 rounded-[2rem] border-2 border-accent shadow-xl"
+                referrerPolicy="no-referrer"
+              />
+              <div className="text-center md:text-left flex-1">
+                <h2 className="text-3xl font-serif text-text-primary italic font-bold mb-1">{profile.displayName}</h2>
+                <p className="text-sm text-text-secondary font-sans tracking-wide mb-4">{profile.email}</p>
+                <div className="flex flex-wrap justify-center md:justify-start gap-2">
+                  <span className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-sans font-bold uppercase tracking-[0.1em] border ${profile.tier === 'premium' ? 'bg-accent/10 border-accent text-accent' : 'bg-ui-sidebar border-ui-border text-text-secondary'}`}>
+                    {profile.tier === 'premium' && <Crown className="w-3 h-3" />}
+                    {profile.tier === 'premium' ? 'Premium Pilgrim' : 'Basic Pilgrim'}
+                  </span>
+                  {profile.role === 'admin' && (
+                    <span className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-sans font-bold uppercase tracking-[0.1em] bg-text-primary text-bg-primary">
+                      <Shield className="w-3 h-3 text-accent" />
+                      Sanctuary Admin
+                    </span>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* Theme Support */}
           <section>
             <div className="flex items-center gap-3 mb-6">

@@ -19,7 +19,8 @@ import {
   testConnection,
   getDbService,
   doc,
-  getDoc
+  getDoc,
+  setDoc
 } from './lib/firebase';
 import { Home, Search, Users, LogOut, ChevronRight, BookOpen, Map, Video, MessageSquare, Share2, HelpCircle, Moon, Sun, Settings, UserX } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -84,19 +85,34 @@ export default function App() {
           const userDoc = await getDoc(doc(getDbService(), 'users', u.uid));
           if (userDoc.exists()) {
             const data = userDoc.data() as UserProfile;
-            setUserProfile(data);
+            
+            // Auto-provision specified admin email if not already set
+            if (u.email === 'dlaniger.napm.consulting@gmail.com' && (data.role !== 'admin' || data.tier !== 'premium')) {
+              const updatedProfile = { ...data, role: 'admin' as const, tier: 'premium' as const };
+              await setDoc(doc(getDbService(), 'users', u.uid), updatedProfile);
+              await setDoc(doc(getDbService(), 'admins', u.uid), { email: u.email });
+              setUserProfile(updatedProfile);
+            } else {
+              setUserProfile(data);
+            }
+
             if (data.theme) {
               setTheme(data.theme);
             }
           } else {
-            setUserProfile({
+            const newProfile: UserProfile = {
               uid: u.uid,
               email: u.email || '',
               displayName: u.displayName || '',
               photoURL: u.photoURL || '',
               role: u.email === 'dlaniger.napm.consulting@gmail.com' ? 'admin' : 'user',
-              tier: 'basic'
-            });
+              tier: u.email === 'dlaniger.napm.consulting@gmail.com' ? 'premium' : 'basic'
+            };
+            await setDoc(doc(getDbService(), 'users', u.uid), newProfile);
+            if (u.email === 'dlaniger.napm.consulting@gmail.com') {
+              await setDoc(doc(getDbService(), 'admins', u.uid), { email: u.email });
+            }
+            setUserProfile(newProfile);
           }
         } catch (e) {
           console.error("Error fetching user profile", e);
