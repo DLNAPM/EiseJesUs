@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { getDbService, getAuthService, collection, addDoc, handleFirestoreError, OperationType, serverTimestamp } from '../lib/firebase';
+import { useState, useEffect } from 'react';
+import { getDbService, getAuthService, collection, addDoc, handleFirestoreError, OperationType, serverTimestamp, getDoc, doc } from '../lib/firebase';
 import { generateExegesis, searchScriptureBySubject } from '../lib/gemini';
 import { Search, Loader2, Sparkles, BookOpen, Fingerprint } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import PremiumOverlay from './PremiumOverlay';
+import { UserProfile } from '../types';
 
 interface InquiryToolProps {
   onComplete: (id: string) => void;
@@ -17,6 +19,29 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
   const [subject, setSubject] = useState('');
   const [searchingSubject, setSearchingSubject] = useState(false);
   const [suggestions, setSuggestions] = useState<{reference: string, reason: string}[]>([]);
+  const [isPremium, setIsPremium] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+
+  useEffect(() => {
+    const checkTier = async () => {
+      const auth = getAuthService();
+      if (!auth.currentUser) return;
+      const userDoc = await getDoc(doc(getDbService(), 'users', auth.currentUser.uid));
+      if (userDoc.exists()) {
+        const profile = userDoc.data() as UserProfile;
+        setIsPremium(profile.tier === 'premium' || profile.role === 'admin' || profile.email === 'dlaniger.napm.consulting@gmail.com');
+      }
+    };
+    checkTier();
+  }, []);
+
+  const handleSubjectToggle = () => {
+    if (!isPremium) {
+      setShowPremiumModal(true);
+      return;
+    }
+    setShowSubjectSearch(!showSubjectSearch);
+  };
 
   const handleSubjectSearch = async () => {
     if (!subject.trim()) return;
@@ -92,7 +117,7 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
               <label className="block text-xs font-sans font-bold uppercase tracking-[0.2em] text-accent">Scripture Reference</label>
               <button
                 type="button"
-                onClick={() => setShowSubjectSearch(!showSubjectSearch)}
+                onClick={handleSubjectToggle}
                 className="text-xs font-sans font-black uppercase tracking-widest text-text-secondary hover:text-accent flex items-center gap-2 transition-colors border-b border-transparent hover:border-accent"
               >
                 <Fingerprint className="w-3 h-3" />
@@ -213,6 +238,12 @@ export default function InquiryTool({ onComplete }: InquiryToolProps) {
       <p className="mt-8 text-center text-xs text-text-secondary font-serif italic max-w-md mx-auto">
         Exegesis results are generated using AI-powered scholarship and cross-referenced with historic biblical contexts.
       </p>
+
+      <PremiumOverlay 
+        isOpen={showPremiumModal} 
+        onClose={() => setShowPremiumModal(false)} 
+        featureName="Don't Know the Scripture?" 
+      />
     </div>
   );
 }

@@ -5,6 +5,8 @@ import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, MessageSquar
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { fetchDefinition } from '../lib/gemini';
+import PremiumOverlay from './PremiumOverlay';
+import { UserProfile } from '../types';
 
 interface InquiryDetailsProps {
   inquiryId: string;
@@ -31,6 +33,8 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
   const [selectionPosition, setSelectionPosition] = useState<{ x: number, y: number } | null>(null);
   const [isDefining, setIsDefining] = useState(false);
   const [definitionResult, setDefinitionResult] = useState<{ word: string, definition: string } | null>(null);
+  const [showPremiumModal, setShowPremiumModal] = useState<{ isOpen: boolean, feature: string }>({ isOpen: false, feature: '' });
+  const [isPremium, setIsPremium] = useState(false);
 
   const handleMouseUp = () => {
     const selection = window.getSelection();
@@ -54,6 +58,10 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
   };
 
   const askForMeaning = async () => {
+    if (!isPremium) {
+      setShowPremiumModal({ isOpen: true, feature: 'Lexicon Glossary' });
+      return;
+    }
     if (!selectedText) return;
     setIsDefining(true);
     try {
@@ -95,7 +103,9 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
       try {
         const userDoc = await getDoc(doc(getDbService(), 'users', auth.currentUser.uid));
         if (userDoc.exists()) {
-          setBibleWebsite(userDoc.data().bibleWebsite || null);
+          const data = userDoc.data() as UserProfile;
+          setBibleWebsite(data.bibleWebsite || null);
+          setIsPremium(data.tier === 'premium' || data.role === 'admin' || data.email === 'dlaniger.napm.consulting@gmail.com');
         }
       } catch (e) {
         console.error(e);
@@ -206,6 +216,22 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
     }
   };
 
+  const handleMagnify = (img: { url: string, title: string, description: string }) => {
+    if (!isPremium) {
+      setShowPremiumModal({ isOpen: true, feature: 'Image Magnification' });
+      return;
+    }
+    setMagnifiedImage(img);
+  };
+
+  const handleTabClick = (tabId: string, label: string) => {
+    if (tabId === 'video' && !isPremium) {
+      setShowPremiumModal({ isOpen: true, feature: 'Living Word Media' });
+      return;
+    }
+    setActiveTab(tabId as any);
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
@@ -257,7 +283,7 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => handleTabClick(tab.id, tab.label)}
                 className={`flex items-center gap-4 px-6 py-4 rounded-xl transition-all text-left font-sans text-sm font-semibold border ${
                   activeTab === tab.id 
                     ? 'bg-text-primary text-bg-primary shadow-lg border-text-primary' 
@@ -372,7 +398,7 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     <div className="space-y-6">
                       <button 
-                        onClick={() => setMagnifiedImage({
+                        onClick={() => handleMagnify({
                           url: inquiry.geography.thenImageUrl || `https://images.unsplash.com/photo-1548625361-91e84fc11993?auto=format&fit=crop&q=80&w=1200`,
                           title: "In Biblical Times",
                           description: inquiry.geography.thenDesc
@@ -396,7 +422,7 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
 
                     <div className="space-y-6">
                       <button 
-                         onClick={() => setMagnifiedImage({
+                         onClick={() => handleMagnify({
                            url: inquiry.geography.nowImageUrl || `https://images.unsplash.com/photo-1544971510-91a787a7187e?auto=format&fit=crop&q=80&w=1200`,
                            title: "Region Today",
                            description: inquiry.geography.nowDesc
@@ -661,6 +687,12 @@ export default function InquiryDetails({ inquiryId, onBack }: InquiryDetailsProp
           </motion.div>
         )}
       </AnimatePresence>
+
+      <PremiumOverlay 
+        isOpen={showPremiumModal.isOpen} 
+        onClose={() => setShowPremiumModal({ ...showPremiumModal, isOpen: false })} 
+        featureName={showPremiumModal.feature} 
+      />
     </div>
   );
 }

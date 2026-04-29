@@ -37,6 +37,7 @@ import Reports from './components/Reports';
 import ProfileSettings from './components/ProfileSettings';
 import Glossary from './components/Glossary';
 import AdminDashboard from './components/AdminDashboard';
+import PremiumOverlay from './components/PremiumOverlay';
 import { FileText, User as UserIcon, GraduationCap, Shield } from 'lucide-react';
 
 type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports' | 'profile' | 'glossary' | 'admin';
@@ -49,6 +50,7 @@ export default function App() {
   const [selectedInquiryId, setSelectedInquiryId] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [premiumModal, setPremiumModal] = useState<{ isOpen: boolean, feature: string }>({ isOpen: false, feature: '' });
   const [theme, setTheme] = useState<'modern' | 'midnight' | 'parchment'>(() => {
     const saved = localStorage.getItem('eisejesus-theme');
     return (saved as 'modern' | 'midnight' | 'parchment') || 'modern';
@@ -127,6 +129,16 @@ export default function App() {
       await signOut(auth);
     }
     setCurrentPage('dashboard');
+  };
+
+  const isPremium = userProfile?.tier === 'premium' || isAdmin;
+
+  const navigateToPage = (page: Page, label: string) => {
+    if ((page === 'reports' || page === 'glossary') && !isPremium) {
+      setPremiumModal({ isOpen: true, feature: label });
+      return;
+    }
+    setCurrentPage(page);
   };
 
   const navigateToDetails = (id: string) => {
@@ -288,7 +300,7 @@ export default function App() {
           ].map((item) => (
             <button
               key={item.id}
-              onClick={() => setCurrentPage(item.id as Page)}
+              onClick={() => navigateToPage(item.id as Page, item.label)}
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-sans text-sm font-semibold",
                 currentPage === item.id 
@@ -297,7 +309,7 @@ export default function App() {
               )}
             >
               <item.icon className="w-4 h-4" />
-              <span className="tracking-wide">{item.label}</span>
+              <span className="tracking-wide text-left">{item.label}</span>
             </button>
           ))}
         </div>
@@ -350,6 +362,11 @@ export default function App() {
         {/* Global Modals */}
         <HelpModal isOpen={showHelp} onClose={() => setShowHelp(false)} />
         <PrivacyModal isOpen={showPrivacy} onClose={() => setShowPrivacy(false)} />
+        <PremiumOverlay 
+          isOpen={premiumModal.isOpen} 
+          onClose={() => setPremiumModal({ ...premiumModal, isOpen: false })} 
+          featureName={premiumModal.feature} 
+        />
       </main>
 
       {/* Mobile Nav */}
@@ -360,10 +377,10 @@ export default function App() {
         <button onClick={() => setCurrentPage('inquiry')} className={cn("p-2 transition-colors", currentPage === 'inquiry' ? "text-accent" : "text-text-secondary")}>
           <Search className="w-6 h-6" />
         </button>
-        <button onClick={() => setCurrentPage('reports')} className={cn("p-2 transition-colors", currentPage === 'reports' ? "text-accent" : "text-text-secondary")}>
+        <button onClick={() => navigateToPage('reports', 'Reports Menu')} className={cn("p-2 transition-colors", currentPage === 'reports' ? "text-accent" : "text-text-secondary")}>
           <FileText className="w-6 h-6" />
         </button>
-        <button onClick={() => setCurrentPage('glossary')} className={cn("p-2 transition-colors", currentPage === 'glossary' ? "text-accent" : "text-text-secondary")}>
+        <button onClick={() => navigateToPage('glossary', 'Lexicon Glossary')} className={cn("p-2 transition-colors", currentPage === 'glossary' ? "text-accent" : "text-text-secondary")}>
           <GraduationCap className="w-6 h-6" />
         </button>
         <button onClick={() => setCurrentPage('profile')} className={cn("p-2 transition-colors", currentPage === 'profile' ? "text-accent" : "text-text-secondary")}>
