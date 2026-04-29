@@ -9,6 +9,8 @@ service cloud.firestore {
     // Global Helpers
     function isSignedIn() { return request.auth != null; }
     function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isAdmin() { return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+    function isFrozen() { return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('isFrozen', false) == true; }
     function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
@@ -27,10 +29,18 @@ service cloud.firestore {
       allow read: if true;
     }
 
+    // --- Admins ---
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || (isSignedIn() && request.auth.token.email == 'dlaniger.napm.consulting@gmail.com');
+    }
+
     // --- Users ---
     match /users/{userId} {
       allow read: if isSignedIn();
-      allow write: if isOwner(userId);
+      allow write: if isOwner(userId) && !isFrozen();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
       
       function isValidUser(data) {
         return data.keys().hasAll(['uid', 'email'])
@@ -41,7 +51,7 @@ service cloud.firestore {
       // Glossary
       match /glossary/{entryId} {
         allow get, list: if isOwner(userId);
-        allow delete: if isOwner(userId);
+        allow delete: if (isOwner(userId) && !isFrozen()) || isAdmin();
         
         function isValidGlossary(data) {
           return data.keys().hasAll(['userId', 'word', 'definition', 'createdAt'])
@@ -51,8 +61,8 @@ service cloud.firestore {
             && (data.createdAt == request.time || data.createdAt is timestamp);
         }
         
-        allow create: if isOwner(userId) && isVerified() && isValidGlossary(incoming());
-        allow update: if isOwner(userId) && isVerified() && isValidGlossary(incoming())
+        allow create: if isOwner(userId) && isVerified() && isValidGlossary(incoming()) && !isFrozen();
+        allow update: if isOwner(userId) && isVerified() && isValidGlossary(incoming()) && !isFrozen()
           && incoming().word == existing().word; // Word is immutable in this app's context
       }
     }
@@ -67,9 +77,9 @@ service cloud.firestore {
     match /inquiries/{inquiryId} {
       allow get: if isSignedIn(); // Allow individual fetch if ID is known (shared)
       allow list: if isOwner(resource.data.userId); // Only own inquiries in lists
-      allow create: if isSignedIn() && isValidInquiry(incoming()) && incoming().userId == request.auth.uid;
-      allow update: if isOwner(existing().userId) && incoming().userId == existing().userId && isValidInquiry(incoming());
-      allow delete: if isOwner(existing().userId);
+      allow create: if isSignedIn() && isValidInquiry(incoming()) && incoming().userId == request.auth.uid && !isFrozen();
+      allow update: if (isOwner(existing().userId) && incoming().userId == existing().userId && isValidInquiry(incoming()) && !isFrozen()) || isAdmin();
+      allow delete: if isOwner(existing().userId) || isAdmin();
 
       function isValidInquiry(data) {
         return data.keys().hasAll(['userId', 'query', 'scripture', 'interpretation', 'createdAt'])
@@ -84,9 +94,9 @@ service cloud.firestore {
     // --- Groups ---
     match /groups/{groupId} {
       allow read: if isSignedIn(); // Public discovery of groups
-      allow create: if isSignedIn() && isValidGroup(incoming()) && incoming().ownerId == request.auth.uid;
-      allow update: if isGroupOwner(groupId) && incoming().ownerId == existing().ownerId && isValidGroup(incoming());
-      allow delete: if isGroupOwner(groupId);
+      allow create: if isSignedIn() && isValidGroup(incoming()) && incoming().ownerId == request.auth.uid && !isFrozen();
+      allow update: if (isGroupOwner(groupId) && incoming().ownerId == existing().ownerId && isValidGroup(incoming()) && !isFrozen()) || isAdmin();
+      allow delete: if isGroupOwner(groupId) || isAdmin();
 
       function isValidGroup(data) {
         return data.keys().hasAll(['name', 'ownerId', 'createdAt'])

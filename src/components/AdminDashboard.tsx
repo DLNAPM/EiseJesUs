@@ -1,0 +1,302 @@
+import { useState, useEffect } from 'react';
+import { 
+  getDbService, 
+  getAuthService, 
+  collection, 
+  getDocs, 
+  doc, 
+  updateDoc, 
+  deleteDoc, 
+  setDoc,
+  handleFirestoreError, 
+  OperationType,
+  query,
+  orderBy
+} from '../lib/firebase';
+import { UserProfile } from '../types';
+import { 
+  Shield, 
+  UserX, 
+  IceCream, 
+  Trash2, 
+  Search, 
+  CheckCircle, 
+  XCircle, 
+  TrendingUp, 
+  Users as UsersIcon,
+  Crown,
+  Settings
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+
+export default function AdminDashboard() {
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [bootstrapping, setBootstrapping] = useState(false);
+  const auth = getAuthService();
+  const db = getDbService();
+
+  const isAdminEmail = auth.currentUser?.email === 'dlaniger.napm.consulting@gmail.com';
+
+  const fetchUsers = async () => {
+    try {
+      const q = query(collection(db, 'users'), orderBy('email'));
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(doc => ({ ...doc.data() } as UserProfile));
+      setUsers(data);
+    } catch (error) {
+      console.error("Failed to fetch users", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleUpdateRole = async (uid: string, role: 'user' | 'admin') => {
+    try {
+      await updateDoc(doc(db, 'users', uid), { role });
+      if (role === 'admin') {
+        await setDoc(doc(db, 'admins', uid), { email: users.find(u => u.uid === uid)?.email });
+      } else {
+        await deleteDoc(doc(db, 'admins', uid));
+      }
+      setUsers(prev => prev.map(u => u.uid === uid ? { ...u, role } : u));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
+    }
+  };
+
+  const handleUpdateTier = async (uid: string, tier: 'basic' | 'premium') => {
+    try {
+      await updateDoc(doc(db, 'users', uid), { tier });
+      setUsers(prev => prev.map(u => u.uid === uid ? { ...u, tier } : u));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
+    }
+  };
+
+  const handleToggleFreeze = async (uid: string, isFrozen: boolean) => {
+    try {
+      await updateDoc(doc(db, 'users', uid), { isFrozen: !isFrozen });
+      setUsers(prev => prev.map(u => u.uid === uid ? { ...u, isFrozen: !isFrozen } : u));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
+    }
+  };
+
+  const handleDeleteUser = async (uid: string) => {
+    if (!confirm('EXTREME CAUTION: This will permanently delete the pilgrim profile. Proceed?')) return;
+    try {
+      await deleteDoc(doc(db, 'users', uid));
+      setUsers(prev => prev.filter(u => u.uid !== uid));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `users/${uid}`);
+    }
+  };
+
+  const bootstrapAdmin = async () => {
+    if (!auth.currentUser) return;
+    setBootstrapping(true);
+    try {
+      await setDoc(doc(db, 'admins', auth.currentUser.uid), { email: auth.currentUser.email });
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), { 
+        role: 'admin', 
+        tier: 'premium' 
+      });
+      alert("Bootstrap Successful. You are now the Grand Architect.");
+      fetchUsers();
+    } catch (e) {
+      console.error(e);
+      alert("Bootstrap failed. Ensure rules are deployed.");
+    } finally {
+      setBootstrapping(false);
+    }
+  };
+
+  const filteredUsers = users.filter(u => 
+    u.email.toLowerCase().includes(search.toLowerCase()) || 
+    u.displayName?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const stats = [
+    { name: 'Basic', value: users.filter(u => u.tier !== 'premium').length },
+    { name: 'Premium', value: users.filter(u => u.tier === 'premium').length },
+  ];
+
+  const COLORS = ['#94a3b8', '#3b82f6'];
+
+  return (
+    <div className="space-y-12">
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-serif text-text-primary mb-2">Sanctuary Overlook</h1>
+          <p className="text-text-secondary italic">Manage the pilgrim body and monitor the divine repository.</p>
+        </div>
+        {isAdminEmail && (
+          <button 
+            onClick={bootstrapAdmin}
+            disabled={bootstrapping}
+            className="px-6 py-2 bg-accent text-bg-primary rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all flex items-center gap-2"
+          >
+            <Shield className="w-4 h-4" />
+            {bootstrapping ? "Confirming..." : "Assign Self Admin"}
+          </button>
+        )}
+      </header>
+
+      {/* Analytics Section */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="md:col-span-1 bg-ui-card rounded-[2rem] border border-ui-border p-8 shadow-sm">
+          <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-widest mb-6">User Distribution</h3>
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={stats}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {stats.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'var(--ui-card)', 
+                    borderRadius: '1rem', 
+                    border: '1px solid var(--ui-border)',
+                    fontSize: '12px'
+                  }}
+                />
+                <Legend iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-ui-card rounded-[2rem] border border-ui-border p-8 flex flex-col justify-between">
+            <UsersIcon className="w-8 h-8 text-accent opacity-40" />
+            <div>
+              <p className="text-4xl font-serif italic text-text-primary">{users.length}</p>
+              <p className="text-xs font-sans font-bold text-text-secondary uppercase tracking-[0.2em]">Total Pilgrims</p>
+            </div>
+          </div>
+          <div className="bg-ui-card rounded-[2rem] border border-ui-border p-8 flex flex-col justify-between">
+            <Crown className="w-8 h-8 text-[#3b82f6] opacity-40" />
+            <div>
+              <p className="text-4xl font-serif italic text-text-primary">{users.filter(u => u.tier === 'premium').length}</p>
+              <p className="text-xs font-sans font-bold text-text-secondary uppercase tracking-[0.2em]">Premium Seekers</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* User Management Section */}
+      <section className="bg-ui-card rounded-[2rem] border border-ui-border overflow-hidden shadow-xl">
+        <div className="p-8 border-b border-ui-border flex items-center justify-between bg-ui-sidebar/30">
+          <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em]">Pilgrim Registry</h3>
+          <div className="relative w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary/40" />
+            <input 
+              type="text" 
+              placeholder="Search by name or email..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-bg-primary/50 border border-ui-border rounded-lg pl-10 pr-4 py-2 text-xs font-sans focus:outline-none focus:border-accent"
+            />
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left font-sans text-xs">
+            <thead>
+              <tr className="bg-ui-sidebar/10 text-text-secondary uppercase tracking-widest font-bold border-b border-ui-border">
+                <th className="px-8 py-4">Pilgrim</th>
+                <th className="px-8 py-4">Role</th>
+                <th className="px-8 py-4">Tier</th>
+                <th className="px-8 py-4">Status</th>
+                <th className="px-8 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ui-border">
+              {filteredUsers.map((u) => (
+                <tr key={u.uid} className="hover:bg-ui-sidebar/5 transition-colors">
+                  <td className="px-8 py-6">
+                    <div className="flex items-center gap-3">
+                      <img src={u.photoURL} alt="" className="w-8 h-8 rounded-full border border-ui-border" referrerPolicy="no-referrer" />
+                      <div>
+                        <p className="font-bold text-text-primary">{u.displayName}</p>
+                        <p className="text-[10px] opacity-60">{u.email}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-8 py-6">
+                    <select 
+                      value={u.role || 'user'} 
+                      onChange={(e) => handleUpdateRole(u.uid, e.target.value as any)}
+                      className="bg-bg-primary border border-ui-border rounded px-2 py-1 focus:outline-none focus:border-accent"
+                    >
+                      <option value="user">User</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </td>
+                  <td className="px-8 py-6">
+                    <select 
+                      value={u.tier || 'basic'} 
+                      onChange={(e) => handleUpdateTier(u.uid, e.target.value as any)}
+                      className="bg-bg-primary border border-ui-border rounded px-2 py-1 focus:outline-none focus:border-accent"
+                    >
+                      <option value="basic">Basic</option>
+                      <option value="premium">Premium</option>
+                    </select>
+                  </td>
+                  <td className="px-8 py-6">
+                    {u.isFrozen ? (
+                      <span className="flex items-center gap-1 text-red-500 font-bold uppercase tracking-tighter">
+                        <UserX className="w-3 h-3" />
+                        Frozen
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-green-500 font-bold uppercase tracking-tighter">
+                        <CheckCircle className="w-3 h-3" />
+                        Active
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-8 py-6 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button 
+                        onClick={() => handleToggleFreeze(u.uid, !!u.isFrozen)}
+                        className={`p-2 rounded-lg transition-all ${u.isFrozen ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : 'bg-red-500/10 text-red-500 hover:bg-red-500/20'}`}
+                        title={u.isFrozen ? "Thaw Account" : "Freeze Account"}
+                      >
+                        <IceCream className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteUser(u.uid)}
+                        className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"
+                        title="Delete User"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  );
+}

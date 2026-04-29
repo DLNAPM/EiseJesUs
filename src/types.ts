@@ -3,6 +3,11 @@ export interface UserProfile {
   email: string;
   displayName: string;
   photoURL: string;
+  bibleWebsite?: string;
+  role?: 'user' | 'admin';
+  tier?: 'basic' | 'premium';
+  isFrozen?: boolean;
+  theme?: 'modern' | 'midnight' | 'parchment';
 }
 
 export interface Inquiry {

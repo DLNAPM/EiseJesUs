@@ -21,11 +21,12 @@ import {
   doc,
   getDoc
 } from './lib/firebase';
-import { Home, Search, Users, LogOut, ChevronRight, BookOpen, Map, Video, MessageSquare, Share2, HelpCircle, Moon, Sun, Settings } from 'lucide-react';
+import { Home, Search, Users, LogOut, ChevronRight, BookOpen, Map, Video, MessageSquare, Share2, HelpCircle, Moon, Sun, Settings, UserX } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
 // Pages - We'll define them as components for now to keep it single file or small
+import { UserProfile } from './types';
 import Dashboard from './components/Dashboard';
 import InquiryTool from './components/InquiryTool';
 import GroupsList from './components/GroupsList';
@@ -35,12 +36,14 @@ import PrivacyModal from './components/PrivacyModal';
 import Reports from './components/Reports';
 import ProfileSettings from './components/ProfileSettings';
 import Glossary from './components/Glossary';
-import { FileText, User as UserIcon, GraduationCap } from 'lucide-react';
+import AdminDashboard from './components/AdminDashboard';
+import { FileText, User as UserIcon, GraduationCap, Shield } from 'lucide-react';
 
-type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports' | 'profile' | 'glossary';
+type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports' | 'profile' | 'glossary' | 'admin';
 
 export default function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
   const [selectedInquiryId, setSelectedInquiryId] = useState<string | null>(null);
@@ -50,6 +53,8 @@ export default function App() {
     const saved = localStorage.getItem('eisejesus-theme');
     return (saved as 'modern' | 'midnight' | 'parchment') || 'modern';
   });
+
+  const isAdmin = userProfile?.role === 'admin' || user?.email === 'dlaniger.napm.consulting@gmail.com';
 
   useEffect(() => {
     localStorage.setItem('eisejesus-theme', theme);
@@ -73,15 +78,29 @@ export default function App() {
     }
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
       if (u) {
-        // Fetch theme from user profile
         try {
           const userDoc = await getDoc(doc(getDbService(), 'users', u.uid));
-          if (userDoc.exists() && userDoc.data().theme) {
-            setTheme(userDoc.data().theme);
+          if (userDoc.exists()) {
+            const data = userDoc.data() as UserProfile;
+            setUserProfile(data);
+            if (data.theme) {
+              setTheme(data.theme);
+            }
+          } else {
+            setUserProfile({
+              uid: u.uid,
+              email: u.email || '',
+              displayName: u.displayName || '',
+              photoURL: u.photoURL || '',
+              role: u.email === 'dlaniger.napm.consulting@gmail.com' ? 'admin' : 'user',
+              tier: 'basic'
+            });
           }
         } catch (e) {
-          console.error("Error fetching user theme", e);
+          console.error("Error fetching user profile", e);
         }
+      } else {
+        setUserProfile(null);
       }
       setUser(u);
       setLoading(false);
@@ -204,6 +223,31 @@ export default function App() {
     );
   }
 
+  if (userProfile?.isFrozen) {
+    return (
+      <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center p-8 text-center bg-[url('https://images.unsplash.com/photo-1548625361-91e84fc11993?auto=format&fit=crop&q=80&w=2071')] bg-cover bg-center">
+        <div className="absolute inset-0 bg-bg-primary/90 backdrop-blur-md"></div>
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="relative z-10 max-w-md bg-ui-card p-12 rounded-[3rem] border border-ui-border shadow-2xl"
+        >
+          <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-8">
+            <UserX className="w-10 h-10 text-red-500" />
+          </div>
+          <h1 className="text-3xl font-serif text-text-primary mb-4 italic font-bold">Account Frozen</h1>
+          <p className="text-text-secondary italic mb-8">Your journey has been temporarily paused. Please contact Sanctuary Support for guidance on your path forward.</p>
+          <button 
+            onClick={handleLogout}
+            className="w-full py-4 bg-text-primary text-bg-primary rounded-2xl font-bold uppercase tracking-widest text-xs hover:opacity-90 transition-all"
+          >
+            Depart Sanctuary
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-bg-primary flex flex-col md:flex-row text-text-primary transition-colors">
       {/* Sidebar - Desktop */}
@@ -240,6 +284,7 @@ export default function App() {
             { id: 'reports', label: 'Reports Menu', icon: FileText },
             { id: 'glossary', label: 'Lexicon Glossary', icon: GraduationCap },
             { id: 'profile', label: 'Pilgrim Profile', icon: UserIcon },
+            ...(isAdmin ? [{ id: 'admin', label: 'Admin Cabinet', icon: Shield }] : []),
           ].map((item) => (
             <button
               key={item.id}
@@ -297,6 +342,7 @@ export default function App() {
             {currentPage === 'reports' && <Reports />}
             {currentPage === 'glossary' && <Glossary />}
             {currentPage === 'profile' && <ProfileSettings />}
+            {currentPage === 'admin' && <AdminDashboard />}
             {currentPage === 'details' && selectedInquiryId && <InquiryDetails inquiryId={selectedInquiryId} onBack={() => setCurrentPage('dashboard')} />}
           </motion.div>
         </AnimatePresence>
@@ -329,6 +375,11 @@ export default function App() {
         <button onClick={() => setCurrentPage('groups')} className={cn("p-2 transition-colors", currentPage === 'groups' ? "text-accent" : "text-text-secondary")}>
           <Users className="w-6 h-6" />
         </button>
+        {isAdmin && (
+          <button onClick={() => setCurrentPage('admin')} className={cn("p-2 transition-colors", currentPage === 'admin' ? "text-accent" : "text-text-secondary")}>
+            <Shield className="w-6 h-6" />
+          </button>
+        )}
         <button onClick={handleLogout} className="p-2 text-text-secondary hover:text-accent">
           <LogOut className="w-6 h-6" />
         </button>

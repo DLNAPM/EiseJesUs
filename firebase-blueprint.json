@@ -9,7 +9,10 @@
         "email": { "type": "string" },
         "displayName": { "type": "string" },
         "photoURL": { "type": "string" },
-        "bibleWebsite": { "type": "string" }
+        "bibleWebsite": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "tier": { "type": "string", "enum": ["basic", "premium"] },
+        "isFrozen": { "type": "boolean" }
       },
       "required": ["uid", "email"]
     },
@@ -119,6 +122,10 @@
     "/users/{userId}": {
       "schema": "User",
       "description": "User profiles"
+    },
+    "/admins/{adminId}": {
+      "schema": { "type": "object", "properties": { "email": { "type": "string" } } },
+      "description": "Administrative users"
     },
     "/users/{userId}/glossary/{entryId}": {
       "schema": "GlossaryEntry",
