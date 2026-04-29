@@ -52,6 +52,7 @@ export default function App() {
   const [showHelp, setShowHelp] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [premiumModal, setPremiumModal] = useState<{ isOpen: boolean, feature: string }>({ isOpen: false, feature: '' });
+  const [showHelpPointer, setShowHelpPointer] = useState(false);
   const [theme, setTheme] = useState<'modern' | 'midnight' | 'parchment'>(() => {
     const saved = localStorage.getItem('eisejesus-theme');
     return (saved as 'modern' | 'midnight' | 'parchment') || 'modern';
@@ -60,6 +61,20 @@ export default function App() {
   const isAdmin = userProfile?.role === 'admin' || 
     user?.email?.toLowerCase() === 'dlaniger.napm.consulting@gmail.com' || 
     user?.email?.toLowerCase() === 'dlaniger.napm.cosulting@gmail.com';
+
+  const isPremium = userProfile?.tier === 'premium' || isAdmin;
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (user && !isPremium && !showHelp) {
+      timer = setTimeout(() => {
+        setShowHelpPointer(true);
+      }, 30000); // 30 seconds
+    } else {
+      setShowHelpPointer(false);
+    }
+    return () => clearTimeout(timer);
+  }, [user, isPremium, showHelp]);
 
   useEffect(() => {
     localStorage.setItem('eisejesus-theme', theme);
@@ -166,8 +181,6 @@ export default function App() {
     setCurrentPage('dashboard');
   };
 
-  const isPremium = userProfile?.tier === 'premium' || isAdmin;
-
   const navigateToPage = (page: Page, label: string) => {
     if ((page === 'reports' || page === 'glossary') && !isPremium) {
       setPremiumModal({ isOpen: true, feature: label });
@@ -201,13 +214,15 @@ export default function App() {
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1438032005730-c779502df39b?auto=format&fit=crop&q=80&w=2071')] bg-cover bg-center opacity-5"></div>
         
         {/* Help Trigger - Landing */}
-        <button 
+        <motion.button 
+          animate={{ y: [0, -8, 0] }}
+          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
           onClick={() => setShowHelp(true)}
           className="absolute top-8 right-8 w-12 h-12 rounded-full bg-ui-card shadow-xl border border-ui-border flex items-center justify-center text-accent hover:scale-110 transition-all z-50 group"
           title="Understanding EiseJesUs"
         >
           <span className="font-serif italic font-bold text-xl group-hover:not-italic group-hover:scale-125 transition-all">?</span>
-        </button>
+        </motion.button>
 
         {/* Theme Toggle - Landing */}
         <button 
@@ -306,13 +321,39 @@ export default function App() {
           >
             {theme === 'modern' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-accent" />}
           </button>
-          <button 
-            onClick={() => setShowHelp(true)}
-            className="w-8 h-8 rounded-full bg-ui-card flex items-center justify-center text-accent hover:bg-ui-card/80 transition-all shadow-sm group"
-            title="Understanding EiseJesUs"
-          >
-            <span className="font-serif italic font-bold group-hover:not-italic">?</span>
-          </button>
+          <div className="relative">
+            <motion.button 
+              animate={{ y: [0, -4, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+              onClick={() => {
+                setShowHelp(true);
+                setShowHelpPointer(false);
+              }}
+              className="w-8 h-8 rounded-full bg-ui-card flex items-center justify-center text-accent hover:bg-ui-card/80 transition-all shadow-sm group"
+              title="Understanding EiseJesUs"
+            >
+              <span className="font-serif italic font-bold group-hover:not-italic">?</span>
+            </motion.button>
+
+            {showHelpPointer && (
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="absolute left-full ml-4 top-1/2 -translate-y-1/2 whitespace-nowrap flex items-center gap-3 z-50"
+              >
+                <motion.div 
+                  animate={{ x: [0, -10, 0] }}
+                  transition={{ repeat: Infinity, duration: 1 }}
+                  className="text-4xl filter drop-shadow-lg"
+                >
+                  👈
+                </motion.div>
+                <div className="bg-accent text-bg-primary px-4 py-2 rounded-lg font-sans text-[10px] font-bold uppercase tracking-wider shadow-xl border border-accent">
+                  Read "How to Use"
+                </div>
+              </motion.div>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col items-center gap-2 mb-12 text-center">
@@ -424,6 +465,26 @@ export default function App() {
         <button onClick={toggleTheme} className="p-2 text-text-secondary">
           {theme === 'modern' ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6 text-accent" />}
         </button>
+        <motion.button 
+          animate={{ y: [0, -4, 0] }}
+          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+          onClick={() => {
+            setShowHelp(true);
+            setShowHelpPointer(false);
+          }} 
+          className="p-2 text-accent relative"
+        >
+          <HelpCircle className="w-6 h-6" />
+          {showHelpPointer && (
+            <motion.div 
+              animate={{ y: [-10, 0, -10] }}
+              transition={{ repeat: Infinity, duration: 1 }}
+              className="absolute -top-12 left-1/2 -translate-x-1/2 text-2xl"
+            >
+              👇
+            </motion.div>
+          )}
+        </motion.button>
         <button onClick={() => setCurrentPage('groups')} className={cn("p-2 transition-colors", currentPage === 'groups' ? "text-accent" : "text-text-secondary")}>
           <Users className="w-6 h-6" />
         </button>
