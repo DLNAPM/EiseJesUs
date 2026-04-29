@@ -38,6 +38,7 @@ import Reports from './components/Reports';
 import ProfileSettings from './components/ProfileSettings';
 import Glossary from './components/Glossary';
 import AdminDashboard from './components/AdminDashboard';
+import ScriptureBanner from './components/ScriptureBanner';
 import PremiumOverlay from './components/PremiumOverlay';
 import { FileText, User as UserIcon, GraduationCap, Shield } from 'lucide-react';
 
@@ -424,6 +425,7 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto h-screen relative">
+        <ScriptureBanner />
         <AnimatePresence mode="wait">
           <motion.div
             key={currentPage}
