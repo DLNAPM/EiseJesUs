@@ -88,11 +88,16 @@ export default function App() {
           if (userDoc.exists()) {
             const data = userDoc.data() as UserProfile;
             
-            // Auto-provision specified admin email if not already set
+            // Auto-provision specified admin email if not already set or if frozen
             const isTargetAdmin = u.email?.toLowerCase() === 'dlaniger.napm.consulting@gmail.com' || u.email?.toLowerCase() === 'dlaniger.napm.cosulting@gmail.com';
             
-            if (isTargetAdmin && (data.role !== 'admin' || data.tier !== 'premium')) {
-              const updatedProfile = { ...data, role: 'admin' as const, tier: 'premium' as const };
+            if (isTargetAdmin && (data.role !== 'admin' || data.tier !== 'premium' || data.isFrozen)) {
+              const updatedProfile = { 
+                ...data, 
+                role: 'admin' as const, 
+                tier: 'premium' as const,
+                isFrozen: false 
+              };
               await setDoc(doc(getDbService(), 'users', u.uid), updatedProfile);
               await setDoc(doc(getDbService(), 'admins', u.uid), { email: u.email });
               setUserProfile(updatedProfile);
@@ -111,7 +116,8 @@ export default function App() {
               displayName: u.displayName || '',
               photoURL: u.photoURL || '',
               role: isTargetAdmin ? 'admin' : 'user',
-              tier: isTargetAdmin ? 'premium' : 'basic'
+              tier: isTargetAdmin ? 'premium' : 'basic',
+              isFrozen: false
             };
             await setDoc(doc(getDbService(), 'users', u.uid), newProfile);
             if (isTargetAdmin) {
