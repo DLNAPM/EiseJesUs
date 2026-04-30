@@ -13,6 +13,7 @@ export interface UserProfile {
 export interface Inquiry {
   id?: string;
   userId: string;
+  userEmail?: string;
   query: string;
   scripture: string;
   interpretation: string;

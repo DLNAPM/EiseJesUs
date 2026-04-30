@@ -64,6 +64,7 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
       const inquiriesPath = 'inquiries';
       const docRef = await addDoc(collection(getDbService(), inquiriesPath), {
         userId: auth.currentUser.uid,
+        userEmail: auth.currentUser.email,
         scripture,
         query: queryText,
         ...exegesis,

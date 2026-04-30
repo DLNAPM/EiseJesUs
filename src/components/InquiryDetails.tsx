@@ -16,6 +16,7 @@ interface InquiryDetailsProps {
 
 export default function InquiryDetails({ inquiryId, onBack, isPremium }: InquiryDetailsProps) {
   const [inquiry, setInquiry] = useState<Inquiry | null>(null);
+  const [senderEmail, setSenderEmail] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'faith' | 'academic' | 'geo' | 'video'>('faith');
   const [showShareModal, setShowShareModal] = useState(false);
@@ -140,7 +141,22 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
       try {
         const snapshot = await getDoc(doc(getDbService(), docPath));
         if (snapshot.exists()) {
-          setInquiry({ id: snapshot.id, ...snapshot.data() } as Inquiry);
+          const data = snapshot.data();
+          setInquiry({ id: snapshot.id, ...data } as Inquiry);
+          
+          if (data.userEmail) {
+            setSenderEmail(data.userEmail);
+          } else if (data.userId) {
+            // Fetch profile for earlier inquiries that don't have userEmail saved
+            try {
+              const userProfileDoc = await getDoc(doc(getDbService(), 'users', data.userId));
+              if (userProfileDoc.exists()) {
+                setSenderEmail(userProfileDoc.data().email);
+              }
+            } catch (e) {
+              console.warn("Could not fetch sender email profile", e);
+            }
+          }
         }
       } catch (error) {
         handleFirestoreError(error, OperationType.GET, docPath);
@@ -256,6 +272,11 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
         {/* Left Column: Headers and Navigation */}
         <div className="lg:col-span-1 space-y-8">
           <div>
+            {senderEmail && inquiry.userId !== getAuthService().currentUser?.uid && (
+              <div className="text-[10px] font-sans font-black text-text-secondary uppercase tracking-[0.3em] mb-1 opacity-60">
+                Shared by: {senderEmail}
+              </div>
+            )}
             {getBibleLink(inquiry.scripture) ? (
               <a 
                 href={getBibleLink(inquiry.scripture)!} 

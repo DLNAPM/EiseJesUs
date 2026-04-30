@@ -97,6 +97,7 @@ service cloud.firestore {
       function isValidInquiry(data) {
         return data.keys().hasAll(['userId', 'query', 'scripture', 'interpretation', 'createdAt'])
           && data.userId is string
+          && (data.get('userEmail', '') is string && data.get('userEmail', '').size() <= 256)
           && data.query is string && data.query.size() <= 2000
           && data.scripture is string && data.scripture.size() <= 500
           && data.interpretation is string && data.interpretation.size() <= 20000
