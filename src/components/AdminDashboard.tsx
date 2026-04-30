@@ -11,7 +11,9 @@ import {
   handleFirestoreError, 
   OperationType,
   query,
-  orderBy
+  orderBy,
+  limit,
+  Timestamp
 } from '../lib/firebase';
 import { UserProfile } from '../types';
 import { 
@@ -25,13 +27,23 @@ import {
   TrendingUp, 
   Users as UsersIcon,
   Crown,
-  Settings
+  Settings,
+  Bell
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
+interface SystemLog {
+  id: string;
+  type: string;
+  userId: string;
+  userEmail: string;
+  timestamp: Timestamp;
+}
+
 export default function AdminDashboard() {
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [logs, setLogs] = useState<SystemLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [bootstrapping, setBootstrapping] = useState(false);
@@ -49,13 +61,27 @@ export default function AdminDashboard() {
       setUsers(data);
     } catch (error) {
       console.error("Failed to fetch users", error);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const fetchLogs = async () => {
+    try {
+      const q = query(collection(db, 'system_logs'), orderBy('timestamp', 'desc'), limit(10));
+      const snapshot = await getDocs(q);
+      const logData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as SystemLog));
+      setLogs(logData);
+    } catch (error) {
+      console.error("Failed to fetch logs", error);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    const init = async () => {
+      setLoading(true);
+      await Promise.all([fetchUsers(), fetchLogs()]);
+      setLoading(false);
+    };
+    init();
   }, []);
 
   const handleUpdateRole = async (uid: string, role: 'user' | 'admin') => {
@@ -151,18 +177,18 @@ export default function AdminDashboard() {
       </header>
 
       {/* Analytics Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-1 bg-ui-card rounded-[2rem] border border-ui-border p-8 shadow-sm">
-          <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-widest mb-6">User Distribution</h3>
-          <div className="h-[250px] w-full">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="md:col-span-1 bg-ui-card rounded-[2rem] border border-ui-border p-6 shadow-sm">
+          <h3 className="text-[10px] font-sans font-black text-accent uppercase tracking-[0.3em] mb-6">User Distribution</h3>
+          <div className="h-[200px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={stats}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
+                  innerRadius={50}
+                  outerRadius={70}
                   paddingAngle={5}
                   dataKey="value"
                 >
@@ -175,29 +201,68 @@ export default function AdminDashboard() {
                     backgroundColor: 'var(--ui-card)', 
                     borderRadius: '1rem', 
                     border: '1px solid var(--ui-border)',
-                    fontSize: '12px'
+                    fontSize: '10px'
                   }}
                 />
-                <Legend iconType="circle" />
               </PieChart>
             </ResponsiveContainer>
           </div>
+          <div className="flex justify-center gap-4 mt-2">
+            {stats.map((s, i) => (
+              <div key={s.name} className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i] }}></div>
+                <span className="text-[9px] font-bold text-text-secondary uppercase tracking-tighter">{s.name}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-ui-card rounded-[2rem] border border-ui-border p-8 flex flex-col justify-between">
+        <div className="md:col-span-1 flex flex-col gap-4">
+          <div className="bg-ui-card rounded-[2rem] border border-ui-border p-8 flex flex-col justify-between flex-1">
             <UsersIcon className="w-8 h-8 text-accent opacity-40" />
             <div>
               <p className="text-4xl font-serif italic text-text-primary">{users.length}</p>
-              <p className="text-xs font-sans font-bold text-text-secondary uppercase tracking-[0.2em]">Total Pilgrims</p>
+              <p className="text-[10px] font-sans font-black text-text-secondary uppercase tracking-[0.2em]">Total Pilgrims</p>
             </div>
           </div>
-          <div className="bg-ui-card rounded-[2rem] border border-ui-border p-8 flex flex-col justify-between">
+          <div className="bg-ui-card rounded-[2rem] border border-ui-border p-8 flex flex-col justify-between flex-1">
             <Crown className="w-8 h-8 text-[#3b82f6] opacity-40" />
             <div>
               <p className="text-4xl font-serif italic text-text-primary">{users.filter(u => u.tier === 'premium').length}</p>
-              <p className="text-xs font-sans font-bold text-text-secondary uppercase tracking-[0.2em]">Premium Seekers</p>
+              <p className="text-[10px] font-sans font-black text-text-secondary uppercase tracking-[0.2em]">Premium Seekers</p>
             </div>
+          </div>
+        </div>
+
+        <div className="md:col-span-2 bg-ui-card rounded-[2rem] border border-ui-border p-8 shadow-sm flex flex-col">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-[10px] font-sans font-black text-accent uppercase tracking-[0.3em]">Recent Activity Log</h3>
+            <Bell className="w-4 h-4 text-accent animate-pulse" />
+          </div>
+          <div className="space-y-4 flex-1">
+            {logs.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-text-secondary italic text-sm">
+                No recent activity recorded.
+              </div>
+            ) : (
+              logs.map((log) => (
+                <div key={log.id} className="flex items-start gap-4 p-4 rounded-2xl bg-bg-primary/30 border border-ui-border/50">
+                  <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                    <UsersIcon className="w-4 h-4 text-accent" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-text-primary">First Login Attempt</p>
+                    <p className="text-xs text-text-secondary truncate">{log.userEmail}</p>
+                    <p className="text-[9px] text-accent/60 font-black uppercase tracking-widest mt-1">
+                      {log.timestamp?.toDate().toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="bg-accent/10 px-2 py-1 rounded text-[8px] font-black uppercase text-accent tracking-tighter">
+                    NEW USER
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

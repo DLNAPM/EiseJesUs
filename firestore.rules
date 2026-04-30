@@ -48,6 +48,12 @@ service cloud.firestore {
       allow write: if isAdmin() || (isSignedIn() && request.auth.token.email == 'dlaniger.napm.consulting@gmail.com');
     }
 
+    // --- System Logs ---
+    match /system_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+    }
+
     // --- Users ---
     match /users/{userId} {
       allow read: if isSignedIn();

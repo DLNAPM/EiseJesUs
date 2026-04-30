@@ -20,7 +20,10 @@ import {
   getDbService,
   doc,
   getDoc,
-  setDoc
+  setDoc,
+  addDoc,
+  collection,
+  serverTimestamp
 } from './lib/firebase';
 import { Home, Search, Users, LogOut, ChevronRight, BookOpen, Map, Video, MessageSquare, Share2, HelpCircle, Moon, Sun, Settings, UserX } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -144,6 +147,13 @@ export default function App() {
               if (isTargetAdmin) {
                 await setDoc(doc(getDbService(), 'admins', u.uid), { email: u.email });
               }
+              // Log first-time login for admin monitoring
+              await addDoc(collection(getDbService(), 'system_logs'), {
+                type: 'first_login',
+                userId: u.uid,
+                userEmail: u.email || '',
+                timestamp: serverTimestamp()
+              });
               setUserProfile(newProfile);
             } catch (createErr) {
               console.error("User profile creation failed", createErr);
