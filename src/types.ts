@@ -8,6 +8,7 @@ export interface UserProfile {
   tier?: 'basic' | 'premium';
   isFrozen?: boolean;
   theme?: 'modern' | 'midnight' | 'parchment';
+  lastLoginAt?: any;
 }
 
 export interface Inquiry {

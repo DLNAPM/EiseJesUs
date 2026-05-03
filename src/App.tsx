@@ -23,7 +23,8 @@ import {
   setDoc,
   addDoc,
   collection,
-  serverTimestamp
+  serverTimestamp,
+  updateDoc
 } from './lib/firebase';
 import { Home, Search, Users, LogOut, ChevronRight, BookOpen, Map, Video, MessageSquare, Share2, HelpCircle, Moon, Sun, Settings, UserX } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -116,7 +117,8 @@ export default function App() {
                   ...data, 
                   role: 'admin' as const, 
                   tier: 'premium' as const,
-                  isFrozen: false 
+                  isFrozen: false,
+                  lastLoginAt: serverTimestamp()
                 };
                 await setDoc(doc(getDbService(), 'users', u.uid), updatedProfile);
                 await setDoc(doc(getDbService(), 'admins', u.uid), { email: u.email });
@@ -126,7 +128,15 @@ export default function App() {
                 setUserProfile(data); // Fallback to existing data
               }
             } else {
-              setUserProfile(data);
+              // Standard last login update
+              try {
+                const userRef = doc(getDbService(), 'users', u.uid);
+                await updateDoc(userRef, { lastLoginAt: serverTimestamp() });
+                setUserProfile({ ...data, lastLoginAt: new Date() }); // Optimistic update
+              } catch (updateErr) {
+                console.error("Failed to update last login", updateErr);
+                setUserProfile(data);
+              }
             }
 
             if (data.theme) {
@@ -141,7 +151,8 @@ export default function App() {
                 photoURL: u.photoURL || '',
                 role: isTargetAdmin ? 'admin' : 'user',
                 tier: isTargetAdmin ? 'premium' : 'basic',
-                isFrozen: false
+                isFrozen: false,
+                lastLoginAt: serverTimestamp()
               };
               await setDoc(doc(getDbService(), 'users', u.uid), newProfile);
               if (isTargetAdmin) {

@@ -291,6 +291,7 @@ export default function AdminDashboard() {
                 <th className="px-8 py-4">Role</th>
                 <th className="px-8 py-4">Tier</th>
                 <th className="px-8 py-4">Status</th>
+                <th className="px-8 py-4">Last Login</th>
                 <th className="px-8 py-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -338,6 +339,16 @@ export default function AdminDashboard() {
                         Active
                       </span>
                     )}
+                  </td>
+                  <td className="px-8 py-6">
+                    <div className="flex flex-col">
+                      <span className="font-bold text-text-primary">
+                        {u.lastLoginAt ? (u.lastLoginAt.toDate ? u.lastLoginAt.toDate().toLocaleDateString() : new Date(u.lastLoginAt).toLocaleDateString()) : 'N/A'}
+                      </span>
+                      <span className="text-[10px] text-text-secondary opacity-60">
+                        {u.lastLoginAt ? (u.lastLoginAt.toDate ? u.lastLoginAt.toDate().toLocaleTimeString() : new Date(u.lastLoginAt).toLocaleTimeString()) : '--:--'}
+                      </span>
+                    </div>
                   </td>
                   <td className="px-8 py-6 text-right">
                     <div className="flex items-center justify-end gap-2">
