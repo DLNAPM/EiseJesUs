@@ -190,6 +190,19 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
     setSharing(groupId);
     try {
       const discussionsPath = `groups/${groupId}/discussions`;
+      
+      // Check for existing share to prevent duplicates
+      const q = query(collection(getDbService(), discussionsPath), where('inquiryId', '==', inquiryId));
+      const existing = await getDocs(q);
+      if (!existing.empty) {
+        setShareSuccess(true);
+        setTimeout(() => {
+          setShareSuccess(false);
+          setShowShareModal(false);
+        }, 1500);
+        return;
+      }
+
       await addDoc(collection(getDbService(), discussionsPath), {
         groupId,
         inquiryId,
@@ -224,9 +237,25 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
     setSharing('individual');
     try {
       const sharesPath = 'direct_shares';
+      const emailLower = email.toLowerCase().trim();
+
+      // Check for existing share to prevent duplicates
+      const q = query(
+        collection(getDbService(), sharesPath),
+        where('inquiryId', '==', inquiryId),
+        where('recipientEmail', '==', emailLower)
+      );
+      const existing = await getDocs(q);
+      
+      if (!existing.empty) {
+        setEmailError('This seeking has already been shared with this individual.');
+        setSharing(null);
+        return;
+      }
+
       await addDoc(collection(getDbService(), sharesPath), {
         senderId: getAuthService().currentUser?.uid,
-        recipientEmail: recipientEmail.toLowerCase().trim(),
+        recipientEmail: emailLower,
         inquiryId,
         createdAt: serverTimestamp()
       });
