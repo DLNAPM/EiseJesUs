@@ -58,13 +58,16 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create: if isOwner(userId) && isValidUser(incoming());
-      allow update: if ((isOwner(userId) && !isFrozen()) || isAdmin()) && isValidUser(incoming());
+      allow update: if (isAdmin() || (isOwner(userId) && !isFrozen())) && isValidUser(incoming());
       allow delete: if isAdmin();
       
       function isValidUser(data) {
-        return data.keys().hasAll(['uid', 'email'])
-          && data.uid is string && data.uid == userId
-          && data.email is string && data.email.size() <= 256
+        // userId is from the match path variable
+        let hasUid = data.keys().contains('uid');
+        let hasEmail = data.keys().contains('email');
+        
+        return (!hasUid || (data.uid is string && data.uid == userId))
+          && (!hasEmail || (data.email is string && data.email.size() <= 256))
           && (!data.keys().contains('lastLoginAt') || data.lastLoginAt is timestamp);
       }
 

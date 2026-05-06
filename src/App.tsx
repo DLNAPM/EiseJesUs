@@ -110,22 +110,34 @@ export default function App() {
           if (userDoc.exists()) {
             const data = userDoc.data() as UserProfile;
             
-            // Auto-provision specified admin email if not already set or if frozen
-            if (isTargetAdmin && (data.role !== 'admin' || data.tier !== 'premium' || data.isFrozen)) {
+            // Ensure admin status and dashboard access
+            if (isTargetAdmin) {
               try {
-                const updatedProfile = { 
-                  ...data, 
-                  role: 'admin' as const, 
-                  tier: 'premium' as const,
-                  isFrozen: false,
-                  lastLoginAt: serverTimestamp()
-                };
-                await setDoc(doc(getDbService(), 'users', u.uid), updatedProfile);
-                await setDoc(doc(getDbService(), 'admins', u.uid), { email: u.email });
-                setUserProfile(updatedProfile);
-              } catch (writeErr) {
-                console.error("Admin auto-provisioning failed", writeErr);
-                setUserProfile(data); // Fallback to existing data
+                // Ensure admins collection doc exists for isAdmin() check in rules
+                const adminRef = doc(getDbService(), 'admins', u.uid);
+                const adminSnap = await getDoc(adminRef);
+                if (!adminSnap.exists()) {
+                  await setDoc(adminRef, { email: u.email });
+                }
+
+                if (data.role !== 'admin' || data.tier !== 'premium' || data.isFrozen) {
+                  const updatedProfile = { 
+                    ...data, 
+                    role: 'admin' as const, 
+                    tier: 'premium' as const,
+                    isFrozen: false,
+                    lastLoginAt: serverTimestamp()
+                  };
+                  await setDoc(doc(getDbService(), 'users', u.uid), updatedProfile);
+                  setUserProfile(updatedProfile);
+                } else {
+                  // Profile is correct, just update last login
+                  await updateDoc(doc(getDbService(), 'users', u.uid), { lastLoginAt: serverTimestamp() });
+                  setUserProfile({ ...data, lastLoginAt: new Date() });
+                }
+              } catch (err) {
+                console.error("Admin check/update failed", err);
+                setUserProfile(data);
               }
             } else {
               // Standard last login update
