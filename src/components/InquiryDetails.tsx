@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { getDbService, doc, getDoc, handleFirestoreError, OperationType, collection, getDocs, query, where, addDoc, serverTimestamp, getAuthService } from '../lib/firebase';
 import { Inquiry, BibleGroup } from '../types';
-import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, MessageSquare, ExternalLink, Share2, Users, Loader2, Check, X, GraduationCap } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Map, Video, BookOpen, Sparkles, MessageSquare, ExternalLink, Share2, Users, Loader2, Check, X, GraduationCap, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import { fetchDefinition } from '../lib/gemini';
 import PremiumOverlay from './PremiumOverlay';
 import { UserProfile } from '../types';
+import { cn } from '../lib/utils';
 
 interface InquiryDetailsProps {
   inquiryId: string;
@@ -26,6 +27,8 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
   const [sharing, setSharing] = useState<string | null>(null); // groupId or 'individual'
   const [shareSuccess, setShareSuccess] = useState(false);
   const [bibleWebsite, setBibleWebsite] = useState<string | null>(null);
+  const [showGmailWarning, setShowGmailWarning] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
   
   // Image Magnification State
   const [magnifiedImage, setMagnifiedImage] = useState<{ url: string, title: string, description: string } | null>(null);
@@ -209,6 +212,13 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
     e.preventDefault();
     if (!getAuthService().currentUser || !recipientEmail) return;
     
+    const email = recipientEmail.toLowerCase().trim();
+    if (!email.endsWith('@gmail.com')) {
+      setEmailError('Sharing requires a valid Gmail account.');
+      return;
+    }
+    
+    setEmailError(null);
     setSharing('individual');
     try {
       const sharesPath = 'direct_shares';
@@ -548,7 +558,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                   Small Groups
                 </button>
                 <button 
-                  onClick={() => setShareMode('individual')}
+                  onClick={() => setShowGmailWarning(true)}
                   className={`flex-1 py-2 text-[10px] font-sans font-bold uppercase tracking-widest rounded-lg transition-all ${
                     shareMode === 'individual' ? 'bg-bg-primary text-accent shadow-sm' : 'text-text-secondary/40'
                   }`}
@@ -556,6 +566,43 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                   Direct Reveal
                 </button>
               </div>
+
+              {/* Gmail Warning Pop-up */}
+              <AnimatePresence>
+                {showGmailWarning && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute inset-x-10 top-1/2 -translate-y-1/2 bg-text-primary text-bg-primary p-8 rounded-3xl z-40 shadow-2xl border border-white/10"
+                  >
+                    <div className="flex flex-col items-center text-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
+                        <Globe className="w-6 h-6 text-accent" />
+                      </div>
+                      <h3 className="text-xl font-serif italic font-bold text-accent">Verify Gmail Account</h3>
+                      <p className="text-xs font-serif leading-relaxed opacity-80">
+                        Before sharing, please verify with the recipient that they are using a valid <span className="font-bold text-white">GMAIL account</span>. Direct sharing only supports Gmail addresses at this time.
+                      </p>
+                      <button 
+                        onClick={() => {
+                          setShareMode('individual');
+                          setShowGmailWarning(false);
+                        }}
+                        className="w-full py-3 bg-accent text-bg-primary rounded-xl font-sans font-black text-[10px] uppercase tracking-widest hover:opacity-90 transition-all"
+                      >
+                        I have verified
+                      </button>
+                      <button 
+                        onClick={() => setShowGmailWarning(false)}
+                        className="text-[10px] font-sans font-bold uppercase tracking-widest opacity-40 hover:opacity-100"
+                      >
+                        Go Back
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
               
               {shareMode === 'groups' ? (
                 <div className="space-y-3 max-h-[350px] overflow-y-auto mb-2 pr-2 scrollbar-thin scrollbar-thumb-ui-border">
@@ -594,10 +641,21 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                       type="email"
                       required
                       value={recipientEmail}
-                      onChange={(e) => setRecipientEmail(e.target.value)}
+                      onChange={(e) => {
+                        setRecipientEmail(e.target.value);
+                        if (emailError) setEmailError(null);
+                      }}
                       placeholder="believer@gmail.com"
-                      className="w-full px-5 py-4 bg-ui-card border border-ui-border rounded-2xl font-serif text-text-primary focus:outline-none focus:border-accent transition-all"
+                      className={cn(
+                        "w-full px-5 py-4 bg-ui-card border rounded-2xl font-serif text-text-primary focus:outline-none transition-all",
+                        emailError ? "border-red-500/50" : "border-ui-border focus:border-accent"
+                      )}
                     />
+                    {emailError && (
+                      <p className="text-[10px] text-red-500 font-bold mt-2 font-sans uppercase tracking-tighter">
+                        {emailError}
+                      </p>
+                    )}
                   </div>
                   <button 
                     type="submit"
