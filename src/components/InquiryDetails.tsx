@@ -192,7 +192,12 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
       const discussionsPath = `groups/${groupId}/discussions`;
       
       // Check for existing share to prevent duplicates
-      const q = query(collection(getDbService(), discussionsPath), where('inquiryId', '==', inquiryId));
+      const currentUserId = getAuthService().currentUser?.uid;
+      const q = query(
+        collection(getDbService(), discussionsPath), 
+        where('inquiryId', '==', inquiryId),
+        where('sharedBy', '==', currentUserId)
+      );
       const existing = await getDocs(q);
       if (!existing.empty) {
         setShareSuccess(true);
@@ -206,7 +211,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
       await addDoc(collection(getDbService(), discussionsPath), {
         groupId,
         inquiryId,
-        sharedBy: getAuthService().currentUser?.uid,
+        sharedBy: currentUserId,
         createdAt: serverTimestamp()
       });
       setShareSuccess(true);
@@ -238,12 +243,14 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
     try {
       const sharesPath = 'direct_shares';
       const emailLower = email.toLowerCase().trim();
+      const currentUserId = getAuthService().currentUser?.uid;
 
       // Check for existing share to prevent duplicates
       const q = query(
         collection(getDbService(), sharesPath),
         where('inquiryId', '==', inquiryId),
-        where('recipientEmail', '==', emailLower)
+        where('recipientEmail', '==', emailLower),
+        where('senderId', '==', currentUserId)
       );
       const existing = await getDocs(q);
       
@@ -254,7 +261,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
       }
 
       await addDoc(collection(getDbService(), sharesPath), {
-        senderId: getAuthService().currentUser?.uid,
+        senderId: currentUserId,
         recipientEmail: emailLower,
         inquiryId,
         createdAt: serverTimestamp()
