@@ -11,9 +11,10 @@ interface DashboardProps {
 
 export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardProps) {
   const [recentInquiries, setRecentInquiries] = useState<Inquiry[]>([]);
-  const [sharedInquiries, setSharedInquiries] = useState<Inquiry[]>([]);
+  const [sharedInquiries, setSharedInquiries] = useState<(Inquiry & { shareId?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingShareId, setDeletingShareId] = useState<string | null>(null);
 
   const fetchInquiries = async () => {
     const auth = getAuthService();
@@ -37,9 +38,23 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
           where('recipientEmail', '==', auth.currentUser.email.toLowerCase())
         );
         const shareSnap = await getDocs(sharesQ);
-        const inquiryPromises = shareSnap.docs.map(s => getDoc(doc(getDbService(), 'inquiries', s.data().inquiryId)));
+        const shareDocs = shareSnap.docs;
+        
+        const inquiryPromises = shareDocs.map(s => getDoc(doc(getDbService(), 'inquiries', s.data().inquiryId)));
         const inqSnaps = await Promise.all(inquiryPromises);
-        setSharedInquiries(inqSnaps.filter(s => s.exists()).map(s => ({ id: s.id, ...s.data() } as Inquiry)));
+        
+        const shared = inqSnaps
+          .map((s, idx) => {
+            if (!s.exists()) return null;
+            return { 
+              id: s.id, 
+              ...s.data(), 
+              shareId: shareDocs[idx].id 
+            } as Inquiry & { shareId: string };
+          })
+          .filter((item): item is Inquiry & { shareId: string } => item !== null);
+          
+        setSharedInquiries(shared);
       }
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, inquiriesPath);
@@ -64,6 +79,21 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
       handleFirestoreError(error, OperationType.DELETE, `inquiries/${id}`);
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleDeleteShared = async (e: React.MouseEvent, shareId: string) => {
+    e.stopPropagation();
+    if (!confirm('Are you sure you wish to remove this shared seeking from your library?')) return;
+
+    setDeletingShareId(shareId);
+    try {
+      await deleteDoc(doc(getDbService(), 'direct_shares', shareId));
+      setSharedInquiries(prev => prev.filter(inq => inq.shareId !== shareId));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `direct_shares/${shareId}`);
+    } finally {
+      setDeletingShareId(null);
     }
   };
 
@@ -167,18 +197,36 @@ export default function Dashboard({ onSelectInquiry, onNewInquiry }: DashboardPr
           </div>
           <div className="space-y-4">
             {sharedInquiries.map((inquiry) => (
-              <motion.button
-                key={inquiry.id}
-                whileHover={{ x: 5 }}
-                onClick={() => onSelectInquiry(inquiry.id!)}
-                className="w-full bg-ui-card/30 p-6 rounded-2xl border border-ui-border flex items-center justify-between group hover:bg-ui-card transition-all text-left shadow-sm"
+              <motion.div
+                key={inquiry.shareId}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="group relative"
               >
-                <div>
-                  <span className="text-xs font-sans font-bold text-accent uppercase tracking-widest mb-1 block">{inquiry.scripture}</span>
-                  <h3 className="font-serif text-lg text-text-primary line-clamp-1 italic">{inquiry.query}</h3>
-                </div>
-                <ChevronRight className="w-5 h-5 text-ui-border group-hover:text-accent transition-colors" />
-              </motion.button>
+                <button
+                  onClick={() => onSelectInquiry(inquiry.id!)}
+                  className="w-full bg-ui-card/30 p-6 rounded-2xl border border-ui-border flex items-center justify-between group hover:bg-ui-card transition-all text-left shadow-sm pr-16"
+                >
+                  <div className="overflow-hidden">
+                    <span className="text-xs font-sans font-bold text-accent uppercase tracking-widest mb-1 block">{inquiry.scripture}</span>
+                    <h3 className="font-serif text-lg text-text-primary line-clamp-1 italic">{inquiry.query}</h3>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-ui-border group-hover:text-accent transition-colors absolute right-6 top-1/2 -translate-y-1/2" />
+                </button>
+
+                <button
+                  onClick={(e) => handleDeleteShared(e, inquiry.shareId!)}
+                  disabled={deletingShareId === inquiry.shareId}
+                  className="absolute right-14 top-1/2 -translate-y-1/2 p-2 text-ui-border hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                  title="Remove Shared Seeking"
+                >
+                  {deletingShareId === inquiry.shareId ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </button>
+              </motion.div>
             ))}
           </div>
         </section>
