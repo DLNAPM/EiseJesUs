@@ -213,8 +213,10 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
     if (!getAuthService().currentUser || !recipientEmail) return;
     
     const email = recipientEmail.toLowerCase().trim();
-    if (!email.endsWith('@gmail.com')) {
-      setEmailError('Sharing requires a valid Gmail account.');
+    // Basic email validation instead of strict @gmail.com check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address.');
       return;
     }
     
@@ -580,9 +582,9 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
                       <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
                         <Globe className="w-6 h-6 text-accent" />
                       </div>
-                      <h3 className="text-xl font-serif italic font-bold text-accent">Verify Gmail Account</h3>
+                      <h3 className="text-xl font-serif italic font-bold text-accent">Verify Google Account</h3>
                       <p className="text-xs font-serif leading-relaxed opacity-80">
-                        Before sharing, please verify with the recipient that they are using a valid <span className="font-bold text-white">GMAIL account</span>. Direct sharing only supports Gmail addresses at this time.
+                        Before sharing, please verify with the recipient that they are using a valid <span className="font-bold text-white">Google account</span>. Direct sharing requires the recipient to sign in with this exact email.
                       </p>
                       <button 
                         onClick={() => {
@@ -636,7 +638,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
               ) : (
                 <form onSubmit={shareToIndividual} className="space-y-6">
                   <div>
-                    <label className="block text-[10px] font-sans font-bold uppercase tracking-widest text-accent mb-3">Gmail Account</label>
+                    <label className="block text-[10px] font-sans font-bold uppercase tracking-widest text-accent mb-3">Google Account Email</label>
                     <input 
                       type="email"
                       required
