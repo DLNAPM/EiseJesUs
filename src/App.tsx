@@ -42,11 +42,12 @@ import Reports from './components/Reports';
 import ProfileSettings from './components/ProfileSettings';
 import Glossary from './components/Glossary';
 import AdminDashboard from './components/AdminDashboard';
+import SettingsPage from './components/Settings';
 import ScriptureBanner from './components/ScriptureBanner';
 import PremiumOverlay from './components/PremiumOverlay';
-import { FileText, User as UserIcon, GraduationCap, Shield } from 'lucide-react';
+import { FileText, User as UserIcon, GraduationCap, Shield, Settings as SettingsIcon } from 'lucide-react';
 
-type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports' | 'profile' | 'glossary' | 'admin';
+type Page = 'dashboard' | 'inquiry' | 'groups' | 'details' | 'reports' | 'settings' | 'glossary' | 'admin';
 
 export default function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -414,7 +415,7 @@ export default function App() {
             { id: 'groups', label: 'My Study Groups', icon: Users },
             { id: 'reports', label: 'Reports Menu', icon: FileText },
             { id: 'glossary', label: 'Lexicon Glossary', icon: GraduationCap },
-            { id: 'profile', label: 'Pilgrim Profile', icon: UserIcon },
+            { id: 'settings', label: 'Sanctuary Settings', icon: SettingsIcon },
             ...(isAdmin ? [{ id: 'admin', label: 'Admin Cabinet', icon: Shield }] : []),
           ].map((item) => (
             <button
@@ -473,7 +474,7 @@ export default function App() {
             {currentPage === 'groups' && <GroupsList onSelectInquiry={navigateToDetails} />}
             {currentPage === 'reports' && <Reports />}
             {currentPage === 'glossary' && <Glossary />}
-            {currentPage === 'profile' && <ProfileSettings />}
+            {currentPage === 'settings' && <SettingsPage />}
             {currentPage === 'admin' && <AdminDashboard />}
             {currentPage === 'details' && selectedInquiryId && <InquiryDetails inquiryId={selectedInquiryId} onBack={() => setCurrentPage('dashboard')} isPremium={isPremium} />}
           </motion.div>
@@ -503,8 +504,8 @@ export default function App() {
         <button onClick={() => navigateToPage('glossary', 'Lexicon Glossary')} className={cn("p-2 transition-colors", currentPage === 'glossary' ? "text-accent" : "text-text-secondary")}>
           <GraduationCap className="w-6 h-6" />
         </button>
-        <button onClick={() => setCurrentPage('profile')} className={cn("p-2 transition-colors", currentPage === 'profile' ? "text-accent" : "text-text-secondary")}>
-          <UserIcon className="w-6 h-6" />
+        <button onClick={() => setCurrentPage('settings')} className={cn("p-2 transition-colors", currentPage === 'settings' ? "text-accent" : "text-text-secondary")}>
+          <SettingsIcon className="w-6 h-6" />
         </button>
         <button onClick={toggleTheme} className="p-2 text-text-secondary">
           {theme === 'modern' ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6 text-accent" />}

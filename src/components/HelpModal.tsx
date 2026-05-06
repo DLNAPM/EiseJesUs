@@ -1,93 +1,10 @@
 import { motion, AnimatePresence } from 'motion/react';
-import { HelpCircle, X, BookOpen, Search, Users, Sparkles, AlertTriangle, FileText, GraduationCap, Globe, Clock, Palette, Trash2, Download } from 'lucide-react';
+import { HelpCircle, X, BookOpen, Search, Users, Sparkles, AlertTriangle } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const UPDATES = [
-  {
-    version: "v2.6",
-    date: "April 2031",
-    title: "The Scholar's Stability",
-    changes: [
-      { 
-        icon: Sparkles, 
-        name: "Enhanced PDF Compatibility", 
-        desc: "Upgraded the Exegesis Export engine with a legacy color parser, ensuring reports generate correctly across all pilgrimage devices." 
-      }
-    ]
-  },
-  {
-    version: "v2.5",
-    date: "April 2030",
-    title: "Pilgrim Tools & Stability",
-    changes: [
-      { 
-        icon: Sparkles, 
-        name: "Legacy PDF Compatibility", 
-        desc: "Enhanced the Registry export engine to support all modern browser environments, ensuring consistent report generation." 
-      },
-      { 
-        icon: Palette, 
-        name: "Atmospheric Persistence", 
-        desc: "Themes now persist across your devices, automatically loading your preferred sanctuary environment upon entry." 
-      }
-    ]
-  },
-  {
-    version: "v2.4",
-    date: "April 2029",
-    title: "Library Management & Registry",
-    changes: [
-      { 
-        icon: Trash2, 
-        name: "Seeking Removal", 
-        desc: "You can now delete any previous seeking from your Exegesis Library to keep your archives focused." 
-      },
-      { 
-        icon: Download, 
-        name: "PDF Exegesis Export", 
-        desc: "Download high-quality Adobe Acrobat PDF reports of your findings directly from the Scholar's Registry." 
-      }
-    ]
-  },
-  {
-    version: "v2.3",
-    date: "April 2028",
-    title: "Sanctuary Environments",
-    changes: [
-      { 
-        icon: Palette, 
-        name: "Multi-Theme Support", 
-        desc: "Switch between Modern Sanctuary, Midnight Exegesis, and Traditional Parchment in your Pilgrim Profile for a customized study atmosphere." 
-      }
-    ]
-  },
-  {
-    version: "v2.2",
-    date: "April 2026",
-    title: "The Lexicon & The Registry",
-    changes: [
-      { 
-        icon: FileText, 
-        name: "Scholar's Registry", 
-        desc: "New Reports Menu! Export any seeking as a professional exegesis PDF for your personal physical archives." 
-      },
-      { 
-        icon: GraduationCap, 
-        name: "Lexicon of Truth", 
-        desc: "Glossary feature added. Highlight any term in an interpretation to define it and save it to your personal study lexicon." 
-      },
-      { 
-        icon: Globe, 
-        name: "Pilgrim's Profile", 
-        desc: "Connect your preferred Bible website (BibleGateway, etc.) to link all scriptures directly to your favorite study tool." 
-      }
-    ]
-  }
-];
 
 export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
   return (
@@ -135,35 +52,6 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                   <span className="text-accent font-bold">EiseJesUs</span> is the divine synthesis of <span className="underline decoration-accent/40 underline-offset-4">Eisegesis</span> (leading out meaning) and the name of <span className="text-accent">Our Savior, Jesus Christ</span>.
                   <p className="mt-4 text-base opacity-80 not-italic font-sans tracking-wide">Our purpose is to travel through the text to discover Jesus' true intentions for <span className="text-accent italic">Us</span> today.</p>
                 </div>
-              </section>
-
-              {/* Updates Section */}
-              <section className="space-y-6">
-                <h3 className="text-xs font-sans font-bold text-accent uppercase tracking-[0.4em] mb-6 flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  Divine Updates
-                </h3>
-                {UPDATES.map((update, idx) => (
-                  <div key={idx} className="space-y-4 bg-ui-sidebar/20 p-6 rounded-3xl border border-ui-border">
-                    <div className="flex items-center justify-between border-b border-ui-border pb-4 mb-2">
-                       <span className="text-xs font-bold font-sans text-accent uppercase tracking-widest">{update.version} • {update.title}</span>
-                       <span className="text-xs text-text-secondary opacity-50 uppercase font-bold">{update.date}</span>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4">
-                      {update.changes.map((change, cIdx) => (
-                        <div key={cIdx} className="flex items-start gap-4">
-                           <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center text-accent flex-shrink-0">
-                             <change.icon className="w-4 h-4" />
-                           </div>
-                           <div>
-                             <h4 className="text-xs font-bold text-text-primary uppercase tracking-tight">{change.name}</h4>
-                             <p className="text-xs text-text-secondary leading-relaxed italic">{change.desc}</p>
-                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
               </section>
 
               {/* Steps */}
