@@ -325,7 +325,7 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
               onClick={handleShareClick}
               className="w-full py-4 bg-bg-primary border border-ui-border text-text-primary rounded-xl text-xs font-sans font-bold shadow-sm hover:bg-accent hover:text-white transition-all flex items-center justify-center gap-2"
             >
-              Share with Group
+              Share with Group and/or Individual
             </button>
           </div>
         </div>

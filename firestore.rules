@@ -63,12 +63,12 @@ service cloud.firestore {
       
       function isValidUser(data) {
         // userId is from the match path variable
-        let hasUid = data.keys().contains('uid');
-        let hasEmail = data.keys().contains('email');
+        let hasUid = 'uid' in data.keys();
+        let hasEmail = 'email' in data.keys();
         
         return (!hasUid || (data.uid is string && data.uid == userId))
           && (!hasEmail || (data.email is string && data.email.size() <= 256))
-          && (!data.keys().contains('lastLoginAt') || data.lastLoginAt is timestamp);
+          && (!('lastLoginAt' in data.keys()) || data.lastLoginAt is timestamp);
       }
 
       // Glossary
