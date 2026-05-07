@@ -1,8 +1,8 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User as FirebaseUser, setPersistence, browserLocalPersistence, indexedDBLocalPersistence } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, type User as FirebaseUser, setPersistence, browserLocalPersistence, indexedDBLocalPersistence, signInAnonymously } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer, collection, getDocs, onSnapshot, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, Timestamp, getDoc, serverTimestamp, limit } from 'firebase/firestore';
 
-export { initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, FirebaseUser, getFirestore, doc, getDocFromServer, collection, getDocs, onSnapshot, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, Timestamp, getDoc, serverTimestamp, setPersistence, browserLocalPersistence, limit };
+export { initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, FirebaseUser, getFirestore, doc, getDocFromServer, collection, getDocs, onSnapshot, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, Timestamp, getDoc, serverTimestamp, setPersistence, browserLocalPersistence, limit, signInAnonymously };
 
 // Singleton instances
 let appInstance: any = null;

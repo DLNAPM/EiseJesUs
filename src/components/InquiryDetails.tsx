@@ -15,6 +15,64 @@ interface InquiryDetailsProps {
   isPremium: boolean;
 }
 
+const TEST_INQUIRIES: Inquiry[] = [
+  {
+    id: 'test-1',
+    userId: 'guest',
+    query: "Jesus wept.  Why was He crying? He knew He was going to Raise Lazarus.",
+    scripture: "John 11:35",
+    interpretation: "Jesus' tears were not from despair over Lazarus' death, but a profound demonstration of His fully human nature and empathy. Even though He knew the victory was imminent, He shared in the grief of Martha, Mary, and the community. It highlights that divinity does not detach God from human sorrow.",
+    historicalContext: "In 1st century Jewish culture, mourning was a communal and vocal event. Jesus entering this space and weeping identified Him as the 'Man of Sorrows' (Isaiah 53).",
+    grammarAnalysis: "The Greek word used is 'edakrysen', which implies a quiet shedding of tears, different from the 'eklaisen' (loud wailing) used to describe the crowd.",
+    literaryGenre: "Gospel Narrative - Historical Account with deep theological underpinnings.",
+    godIntent: "To manifest the compassion of the Father. Even when God knows the end from the beginning, He is deeply moved by our present pain.",
+    crossReferences: ["Isaiah 53:3", "Hebrews 4:15", "Luke 19:41"],
+    geography: {
+      location: "Bethany",
+      thenDesc: "A small village on the eastern slope of the Mount of Olives, near Jerusalem.",
+      nowDesc: "Known as al-Eizariya in the West Bank, home to the Tomb of Lazarus.",
+    },
+    createdAt: { toDate: () => new Date(Date.now() - 3600000) }
+  },
+  {
+    id: 'test-shared-1',
+    userId: 'other',
+    userEmail: 'scholar@sanctuary.org',
+    query: "Jesus wept.  Why was He crying? He knew He was going to Raise Lazarus.",
+    scripture: "John 11:35",
+    interpretation: "Jesus' tears were not from despair over Lazarus' death, but a profound demonstration of His fully human nature and empathy. Even though He knew the victory was imminent, He shared in the grief of Martha, Mary, and the community. It highlights that divinity does not detach God from human sorrow.",
+    historicalContext: "In 1st century Jewish culture, mourning was a communal and vocal event. Jesus entering this space and weeping identified Him as the 'Man of Sorrows' (Isaiah 53).",
+    grammarAnalysis: "The Greek word used is 'edakrysen', which implies a quiet shedding of tears, different from the 'eklaisen' (loud wailing) used to describe the crowd.",
+    literaryGenre: "Gospel Narrative - Historical Account with deep theological underpinnings.",
+    godIntent: "To manifest the compassion of the Father. Even when God knows the end from the beginning, He is deeply moved by our present pain.",
+    crossReferences: ["Isaiah 53:3", "Hebrews 4:15", "Luke 19:41"],
+    geography: {
+      location: "Bethany",
+      thenDesc: "A small village on the eastern slope of the Mount of Olives, near Jerusalem.",
+      nowDesc: "Known as al-Eizariya in the West Bank, home to the Tomb of Lazarus.",
+    },
+    createdAt: { toDate: () => new Date(Date.now() - 3600000) }
+  },
+  {
+    id: 'test-2',
+    userId: 'guest',
+    query: "The significance of the 153 fish in Peter's net.",
+    scripture: "John 21:11",
+    interpretation: "While many symbolic interpretations exist (representing all known nations or tribes), the primary meaning is the abundance found in obedience to Christ. It marks the transition from 'fishermen' to 'fishers of men'.",
+    historicalContext: "Fishing on the Sea of Galilee was a major industry. Such a specific count suggests an eyewitness account of a literal miracle.",
+    grammarAnalysis: "The specificity of the number 'hekaton pentēkonta triōn' emphasizes the overwhelming nature of the haul.",
+    literaryGenre: "Post-Resurrection Appearance Narrative.",
+    godIntent: "To show that following Jesus' command leads to a harvest beyond human calculation.",
+    crossReferences: ["Luke 5:4-11", "Matthew 4:19", "Ezekiel 47:10"],
+    geography: {
+      location: "Sea of Galilee",
+      thenDesc: "The primary freshwater source in Roman Palestine, surrounded by fishing villages like Capernaum.",
+      nowDesc: "Also known as Lake Tiberias, it remains Israel's largest freshwater lake.",
+    },
+    createdAt: { toDate: () => new Date(Date.now() - 86400000) }
+  }
+];
+
 export default function InquiryDetails({ inquiryId, onBack, isPremium }: InquiryDetailsProps) {
   const [inquiry, setInquiry] = useState<Inquiry | null>(null);
   const [senderEmail, setSenderEmail] = useState<string | null>(null);
@@ -140,6 +198,15 @@ export default function InquiryDetails({ inquiryId, onBack, isPremium }: Inquiry
 
   useEffect(() => {
     const fetchInquiry = async () => {
+      // Handle test IDs first
+      const testInq = TEST_INQUIRIES.find(t => t.id === inquiryId);
+      if (testInq) {
+        setInquiry(testInq);
+        setSenderEmail(testInq.userEmail || null);
+        setLoading(false);
+        return;
+      }
+
       const docPath = `inquiries/${inquiryId}`;
       try {
         const snapshot = await getDoc(doc(getDbService(), docPath));

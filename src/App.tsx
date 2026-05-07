@@ -24,9 +24,10 @@ import {
   addDoc,
   collection,
   serverTimestamp,
+  signInAnonymously,
   updateDoc
 } from './lib/firebase';
-import { Home, Search, Users, LogOut, ChevronRight, BookOpen, Map, Video, MessageSquare, Share2, HelpCircle, Moon, Sun, Settings, UserX } from 'lucide-react';
+import { Home, Search, Users, LogOut, ChevronRight, BookOpen, Map, Video, MessageSquare, Share2, HelpCircle, Moon, Sun, Settings, UserX, UserSearch } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 
@@ -159,9 +160,9 @@ export default function App() {
             try {
               const newProfile: UserProfile = {
                 uid: u.uid,
-                email: u.email || '',
-                displayName: u.displayName || '',
-                photoURL: u.photoURL || '',
+                email: u.isAnonymous ? 'guest@eisejesus.app' : (u.email || ''),
+                displayName: u.isAnonymous ? 'Test Pilgrim' : (u.displayName || 'Pilgrim'),
+                photoURL: u.isAnonymous ? 'https://api.dicebear.com/7.x/avataaars/svg?seed=guest' : (u.photoURL || ''),
                 role: isTargetAdmin ? 'admin' : 'user',
                 tier: isTargetAdmin ? 'premium' : 'basic',
                 isFrozen: false,
@@ -175,8 +176,9 @@ export default function App() {
               await addDoc(collection(getDbService(), 'system_logs'), {
                 type: 'first_login',
                 userId: u.uid,
-                userEmail: u.email || '',
-                timestamp: serverTimestamp()
+                userEmail: newProfile.email,
+                timestamp: serverTimestamp(),
+                isGuest: u.isAnonymous
               });
               setUserProfile(newProfile);
             } catch (createErr) {
@@ -213,6 +215,24 @@ export default function App() {
         alert("Login is restricted in this mobile browser view. Please tap the 'Open in New Tab' icon or use a desktop browser to complete the login.");
       } else {
         alert("Login failed: " + (error.message || "Unknown error"));
+      }
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    const auth = getAuthService();
+    if (!auth) {
+      alert("Firebase is not configured.");
+      return;
+    }
+    try {
+      await signInAnonymously(auth);
+    } catch (error: any) {
+      console.error("Guest login failed", error);
+      if (error.code === 'auth/admin-restricted-operation') {
+        alert("Anonymous sign-in is not enabled in the Firebase Console. Please enable it in the Auth settings.");
+      } else {
+        alert("Guest login failed: " + (error.message || "Unknown error"));
       }
     }
   };
@@ -296,13 +316,23 @@ export default function App() {
             The divine synthesis of Eisegesis and the name of Our Savior, Jesus Christ
           </p>
           
-          <button 
-            onClick={handleLogin}
-            className="px-8 py-4 bg-text-primary text-bg-primary font-sans font-bold rounded-xl text-lg shadow-xl hover:opacity-90 transition-all flex items-center gap-3 mx-auto"
-          >
-            Enter the Sanctuary
-            <ChevronRight className="w-5 h-5 text-accent" />
-          </button>
+          <div className="flex flex-col gap-4 w-full max-w-sm mx-auto">
+            <button 
+              onClick={handleLogin}
+              className="w-full px-8 py-4 bg-text-primary text-bg-primary font-sans font-bold rounded-xl text-lg shadow-xl hover:opacity-90 transition-all flex items-center justify-center gap-3"
+            >
+              Enter the Sanctuary
+              <ChevronRight className="w-5 h-5 text-accent" />
+            </button>
+
+            <button 
+              onClick={handleGuestLogin}
+              className="w-full px-8 py-4 bg-ui-card border border-ui-border text-text-primary font-sans font-bold rounded-xl text-lg shadow-xl hover:bg-accent hover:text-bg-primary transition-all flex items-center justify-center gap-3 group"
+            >
+              <UserSearch className="w-5 h-5 text-accent group-hover:text-bg-primary transition-colors" />
+              Test Drive as Guest
+            </button>
+          </div>
 
           {!getAuthService() && (
             <div className="mt-8 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm font-sans flex items-center gap-3 animate-pulse">
