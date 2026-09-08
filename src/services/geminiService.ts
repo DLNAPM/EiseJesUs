@@ -25,9 +25,16 @@ export async function generateScholarTTS(
     });
 
     if (res.ok) {
-      const data = await res.json();
-      if (data.audioBase64) {
-        return data.audioBase64;
+      const rawText = await res.text();
+      if (rawText && rawText.trim()) {
+        try {
+          const data = JSON.parse(rawText);
+          if (data && data.audioBase64) {
+            return data.audioBase64;
+          }
+        } catch {
+          // Non-JSON response
+        }
       }
     }
   } catch (err) {
@@ -46,7 +53,7 @@ export async function chatWithSanctuary(
     .filter(h => h && h.text)
     .map(h => ({ role: h.role, text: h.text }));
 
-  try {
+  const doChatFetch = async (): Promise<string> => {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -57,19 +64,40 @@ export async function chatWithSanctuary(
       })
     });
 
-    if (!res.ok) {
-      const errorJson = await res.json().catch(() => ({}));
-      throw new Error(errorJson.message || `Server responded with status ${res.status}`);
+    const rawText = await res.text();
+    let data: any = null;
+
+    if (rawText && rawText.trim()) {
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        // Raw text was not valid JSON
+      }
     }
 
-    const data = await res.json();
+    if (!res.ok) {
+      const serverMsg = data?.message || data?.error || (rawText && rawText.trim() ? rawText.slice(0, 150) : `Server responded with status ${res.status}`);
+      throw new Error(serverMsg);
+    }
+
     if (!data || !data.text) {
       throw new Error("The Sanctuary Scholar returned an empty response. Please ask your question again.");
     }
+
     return data.text;
+  };
+
+  try {
+    return await doChatFetch();
   } catch (err: any) {
-    console.error("Sanctuary Chat request error:", err);
-    throw err;
+    console.warn("First chat request attempt encountered issue, retrying...", err?.message || err);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      return await doChatFetch();
+    } catch (retryErr: any) {
+      console.error("Sanctuary Chat request error:", retryErr);
+      throw retryErr;
+    }
   }
 }
 
@@ -473,7 +501,15 @@ export async function generateLiteraryWorkExport(
     });
 
     if (res.ok) {
-      const parsed = await res.json();
+      const rawText = await res.text();
+      let parsed: any = null;
+      if (rawText && rawText.trim()) {
+        try {
+          parsed = JSON.parse(rawText);
+        } catch {
+          // not json
+        }
+      }
       if (parsed && typeof parsed === 'object') {
         const imagesWithFallback = Array.isArray(parsed.images) && parsed.images.length > 0
           ? parsed.images.map((img: any, idx: number) => {

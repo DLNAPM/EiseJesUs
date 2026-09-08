@@ -29,11 +29,10 @@ async function startServer() {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  // Candidate models in priority order (only actively supported and responsive models)
+  // Candidate models in priority order (active, fast, and responsive models)
   const CANDIDATE_MODELS = [
     "gemini-3.5-flash-lite",
     "gemini-flash-lite-latest",
-    "gemini-3.1-flash-lite",
   ];
 
   // Helper for racing a model call against a timeout
@@ -125,7 +124,7 @@ Guidelines:
 
           const result = await withTimeout(
             chat.sendMessage({ message }),
-            25000,
+            14000,
             `Chat on ${model}`
           );
 
@@ -198,7 +197,7 @@ Guidelines:
 
       for (const model of CANDIDATE_MODELS) {
         try {
-          const timeoutMs = 25000;
+          const timeoutMs = 18000;
           const response = await withTimeout(
             ai.models.generateContent({
               model,
