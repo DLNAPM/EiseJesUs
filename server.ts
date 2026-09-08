@@ -29,10 +29,10 @@ async function startServer() {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  // Candidate models in priority order (active, fast, and responsive models)
+  // Candidate models in priority order (fastest first)
   const CANDIDATE_MODELS = [
-    "gemini-3.5-flash-lite",
     "gemini-flash-lite-latest",
+    "gemini-3.5-flash-lite",
   ];
 
   // Helper for racing a model call against a timeout
@@ -93,20 +93,43 @@ Guidelines:
 3. Always keep your focus fixed on the pilgrim's actual question.`;
 
       // Filter and sanitize chat history
-      const formattedHistory: { role: string; parts: { text: string }[] }[] = [];
+      const rawHistory: { role: string; text: string }[] = [];
       if (Array.isArray(history)) {
         for (const h of history) {
           if (!h || !h.text || (h.role !== "user" && h.role !== "model")) continue;
-          formattedHistory.push({
-            role: h.role,
-            parts: [{ text: String(h.text) }],
-          });
+          const text = String(h.text).trim();
+          if (
+            !text ||
+            text.includes("connection to the sanctuary was interrupted") ||
+            text.includes("experiencing high demand") ||
+            text.includes("Greetings, pilgrim")
+          ) {
+            continue;
+          }
+          rawHistory.push({ role: h.role, text });
         }
       }
 
-      // Ensure history strictly begins with a 'user' turn (skip any initial bot welcome message)
-      while (formattedHistory.length > 0 && formattedHistory[0].role !== "user") {
-        formattedHistory.shift();
+      // Ensure history strictly begins with a 'user' turn and alternates
+      const formattedHistory: { role: string; parts: { text: string }[] }[] = [];
+      for (const item of rawHistory) {
+        if (formattedHistory.length === 0) {
+          if (item.role === "user") {
+            formattedHistory.push({ role: "user", parts: [{ text: item.text }] });
+          }
+        } else {
+          const last = formattedHistory[formattedHistory.length - 1];
+          if (last.role === item.role) {
+            last.parts[0].text += "\n\n" + item.text;
+          } else {
+            formattedHistory.push({ role: item.role, parts: [{ text: item.text }] });
+          }
+        }
+      }
+
+      // If formattedHistory ends with a 'user' turn, remove it because sendMessage({ message }) supplies the next user turn
+      if (formattedHistory.length > 0 && formattedHistory[formattedHistory.length - 1].role === "user") {
+        formattedHistory.pop();
       }
 
       let responseText = "";
@@ -122,9 +145,10 @@ Guidelines:
             history: formattedHistory,
           });
 
+          const timeoutMs = model.includes("latest") ? 12000 : 18000;
           const result = await withTimeout(
             chat.sendMessage({ message }),
-            14000,
+            timeoutMs,
             `Chat on ${model}`
           );
 

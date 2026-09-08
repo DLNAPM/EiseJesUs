@@ -50,7 +50,11 @@ export async function chatWithSanctuary(
   recentInquiries: Inquiry[]
 ): Promise<string> {
   const sanitizedHistory = history
-    .filter(h => h && h.text)
+    .filter(h => h && h.text && 
+      !h.text.includes("connection to the sanctuary was interrupted") && 
+      !h.text.includes("experiencing high demand") &&
+      !h.text.includes("Greetings, pilgrim")
+    )
     .map(h => ({ role: h.role, text: h.text }));
 
   const doChatFetch = async (): Promise<string> => {
