@@ -89,12 +89,12 @@ export default function InquiryTool({ onComplete, isPremium }: InquiryToolProps)
     } catch (err: any) {
       console.error("Exegesis submission error:", err);
       const msg = err?.message || "";
-      if (msg.includes("503") || msg.includes("demand") || msg.includes("unavailable")) {
-        setError("The sanctuary scholarship service is experiencing high demand. Please press Retry to try again.");
+      if (msg.includes("503") || msg.includes("demand") || msg.includes("unavailable") || msg.includes("Empty response") || msg.includes("empty")) {
+        setError("The sanctuary scholarship service is experiencing high demand. Please press Retry to complete your exegesis.");
       } else if (msg.includes("permission") || msg.includes("PERMISSION_DENIED")) {
         setError("Unable to save your inquiry to the sanctuary. Please verify your connection or sign-in state.");
       } else {
-        setError(msg || "An error occurred during interpretation. Please check your query or try again.");
+        setError(msg || "The sanctuary scholarship service encountered a momentary delay. Please press Retry to complete your exegesis.");
       }
     } finally {
       setLoading(false);
