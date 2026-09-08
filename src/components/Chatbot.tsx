@@ -442,11 +442,11 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
     } catch (error: any) {
       console.error("Chatbot error:", error);
       const serverMsg = error?.message;
-      let errorText = "Forgive me, the connection to the sanctuary was interrupted. Please try asking your question again.";
+      let errorText = "Grace and peace to you, pilgrim. The sanctuary connection briefly wavered. Please ask your question again, and let us continue our study of God's Word.";
       if (serverMsg) {
         if (serverMsg.includes("demand") || serverMsg.includes("503")) {
           errorText = "The Sanctuary Scholar is currently experiencing high demand. Please ask your question again in a moment.";
-        } else if (serverMsg.length > 5 && !serverMsg.includes("status 500") && !serverMsg.includes("Failed to fetch")) {
+        } else if (serverMsg.length > 5 && !serverMsg.includes("status 500") && !serverMsg.includes("Failed to fetch") && !serverMsg.includes("Empty response") && !serverMsg.includes("gateway")) {
           errorText = serverMsg;
         }
       }

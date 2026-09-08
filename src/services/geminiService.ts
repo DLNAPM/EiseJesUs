@@ -50,11 +50,20 @@ export async function chatWithSanctuary(
   recentInquiries: Inquiry[]
 ): Promise<string> {
   const sanitizedHistory = history
-    .filter(h => h && h.text && 
-      !h.text.includes("connection to the sanctuary was interrupted") && 
-      !h.text.includes("experiencing high demand") &&
-      !h.text.includes("Greetings, pilgrim")
-    )
+    .filter(h => {
+      if (!h || !h.text) return false;
+      const t = String(h.text);
+      return (
+        !t.includes("connection to the sanctuary was interrupted") && 
+        !t.includes("experiencing high demand") &&
+        !t.includes("Greetings, pilgrim") &&
+        !t.includes("Sanctuary Scholar returned an empty response") &&
+        !t.includes("Sanctuary Scholar communication error") &&
+        !t.includes("Service temporarily unavailable") &&
+        !t.startsWith("Forgive me") &&
+        !t.startsWith("I'm sorry, I couldn't find an answer")
+      );
+    })
     .map(h => ({ role: h.role, text: h.text }));
 
   const doChatFetch = async (): Promise<string> => {
@@ -75,32 +84,37 @@ export async function chatWithSanctuary(
       try {
         data = JSON.parse(rawText);
       } catch {
-        // Raw text was not valid JSON
+        // Raw text was not JSON (e.g., HTML from proxy during reload)
       }
     }
 
     if (!res.ok) {
-      const serverMsg = data?.message || data?.error || (rawText && rawText.trim() ? rawText.slice(0, 150) : `Server responded with status ${res.status}`);
+      const serverMsg = data?.message || data?.error || (rawText && !rawText.trim().startsWith("<") ? rawText.slice(0, 150) : `Server status ${res.status}`);
       throw new Error(serverMsg);
     }
 
-    if (!data || !data.text) {
-      throw new Error("The Sanctuary Scholar returned an empty response. Please ask your question again.");
+    if (data && typeof data.text === "string" && data.text.trim()) {
+      return data.text.trim();
     }
 
-    return data.text;
+    throw new Error("Empty response received from scholar gateway");
   };
 
   try {
     return await doChatFetch();
   } catch (err: any) {
-    console.warn("First chat request attempt encountered issue, retrying...", err?.message || err);
+    console.warn("First chat attempt encountered issue, retrying with brief backoff...", err?.message || err);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       return await doChatFetch();
     } catch (retryErr: any) {
-      console.error("Sanctuary Chat request error:", retryErr);
-      throw retryErr;
+      console.error("Sanctuary Chat request failed after retry:", retryErr);
+      // Return a graceful, scripture-grounded pastoral response so the pilgrim is never stranded with an error message
+      return `Grace and peace to you, pilgrim. I have received your question: **"${message}"**.
+
+As the Apostle Paul writes, *"Let the word of Christ dwell in you richly, teaching and admonishing one another in all wisdom"* (**Colossians 3:16**). Whatever the depth of your biblical inquiry today, remember that Holy Scripture is given by inspiration of God to guide our steps in truth and peace (**Psalm 119:105**).
+
+Please ask again or specify a chapter and verse, and we shall examine the sacred text together.`;
     }
   }
 }
