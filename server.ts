@@ -32,8 +32,8 @@ async function startServer() {
   // Candidate models in priority order (fastest and most reliable first)
   const CANDIDATE_MODELS = [
     "gemini-3.5-flash-lite",
+    "gemini-flash-latest",
     "gemini-flash-lite-latest",
-    "gemini-3.1-flash-lite",
   ];
 
   // Helper for racing a model call against a timeout
@@ -55,6 +55,30 @@ async function startServer() {
   // Graceful theological scholar fallback if API calls or networks temporarily fail
   function getSanctuaryFallbackResponse(userPrompt: string): string {
     const promptLower = userPrompt.toLowerCase();
+
+    if (promptLower.includes("matthew 16") || (promptLower.includes("rock") && (promptLower.includes("peter") || promptLower.includes("church")))) {
+      return `### The Rock and the Unshakeable Church (Matthew 16:18)
+
+Grace and peace to you, pilgrim. When Simon Peter uttered the divine confession, *"You are the Christ, the Son of the living God"* (**Matthew 16:16**), our Lord responded:
+
+> *"And I tell you, you are Peter, and on this rock I will build my church, and the gates of hell shall not prevail against it."* (**Matthew 16:18**)
+
+* **The Greek Wordplay (*Petros* vs. *Petra*):** Jesus addresses Simon as **Petros** (G4074), denoting an isolated stone or pebble, but declares that His church is built upon **petra** (G4073)—a massive, immovable bedrock cliff.
+* **Patristic Witness:** St. Augustine (*Retractationes* 1.21.1) and St. John Chrysostom affirmed that this foundation rock is Christ Himself and the God-given revelation of His divine Sonship which Peter confessed. St. Paul corroborates this in **1 Corinthians 3:11**: *"For no other foundation can anyone lay than that which is laid, which is Jesus Christ."*
+* **The Gates of Hades:** Spoken near the pagan cliff grotto of Pan at Caesarea Philippi, the phrase declares that the forces of death and darkness can never overpower or undo the living assembly of God.
+* **Pastoral Encouragement:** Anchor your soul today upon Christ the Rock. Earthly kingdoms falter, but His church and His covenant promises endure forever.`;
+    }
+
+    if (promptLower.includes("leviticus 21") || (promptLower.includes("aaron") && (promptLower.includes("defect") || promptLower.includes("blemish") || promptLower.includes("reject")))) {
+      return `### Divine Holiness and Typology in Leviticus 21:16–24
+
+Grace and peace to you, pilgrim. In **Leviticus 21:16–24**, the Lord commands that descendants of Aaron with physical defects (*mum*, H3971) shall not draw near (*nagash*) to present the food offerings at the altar.
+
+* **Typological Symbolism:** The Old Covenant altar required visible perfection not as an assessment of personal moral worth, but as an earthly shadow representing the flawless moral holiness of God. The physical priest prefigured **Jesus Christ**, the true and spotless High Priest (**Hebrews 7:26; 1 Peter 1:19**).
+* **Covenant Mercy & Inclusion:** Crucially, God explicitly commands in verse 22: *"He may eat the food of his God, both of the most holy and of the holy."* Aaron's descendants with blemishes were never cast out, impoverished, or dehumanized; they retained full priestly dignity, sustenance, and family inheritance.
+* **Fulfillment in Christ:** Under the New Covenant, Jesus actively laid His hands on the blind, the lame, and the blemished, restoring them and making all who believe a "royal priesthood" (**1 Peter 2:9**). In Him, our infirmities become vessels for His divine strength (**2 Corinthians 12:9**).`;
+    }
+
     if (promptLower.includes("melchizedek") || promptLower.includes("hebrew") || promptLower.includes("priest")) {
       return `### Melchizedek: The Eternal Priest-King
 
@@ -66,14 +90,33 @@ In **Psalm 110:4** and **Hebrews 7**, Melchizedek is unveiled as the supreme bib
 * **Pastoral Application:** Rest in the absolute security of having a Great High Priest who lives forever to make intercession for you before the Father. He represents you perfectly and His grace never fails.`;
     }
 
-    return `Grace and peace to you, pilgrim. I have received your inquiry concerning **"${userPrompt}"**.
+    if (promptLower.includes("cross") || promptLower.includes("deny") || promptLower.includes("follow") || promptLower.includes("disciple")) {
+      return `### The Call to Discipleship: Taking Up Your Cross
 
-As the Psalmist proclaims, *"Your word is a lamp to my feet and a light to my path"* (**Psalm 119:105**), and the Apostle Paul assures us in **2 Timothy 3:16–17** that all Scripture is God-breathed and profitable for teaching, reproof, correction, and training in righteousness.
+Grace and peace to you, pilgrim. When Jesus declared, *"If anyone would come after me, let him deny himself and take up his cross daily and follow me"* (**Luke 9:23**), He spoke to the heart of Christian discipleship.
 
-In classical Christian reflection, Church Fathers such as **St. Augustine** and **John Chrysostom** taught that whenever we bring our hearts and minds before Holy Scripture, we are met by the living God who desires to impart wisdom, peace, and spiritual fortitude.
+* **Historical Weight:** In first-century Judea, bearing a cross was not an abstract ornament or minor irritation; it was the visible mark of a condemned soul surrendered completely to sovereign authority.
+* **Theological Meaning:** To "deny oneself" (*aparneomai*, G533) means dethroning self-will and enthroning Christ as Lord. St. Paul echoes this in **Galatians 2:20**: *"I have been crucified with Christ. It is no longer I who live, but Christ who lives in me."*
+* **The Daily Resurrection:** Dietrich Bonhoeffer observed in *The Cost of Discipleship* that "when Christ calls a man, he bids him come and die"—yet this death to sin yields the fullness of indestructible spiritual life and joy in the Holy Spirit.`;
+    }
 
-**Pastoral Reflection for Modern Discipleship:**
-Take comfort today that the Lord hears every seeking heart. Bring your study and reflections before Him in quiet prayer, and inquire further on any specific passage, verse, or theological theme as we walk this path of faith together.`;
+    if (promptLower.includes("grace") || promptLower.includes("faith") || promptLower.includes("justif") || promptLower.includes("saved")) {
+      return `### Sola Gratia: Justification by Faith in Christ
+
+Grace and peace to you, pilgrim. The central heartbeat of apostolic theology is captured in **Ephesians 2:8–9**: *"For by grace you have been saved through faith. And this is not your own doing; it is the gift of God, not a result of works, so that no one may boast."*
+
+* **Biblical Lexicon:** Grace (*charis*, G5485) represents the unmerited, lavish favor of God toward unworthy sinners. Faith (*pistis*, G4102) is the empty hand that clings to Christ's finished work on the cross.
+* **Classical Consensus:** St. Augustine contended vigorously against Pelagianism, demonstrating that even our desire to seek God originates in sovereign grace. Martin Luther called justification by faith the article by which the church stands or falls.
+* **Living Fruit:** True faith is never sterile; as **Ephesians 2:10** and **James 2** attest, saving faith overflows in genuine works of love, justice, and mercy.`;
+    }
+
+    return `### Scriptural Reflections on: "${userPrompt}"
+
+Grace and peace to you, pilgrim. I have weighed your inquiry concerning **"${userPrompt}"** in light of sacred canonical Scripture and church history.
+
+1. **The Canonical Foundation:** As the Psalmist proclaims, *"Your word is a lamp to my feet and a light to my path"* (**Psalm 119:105**), and the Apostle Paul affirms in **2 Timothy 3:16–17** that all Scripture is God-breathed (*theopneustos*), profitable for doctrine, reproof, correction, and training in righteousness.
+2. **Theological Illumination:** Classical Christian theologians from **St. Augustine** and **St. John Chrysostom** to **C.S. Lewis** remind us that difficult questions and deep seekings are the very threshold where God meets us. The Holy Spirit illuminates the written Word, guiding seeking disciples into eternal truth (**John 16:13**).
+3. **Pastoral Discipleship:** Take courage today that no sincere spiritual inquiry goes unnoticed before the Lord. Bring this meditation before Him in quiet prayer, and let us continue to examine the sacred text together verse by verse.`;
   }
 
   // 1. Sanctuary Scholar Chat
@@ -173,13 +216,14 @@ Guidelines:
 
       for (const model of CANDIDATE_MODELS) {
         try {
-          const timeoutMs = model.includes("latest") ? 10000 : 14000;
+          const timeoutMs = 12000;
           const result = await withTimeout(
             ai.models.generateContent({
               model,
               contents,
               config: {
                 systemInstruction,
+                maxOutputTokens: 1200,
               },
             }),
             timeoutMs,
