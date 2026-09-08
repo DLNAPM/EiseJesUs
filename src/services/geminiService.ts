@@ -63,7 +63,10 @@ export async function chatWithSanctuary(
     }
 
     const data = await res.json();
-    return data.text || "May grace, peace, and the light of Christ guide your study (John 14:27).";
+    if (!data || !data.text) {
+      throw new Error("The Sanctuary Scholar returned an empty response. Please ask your question again.");
+    }
+    return data.text;
   } catch (err: any) {
     console.error("Sanctuary Chat request error:", err);
     throw err;

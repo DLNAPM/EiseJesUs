@@ -52,80 +52,6 @@ async function startServer() {
     }
   }
 
-  // Comprehensive scholarly fallback exegesis when all upstream AI models experience demand spikes (503)
-  function generateScholarlyFallbackExegesis(scripture: string, queryText?: string) {
-    const refClean = scripture.trim();
-    const queryClean = queryText?.trim() || "Provide an exegetical study of this passage";
-
-    const isPsalm = /psalm/i.test(refClean);
-    const isGospel = /(matthew|mark|luke|john)/i.test(refClean);
-    const isPaul = /(roman|corinthian|galatian|ephesian|philippian|colossian|thessalonian|timothy|titus|philemon)/i.test(refClean);
-    const isProphet = /(isaiah|jeremiah|ezekiel|daniel|hosea|joel|amos|micah|habakkuk|zephaniah|haggai|zechariah|malachi)/i.test(refClean);
-    const isGenesis = /genesis/i.test(refClean);
-
-    let location = "Jerusalem";
-    let thenDesc = "The historic spiritual and covenantal center of biblical Judea, site of the Holy Temple and apostolic preaching.";
-    let nowDesc = "A modern historic city in Israel with preserved ancient stone architecture and sacred pilgrimage locations.";
-    let genre = "Biblical Expository Scripture";
-
-    if (isPsalm) {
-      location = "Judean Wilderness & Mount Zion";
-      thenDesc = "The rugged pastoral grazing terrain of Bethlehem and the fortified hill of Zion, where David composed devotional songs.";
-      nowDesc = "The Judean hills and historic City of David archaeological national park overlooking the Kidron Valley in Israel.";
-      genre = "Hebrew Poetry & Devotional Psalmody";
-    } else if (isGospel) {
-      location = "Galilee and Capernaum";
-      thenDesc = "The northern freshwater basin and fishing villages of Roman-era Judea, where Jesus commenced His public ministry and taught in synagogues.";
-      nowDesc = "The modern Sea of Galilee (Lake Kinneret) bordered by Tiberias and the excavated 1st-century limestone ruins of Capernaum.";
-      genre = "Evangelistic Gospel Narrative & Messianic Discourse";
-    } else if (isPaul) {
-      location = "Corinth & Ancient Greece";
-      thenDesc = "A prominent Roman provincial capital and maritime commercial hub linking the Aegean and Ionian seas, characterized by diverse cultures.";
-      nowDesc = "Ancient Corinth archaeological site near modern Korinthos, Greece, featuring the Roman Agora and the Bema seat of Gallio.";
-      genre = "Pauline Pastoral Epistle";
-    } else if (isProphet) {
-      location = "Ancient Judea & Babylon";
-      thenDesc = "The pre-exilic and exilic Near Eastern kingdoms where God raised prophets to call the covenant nation to repentance and promise restoration.";
-      nowDesc = "Modern Middle Eastern regions encompassing Israel and historical Mesopotamia with conserved biblical tell sites.";
-      genre = "Prophetic Covenant Oracle";
-    } else if (isGenesis) {
-      location = "Mesopotamia and Canaan";
-      thenDesc = "The fertile crescent and patriarchal hill country from Ur of the Chaldees to Hebron, where God established His covenant with Abraham.";
-      nowDesc = "The historical lands of modern Iraq, Jordan, and Israel with ancient bronze-age archaeological mounds and wells.";
-      genre = "Primordial Theological History & Patriarchal Narrative";
-    }
-
-    const thenPrompt = `historical biblical map of ${location}, ancient style, parchment texture, high detail, archaeological annotations`;
-    const nowPrompt = `modern geographical view or drone shot of ${location}, high resolution, realistic, sacred historical landscape`;
-
-    const formatPrompt = (p: string) =>
-      `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=800&height=600&nologo=true`;
-
-    return {
-      interpretation: `Exegetical examination of ${refClean} reveals God's self-disclosure and covenant fidelity centered on redemption. Addressing the inquiry ("${queryClean}"), this sacred passage calls the believer away from subjective human reasoning (eisegesis) into the objective truth of God's revealed Word. As St. Augustine observed in 'De Doctrina Christiana,' the heart of all sacred scripture is love for God and neighbor, and every verse finds its ultimate fulfillment in Jesus Christ. The author addresses a community in need of divine assurance, establishing that God's sovereignty over history, nature, and human circumstance is unwavering. In Christ, the promises embedded in this passage transition from prophetic shadow into spiritual reality.`,
-      historicalContext: `Authored within the rich covenantal history of the ancient Near East, ${refClean} speaks directly to its primary audience in their historical struggle and faith journey. Whether amid the trials of Davidic kingdom-building, the solemn exile of God's people, or the 1st-century Roman occupation during the dawn of the Apostolic Church, this text served as an anchor of divine truth. Classical scholars like Matthew Henry and Charles Spurgeon noted that the original hearers were challenged to rely completely on God's covenant promises (*Berith*) rather than earthly political powers or transient security.`,
-      grammarAnalysis: `In the original biblical language (Hebrew/Greek), key lexical roots illuminate the depth of the passage. Central terms include the covenantal name of God (*Yahweh*, Strong's H3068), His enduring lovingkindness (*Hesed*, Strong's H2617 - steadfast covenant love), and divine peace (*Shalom*, Strong's H7965 - wholeness, completeness). In the New Testament paradigm, this corresponds with *Agape* (Strong's G26 - unconditional sacrificial divine love) and *Pistis* (Strong's G4102 - living faith and absolute trust). Morphologically, the verbs emphasize continuous divine action, signifying that God's providential grace is an active, ongoing reality for the believer.`,
-      literaryGenre: genre,
-      godIntent: `God's sovereign intent in inspiring ${refClean} is to lead His people into an intimate, enduring relationship with Himself through Jesus Christ. The Holy Spirit designed this passage to shatter human self-reliance, comfort the afflicted soul, and awaken worship. It reminds the pilgrim that our identity is rooted in divine adoption and that God works all things together for the good of those who love Him (Romans 8:28).`,
-      crossReferences: [
-        "Romans 8:28-39",
-        "John 14:1-6",
-        "Psalm 23:1-6",
-        "Philippians 4:6-7",
-        "Hebrews 11:1-6",
-        "Isaiah 40:28-31",
-      ],
-      geography: {
-        location,
-        thenDesc,
-        nowDesc,
-        thenImageUrl: formatPrompt(thenPrompt),
-        nowImageUrl: formatPrompt(nowPrompt),
-      },
-      videoClipQuery: `${refClean} biblical documentary historical exegesis`,
-    };
-  }
-
   // 1. Sanctuary Scholar Chat
   app.post("/api/chat", async (req, res) => {
     try {
@@ -137,35 +63,52 @@ async function startServer() {
       const ai = getAiClient();
       const contextStrings = Array.isArray(recentInquiries)
         ? recentInquiries
+            .filter((inq: any) => inq && (inq.scripture || inq.query))
+            .slice(0, 5)
             .map(
               (inq: any) =>
-                `Scripture: ${inq.scripture || ""}\nQuery: ${inq.query || ""}\nInterpretation: ${inq.interpretation || ""}\nGod's Intent: ${inq.godIntent || ""}`
+                `Scripture: ${inq.scripture || ""}\nQuestion: ${inq.query || ""}\nKey Insights: ${(inq.interpretation || "").slice(0, 300)}`
             )
             .join("\n\n---\n\n")
         : "";
 
-      const systemInstruction = `You are the "Sanctuary Scholar", a divine AI companion for the XeJesUs app.
-Your goal is to help pilgrims find deeper insights into their biblical studies and spiritual search inquiries, connecting them to Christian wisdom, scripture, and personal growth.
+      let contextSection = "";
+      if (contextStrings.trim()) {
+        contextSection = `\nPilgrim's Past Saved Inquiries (REFERENCE ARCHIVE ONLY - ONLY refer to these if the pilgrim explicitly asks about their past studies, seekings, or history):\n${contextStrings}\n`;
+      }
 
-User's Recent Seekings Context:
-${contextStrings}
+      const systemInstruction = `You are the "Sanctuary Scholar", a distinguished, reverent Christian biblical scholar, church historian, and pastoral guide for the XeJesUs app.
+Your highest duty is to provide pilgrims with deep, authentic, scripture-saturated, and intellectually rigorous answers to their questions.
 
+PRIMARY DIRECTIVE:
+- DIRECTLY AND SPECIFICALLY ANSWER the pilgrim's immediate question or prompt. Never deflect, give vague answers, or repeat canned or evasive phrases.
+- Every sentence must address the specific substance of what the pilgrim asked.
+- Provide primary Scripture citations (Book, Chapter, and Verse) with biblical context.
+- Cite historical theology and classical scholarship (e.g., Early Church Fathers like Augustine and Chrysostom; Reformers like Calvin; and commentators like Matthew Henry, Charles Spurgeon, and C.S. Lewis).
+- Explain relevant Greek/Hebrew lexical nuances where they illuminate the question.
+- Conclude with a practical, inspiring application for modern Christian discipleship.
+${contextSection}
 Guidelines:
-1. Be encouraging, scholarly, reverent, and spiritually insightful.
-2. Always cite your sources clearly in your responses — including primary Scripture book/chapter/verse references, historical commentators/church fathers (e.g., Augustine, Chrysostom, Matthew Henry, Spurgeon, C.S. Lewis, N.T. Wright), and original Hebrew/Greek lexical terms.
-3. When asked about recent studies or search topics, refer to the provided context or canonical scriptures.
-4. Help the user apply biblical truths to modern life and personal discipleship.
-5. Keep responses structured, concise, and profound, ensuring claims carry scriptural citations.`;
+1. Speak with reverence, warmth, intellectual integrity, and pastoral encouragement.
+2. Structure your response with clean formatting, bold theological terms, and clear headings.
+3. Always keep your focus fixed on the pilgrim's actual question.`;
 
       // Filter and sanitize chat history
-      const formattedHistory = Array.isArray(history)
-        ? history
-            .filter((h: any) => h && h.text && (h.role === "user" || h.role === "model"))
-            .map((h: any) => ({
-              role: h.role,
-              parts: [{ text: String(h.text) }],
-            }))
-        : [];
+      const formattedHistory: { role: string; parts: { text: string }[] }[] = [];
+      if (Array.isArray(history)) {
+        for (const h of history) {
+          if (!h || !h.text || (h.role !== "user" && h.role !== "model")) continue;
+          formattedHistory.push({
+            role: h.role,
+            parts: [{ text: String(h.text) }],
+          });
+        }
+      }
+
+      // Ensure history strictly begins with a 'user' turn (skip any initial bot welcome message)
+      while (formattedHistory.length > 0 && formattedHistory[0].role !== "user") {
+        formattedHistory.shift();
+      }
 
       let responseText = "";
       let lastError: any = null;
@@ -182,7 +125,7 @@ Guidelines:
 
           const result = await withTimeout(
             chat.sendMessage({ message }),
-            9000,
+            25000,
             `Chat on ${model}`
           );
 
@@ -195,7 +138,11 @@ Guidelines:
       }
 
       if (!responseText) {
-        responseText = `Fellow pilgrim, while the network connection is experiencing high demand, hear the timeless words of Our Lord: "Peace I leave with you; my peace I give to you. Not as the world gives do I give to you. Let not your hearts be troubled, neither let them be afraid" (John 14:27). How may the Sanctuary Scholar guide your study today?`;
+        console.error("All candidate chat models failed to return a response:", lastError);
+        return res.status(503).json({
+          error: "The Sanctuary Scholar is currently experiencing high demand. Please ask your question again in a moment.",
+          message: lastError?.message || "Service temporarily unavailable",
+        });
       }
 
       return res.json({ text: responseText });
@@ -218,25 +165,32 @@ Guidelines:
 
       const ai = getAiClient();
       const prompt = `
-        You are an expert biblical scholar specializing in exegesis (leading out the author's original meaning).
-        Your goal is to explain the following scripture reference deeply, avoiding subjective or forced interpretations (eisegesis).
+        You are an expert biblical scholar specializing in grammatical-historical exegesis (leading out the author's original meaning).
+        Your goal is to provide a rigorous, reverent, and comprehensive exegetical analysis of the following passage.
         
         Scripture: ${scripture}
-        User Question: ${queryText || "Provide an exegetical study of this passage"}
+        User Question / Context: ${queryText || "Provide an exegetical study of this passage"}
         
-        Provide a deep analytical analysis including historical context, grammar, and literary genre.
-        Always cite your sources clearly in your exegesis, including:
-        1. Primary Canonical Scripture citations (Book, Chapter, and Verse).
-        2. Original Hebrew/Greek lexical roots and Strong's concordance references in the grammar analysis.
-        3. Classical and Patristic commentary references (e.g., Augustine, John Chrysostom, Matthew Henry, Charles Spurgeon, C.S. Lewis, N.T. Wright).
-        4. Relevant historical/archaeological documentation in the historical context section.
+        MANDATORY REQUIREMENTS:
+        1. "interpretation": You MUST directly, specifically, and thoroughly address and answer the user's specific question ("${queryText || "Provide an exegetical study of this passage"}").
+           - Explain how ${scripture} directly answers or informs the user's inquiry.
+           - Avoid generic summaries, boilerplate phrases, or canned templates.
+           - Quote and expound upon specific phrases from the text.
+           - Cite relevant Patristic or classical commentators (e.g., Augustine, Chrysostom, Calvin, Matthew Henry, Spurgeon, C.S. Lewis).
+        2. "historicalContext": Detail the author, historical date, original recipients, cultural environment, and relevant archaeological findings for ${scripture}.
+        3. "grammarAnalysis": Provide deep lexical analysis of key original Greek/Hebrew words in ${scripture}, with transliterations, Strong's concordance numbers, grammatical tense/mood, and precise theological nuances.
+        4. "literaryGenre": Identify the exact literary genre (e.g., Gospel Narrative, Pauline Epistle, Hebrew Poetry, Prophetic Oracle) and stylistic structures.
+        5. "godIntent": Articulate God's divine purpose in inspiring ${scripture}, applying its eternal truth directly to the user's question.
+        6. "crossReferences": Provide 4 to 6 canonical cross-references with verse citations and brief reasons for correlation.
+        7. "geography": Identify the key biblical location:
+           - "location": Specific name of the place.
+           - "thenDesc": Detailed description of this location in ancient biblical times with historical notes.
+           - "nowDesc": Detailed description of this location today (modern region, country, archaeological status).
+           - "thenImageUrl": Short descriptive prompt for a historical biblical map illustration of this location.
+           - "nowImageUrl": Short descriptive prompt for a modern realistic or aerial view of this location.
+        8. "videoClipQuery": A descriptive search query for an educational or historical documentary on ${scripture}.
         
-        For the geography section:
-        - "location": The name of the specific place.
-        - "thenDesc": Description of the place in biblical/historical times with ancient textual citations.
-        - "nowDesc": Description of the place as it is today with modern geographical citations.
-        - "thenImageUrl": Provide a short descriptive prompt for generating an image of a historical biblical map of this specific location.
-        - "nowImageUrl": Provide a short descriptive prompt for generating a modern geographical or drone-shot image of this specific location.
+        Provide the response strictly adhering to the JSON schema.
       `;
 
       let data: any = null;
@@ -244,7 +198,7 @@ Guidelines:
 
       for (const model of CANDIDATE_MODELS) {
         try {
-          const timeoutMs = (model === "gemini-3.5-flash-lite" || model === "gemini-flash-lite-latest") ? 6000 : 4000;
+          const timeoutMs = 25000;
           const response = await withTimeout(
             ai.models.generateContent({
               model,
@@ -310,8 +264,11 @@ Guidelines:
       }
 
       if (!data) {
-        console.info("All exegesis models busy; deploying scholarly theological fallback.");
-        data = generateScholarlyFallbackExegesis(scripture, queryText);
+        console.error("All exegesis candidate models failed:", lastError);
+        return res.status(503).json({
+          error: "The sanctuary scholarship service is currently experiencing high demand. Please press Retry to generate this exegesis.",
+          message: lastError?.message || "All models busy",
+        });
       }
 
       // Format image URLs
@@ -333,10 +290,10 @@ Guidelines:
       return res.json(data);
     } catch (error: any) {
       console.error("Exegesis API Error:", error);
-      // Even on catastrophic error, return safe scholarly fallback
-      const { scripture, queryText } = req.body || {};
-      const fallback = generateScholarlyFallbackExegesis(scripture || "Scripture", queryText);
-      return res.json(fallback);
+      return res.status(500).json({
+        error: "Unable to complete exegesis analysis. Please try again.",
+        message: error?.message || "Exegesis service error",
+      });
     }
   });
 
@@ -379,7 +336,7 @@ Guidelines:
                 },
               },
             }),
-            8000,
+            15000,
             `Search on ${model}`
           );
 
@@ -467,7 +424,7 @@ Guidelines:
               model,
               contents: prompt,
             }),
-            7000,
+            15000,
             `Define on ${model}`
           );
 
@@ -539,7 +496,7 @@ Return ONLY valid JSON matching this schema.`;
                 responseMimeType: "application/json",
               },
             }),
-            10000,
+            25000,
             `Literary work on ${model}`
           );
 

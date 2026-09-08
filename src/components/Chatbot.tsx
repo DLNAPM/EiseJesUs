@@ -439,9 +439,12 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
         recentInquiries
       );
       setMessages(prev => [...prev, { role: 'model', text: response || "I'm sorry, I couldn't find an answer. Let's try reflecting on a different verse." }]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Chatbot error:", error);
-      setMessages(prev => [...prev, { role: 'model', text: "Forgive me, the connection to the sanctuary was interrupted. Please try again." }]);
+      const errorText = error?.message?.includes("demand")
+        ? "The Sanctuary Scholar is currently experiencing high demand. Please ask your question again in a moment."
+        : "Forgive me, the connection to the sanctuary was interrupted. Please try asking your question again.";
+      setMessages(prev => [...prev, { role: 'model', text: errorText }]);
     } finally {
       setIsLoading(false);
     }
