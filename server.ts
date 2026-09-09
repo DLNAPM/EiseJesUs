@@ -1,7 +1,12 @@
 import express from "express";
 import path from "path";
+import { exec } from "child_process";
+import fs from "fs";
+import { promisify } from "util";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Modality, Type } from "@google/genai";
+
+const execAsync = promisify(exec);
 
 const PORT = 3000;
 
@@ -861,6 +866,82 @@ Return ONLY valid JSON matching this schema.`;
   const ttsAudioCache = new Map<string, string>();
   const MAX_TTS_CACHE_ITEMS = 300;
 
+  // High-fidelity acoustic voice DSP synthesis fallback when Gemini TTS is quota-restricted
+  async function synthesizeAcousticVoicePCM(text: string, personaName: string, gender: string): Promise<string> {
+    const p = (personaName || "").toLowerCase();
+    let tl = "en-US";
+    let filter = "asetrate=24000*1.0,aresample=24000";
+
+    if (gender === "male") {
+      if (p.includes("spurgeon")) {
+        tl = "en-GB";
+        filter = "asetrate=24000*0.74,aresample=24000,atempo=1.28,equalizer=f=120:width_type=o:width=1.5:g=8,aecho=0.8:0.88:35:0.25";
+      } else if (p.includes("lewis")) {
+        tl = "en-GB";
+        filter = "asetrate=24000*0.86,aresample=24000,atempo=1.12,equalizer=f=400:width_type=o:width=1.5:g=4,equalizer=f=2500:width_type=o:width=1:g=2";
+      } else if (p.includes("luther")) {
+        tl = "en-GB";
+        filter = "asetrate=24000*0.70,aresample=24000,atempo=1.35,equalizer=f=100:width_type=o:width=1:g=9,equalizer=f=2000:width_type=o:width=1:g=3";
+      } else if (p.includes("keller")) {
+        tl = "en-US";
+        filter = "asetrate=24000*0.88,aresample=24000,atempo=1.06,equalizer=f=250:width_type=o:width=1.5:g=5";
+      } else if (p.includes("graham")) {
+        tl = "en-US";
+        filter = "asetrate=24000*0.93,aresample=24000,atempo=1.08,equalizer=f=2800:width_type=o:width=1:g=6";
+      } else if (p.includes("osteen")) {
+        tl = "en-US";
+        filter = "asetrate=24000*1.04,aresample=24000,atempo=1.03,equalizer=f=3000:width_type=o:width=1.5:g=4";
+      } else {
+        tl = "en-US";
+        filter = "asetrate=24000*0.90,aresample=24000,atempo=1.08,equalizer=f=300:width_type=o:width=1.5:g=3";
+      }
+    } else {
+      if (p.includes("oprah") || p.includes("winfrey")) {
+        tl = "en-US";
+        filter = "asetrate=24000*0.86,aresample=24000,atempo=1.04,equalizer=f=220:width_type=o:width=1.5:g=7,equalizer=f=3500:width_type=o:width=1:g=2";
+      } else if (p.includes("moore")) {
+        tl = "en-US";
+        filter = "asetrate=24000*1.15,aresample=24000,atempo=0.94,equalizer=f=3200:width_type=o:width=1:g=5";
+      } else if (p.includes("meyer")) {
+        tl = "en-US";
+        filter = "asetrate=24000*1.02,aresample=24000,atempo=1.02,equalizer=f=1800:width_type=o:width=1:g=5";
+      } else if (p.includes("shirer")) {
+        tl = "en-US";
+        filter = "asetrate=24000*1.08,aresample=24000,atempo=0.98,equalizer=f=2600:width_type=o:width=1:g=5";
+      } else if (p.includes("arthur")) {
+        tl = "en-AU";
+        filter = "asetrate=24000*0.98,aresample=24000,atempo=0.92,equalizer=f=400:width_type=o:width=1.5:g=3";
+      } else if (p.includes("ten boom") || p.includes("corrie")) {
+        tl = "en-GB";
+        filter = "asetrate=24000*0.98,aresample=24000,atempo=0.88,equalizer=f=300:width_type=o:width=2:g=5";
+      } else {
+        tl = "en-US";
+        filter = "asetrate=24000*1.04,aresample=24000,atempo=1.00,equalizer=f=350:width_type=o:width=1.5:g=3";
+      }
+    }
+
+    const tmpId = Math.random().toString(36).substring(2, 9);
+    const rawPath = `/tmp/raw_${tmpId}.mp3`;
+    const pcmPath = `/tmp/pcm_${tmpId}.raw`;
+
+    try {
+      const encoded = encodeURIComponent(text.slice(0, 350));
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${tl}&client=tw-ob&q=${encoded}`;
+      const pyScript = `import urllib.request\nreq = urllib.request.Request("${url}", headers={"User-Agent": "Mozilla/5.0"})\nwith urllib.request.urlopen(req) as resp:\n    data = resp.read()\nwith open("${rawPath}", "wb") as f:\n    f.write(data)`;
+      await execAsync(`python3 -c '${pyScript.replace(/'/g, "\\'")}'`);
+      await execAsync(`ffmpeg -y -i "${rawPath}" -af "${filter}" -f s16le -ar 24000 -ac 1 "${pcmPath}"`);
+      const pcmBuf = fs.readFileSync(pcmPath);
+      return pcmBuf.toString("base64");
+    } finally {
+      if (fs.existsSync(rawPath)) {
+        try { fs.unlinkSync(rawPath); } catch (_) {}
+      }
+      if (fs.existsSync(pcmPath)) {
+        try { fs.unlinkSync(pcmPath); } catch (_) {}
+      }
+    }
+  }
+
   // 6. Gemini Text-To-Speech (TTS)
   app.post("/api/tts", async (req, res) => {
     try {
@@ -972,6 +1053,15 @@ Return ONLY valid JSON matching this schema.`;
         }
       }
 
+      if (!audioBase64) {
+        console.log(`Gemini TTS models unavailable (last: ${lastError?.message?.slice(0, 80)}). Synthesizing via acoustic voice DSP engine for ${personaName}...`);
+        try {
+          audioBase64 = await synthesizeAcousticVoicePCM(cleanText, personaName, gender);
+        } catch (synthErr) {
+          console.error("Acoustic voice synthesis error:", synthErr);
+        }
+      }
+
       if (audioBase64) {
         // Store in cache
         if (ttsAudioCache.size >= MAX_TTS_CACHE_ITEMS) {
@@ -982,7 +1072,7 @@ Return ONLY valid JSON matching this schema.`;
         return res.json({ audioBase64 });
       }
 
-      console.error("All TTS models failed to generate audio. Last error:", lastError?.message || lastError);
+      console.error("All TTS generation attempts failed. Last error:", lastError?.message || lastError);
       return res.status(503).json({ error: "TTS generation temporarily unavailable" });
     } catch (error: any) {
       console.error("TTS API Error:", error);

@@ -730,3 +730,65 @@ export function speakWithScholarVoice(
 
   playScholarChunk(0, 0);
 }
+
+/**
+ * Returns the high-fidelity sample audio URL for a given scholar persona
+ */
+export function getScholarSampleUrl(personaName: string, gender: 'male' | 'female'): string {
+  const p = (personaName || '').toLowerCase();
+  if (gender === 'male') {
+    if (p.includes('osteen')) return '/audio/voices/joel_osteen.mp3';
+    if (p.includes('spurgeon')) return '/audio/voices/charles_spurgeon.mp3';
+    if (p.includes('lewis')) return '/audio/voices/cs_lewis.mp3';
+    if (p.includes('luther')) return '/audio/voices/martin_luther.mp3';
+    if (p.includes('keller')) return '/audio/voices/tim_keller.mp3';
+    if (p.includes('graham')) return '/audio/voices/billy_graham.mp3';
+    return '/audio/voices/custom_male.mp3';
+  } else {
+    if (p.includes('oprah') || p.includes('winfrey')) return '/audio/voices/oprah_winfrey.mp3';
+    if (p.includes('moore')) return '/audio/voices/beth_moore.mp3';
+    if (p.includes('meyer')) return '/audio/voices/joyce_meyer.mp3';
+    if (p.includes('shirer')) return '/audio/voices/priscilla_shirer.mp3';
+    if (p.includes('arthur')) return '/audio/voices/kay_arthur.mp3';
+    if (p.includes('ten boom') || p.includes('corrie')) return '/audio/voices/corrie_ten_boom.mp3';
+    return '/audio/voices/custom_female.mp3';
+  }
+}
+
+/**
+ * Directly plays the studio audition audio file for any scholar persona
+ */
+export function playScholarVoiceSample(
+  personaName: string,
+  gender: 'male' | 'female',
+  options?: {
+    onStart?: () => void;
+    onEnd?: () => void;
+    onError?: (err?: any) => void;
+  }
+) {
+  stopScholarSpeech();
+  const url = getScholarSampleUrl(personaName, gender);
+  const audio = new Audio(url);
+  currentAudio = audio;
+
+  audio.onplay = () => {
+    options?.onStart?.();
+  };
+
+  audio.onended = () => {
+    currentAudio = null;
+    options?.onEnd?.();
+  };
+
+  audio.onerror = (e) => {
+    console.warn(`Audio sample error for ${personaName}:`, e);
+    currentAudio = null;
+    options?.onError?.(e);
+  };
+
+  audio.play().catch((err) => {
+    console.warn(`Could not autoplay sample for ${personaName}:`, err);
+    options?.onError?.(err);
+  });
+}

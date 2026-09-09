@@ -3,7 +3,7 @@ import { getDbService, getAuthService, doc, getDoc, setDoc, handleFirestoreError
 import { Shield, Globe, Save, Loader2, Check, Palette, Sun, Moon, BookOpen, Crown, Mic, Volume2, Square, Sparkles, UserCheck, Radio, Library, Compass, GraduationCap, FileText, Search, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { UserProfile } from '../types';
-import { speakWithScholarVoice, stopScholarSpeech } from '../lib/ttsHelper';
+import { speakWithScholarVoice, stopScholarSpeech, playScholarVoiceSample } from '../lib/ttsHelper';
 
 const MALE_VOICE_PRESETS = [
   { name: 'Joel Osteen', style: 'Warm, Inspirational & Encouraging' },
@@ -40,6 +40,7 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
   const [customMaleVoice, setCustomMaleVoice] = useState('');
   const [customFemaleVoice, setCustomFemaleVoice] = useState('');
   const [testingVoice, setTestingVoice] = useState<'male' | 'female' | null>(null);
+  const [activeAuditionPersona, setActiveAuditionPersona] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -106,37 +107,49 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
     };
   }, []);
 
-  const handleTestVoice = (gender: 'male' | 'female') => {
-    if (testingVoice === gender) {
+  const handleAuditionPersona = (personaName: string, gender: 'male' | 'female') => {
+    if (activeAuditionPersona === personaName) {
       stopScholarSpeech();
+      setActiveAuditionPersona(null);
       setTestingVoice(null);
       return;
     }
 
-    const effectiveMale = maleScholarVoice === 'Custom' ? customMaleVoice || 'Custom Male Scholar' : maleScholarVoice;
-    const effectiveFemale = femaleScholarVoice === 'Custom' ? customFemaleVoice || 'Custom Female Scholar' : femaleScholarVoice;
+    if (gender === 'male') {
+      setMaleScholarVoice(personaName);
+    } else {
+      setFemaleScholarVoice(personaName);
+    }
 
-    const personaName = gender === 'male' ? effectiveMale : effectiveFemale;
-    const sampleText = gender === 'male'
-      ? `Grace, peace, and wisdom to you, pilgrim. May the Lord bless you and keep you; may His face shine upon you and grant you peace on your spiritual pilgrimage.`
-      : `Grace, peace, and wisdom to you, pilgrim. The Lord is my shepherd, I shall not want; He leads me beside still waters and restores my soul on this spiritual pilgrimage.`;
-
-    speakWithScholarVoice(sampleText, {
-      gender,
-      profile: {
-        uid: profile?.uid || '',
-        email: profile?.email || '',
-        displayName: profile?.displayName || '',
-        photoURL: profile?.photoURL || '',
-        maleScholarVoice: effectiveMale,
-        femaleScholarVoice: effectiveFemale,
-        activeScholarGender,
-        scholarsVoicesEnabled
+    playScholarVoiceSample(personaName, gender, {
+      onStart: () => {
+        setActiveAuditionPersona(personaName);
+        setTestingVoice(gender);
       },
-      onStart: () => setTestingVoice(gender),
-      onEnd: () => setTestingVoice(null),
-      onError: () => setTestingVoice(null)
+      onEnd: () => {
+        setActiveAuditionPersona(null);
+        setTestingVoice(null);
+      },
+      onError: () => {
+        setActiveAuditionPersona(null);
+        setTestingVoice(null);
+      }
     });
+  };
+
+  const handleTestVoice = (gender: 'male' | 'female') => {
+    if (testingVoice === gender) {
+      stopScholarSpeech();
+      setActiveAuditionPersona(null);
+      setTestingVoice(null);
+      return;
+    }
+
+    const effectiveMale = maleScholarVoice === 'Custom' ? customMaleVoice || 'Custom Male' : maleScholarVoice;
+    const effectiveFemale = femaleScholarVoice === 'Custom' ? customFemaleVoice || 'Custom Female' : femaleScholarVoice;
+    const personaName = gender === 'male' ? effectiveMale : effectiveFemale;
+
+    handleAuditionPersona(personaName, gender);
   };
 
   const handleSave = async () => {
@@ -383,24 +396,47 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {MALE_VOICE_PRESETS.map((p) => (
-                  <button
-                    key={p.name}
-                    type="button"
-                    onClick={() => setMaleScholarVoice(p.name)}
-                    className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
-                      maleScholarVoice === p.name
-                        ? 'border-accent bg-accent/10 text-accent font-bold shadow-sm'
-                        : 'border-ui-border bg-ui-card text-text-secondary hover:border-accent/30 hover:bg-bg-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-xs font-bold uppercase tracking-wide">{p.name}</span>
-                      {maleScholarVoice === p.name && <Check className="w-3.5 h-3.5 text-accent" />}
+                {MALE_VOICE_PRESETS.map((p) => {
+                  const isSelected = maleScholarVoice === p.name;
+                  const isAuditioning = activeAuditionPersona === p.name;
+
+                  return (
+                    <div
+                      key={p.name}
+                      onClick={() => setMaleScholarVoice(p.name)}
+                      className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
+                        isSelected
+                          ? 'border-accent bg-accent/10 text-accent font-bold shadow-sm'
+                          : 'border-ui-border bg-ui-card text-text-secondary hover:border-accent/30 hover:bg-bg-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-xs font-bold uppercase tracking-wide">{p.name}</span>
+                        <div className="flex items-center gap-1.5">
+                          {p.name !== 'Custom' && (
+                            <button
+                              type="button"
+                              title={`Audition ${p.name}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAuditionPersona(p.name, 'male');
+                              }}
+                              className={`p-1 rounded-lg border transition-all ${
+                                isAuditioning
+                                  ? 'bg-red-500/20 border-red-500 text-red-500 animate-pulse'
+                                  : 'bg-accent/10 border-accent/30 text-accent hover:bg-accent/20'
+                              }`}
+                            >
+                              {isAuditioning ? <Square className="w-3 h-3 fill-current" /> : <Volume2 className="w-3 h-3" />}
+                            </button>
+                          )}
+                          {isSelected && <Check className="w-3.5 h-3.5 text-accent" />}
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-text-secondary/70 italic font-serif mt-1">{p.style}</span>
                     </div>
-                    <span className="text-[10px] text-text-secondary/70 italic font-serif mt-1">{p.style}</span>
-                  </button>
-                ))}
+                  );
+                })}
               </div>
 
               {maleScholarVoice === 'Custom' && (
@@ -448,24 +484,47 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {FEMALE_VOICE_PRESETS.map((p) => (
-                  <button
-                    key={p.name}
-                    type="button"
-                    onClick={() => setFemaleScholarVoice(p.name)}
-                    className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between ${
-                      femaleScholarVoice === p.name
-                        ? 'border-accent bg-accent/10 text-accent font-bold shadow-sm'
-                        : 'border-ui-border bg-ui-card text-text-secondary hover:border-accent/30 hover:bg-bg-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-xs font-bold uppercase tracking-wide">{p.name}</span>
-                      {femaleScholarVoice === p.name && <Check className="w-3.5 h-3.5 text-accent" />}
+                {FEMALE_VOICE_PRESETS.map((p) => {
+                  const isSelected = femaleScholarVoice === p.name;
+                  const isAuditioning = activeAuditionPersona === p.name;
+
+                  return (
+                    <div
+                      key={p.name}
+                      onClick={() => setFemaleScholarVoice(p.name)}
+                      className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between cursor-pointer ${
+                        isSelected
+                          ? 'border-accent bg-accent/10 text-accent font-bold shadow-sm'
+                          : 'border-ui-border bg-ui-card text-text-secondary hover:border-accent/30 hover:bg-bg-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-xs font-bold uppercase tracking-wide">{p.name}</span>
+                        <div className="flex items-center gap-1.5">
+                          {p.name !== 'Custom' && (
+                            <button
+                              type="button"
+                              title={`Audition ${p.name}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleAuditionPersona(p.name, 'female');
+                              }}
+                              className={`p-1 rounded-lg border transition-all ${
+                                isAuditioning
+                                  ? 'bg-red-500/20 border-red-500 text-red-500 animate-pulse'
+                                  : 'bg-accent/10 border-accent/30 text-accent hover:bg-accent/20'
+                              }`}
+                            >
+                              {isAuditioning ? <Square className="w-3 h-3 fill-current" /> : <Volume2 className="w-3 h-3" />}
+                            </button>
+                          )}
+                          {isSelected && <Check className="w-3.5 h-3.5 text-accent" />}
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-text-secondary/70 italic font-serif mt-1">{p.style}</span>
                     </div>
-                    <span className="text-[10px] text-text-secondary/70 italic font-serif mt-1">{p.style}</span>
-                  </button>
-                ))}
+                  );
+                })}
               </div>
 
               {femaleScholarVoice === 'Custom' && (
