@@ -5,6 +5,7 @@ import fs from "fs";
 import { promisify } from "util";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Modality, Type } from "@google/genai";
+import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
 
 const execAsync = promisify(exec);
 
@@ -1010,7 +1011,78 @@ Return ONLY valid JSON matching this schema.`;
     }
   }
 
-  // 6. Gemini Text-To-Speech (TTS)
+  // Neural Voice Configuration matched to the assigned Sanctuary Scholar Personas
+  function getNeuralVoiceConfig(personaName: string, gender: string) {
+    const p = (personaName || "").toLowerCase();
+    if (gender === "male") {
+      if (p.includes("osteen")) {
+        return { voice: "en-US-GuyNeural", rate: "+4%", pitch: "+2Hz" };
+      } else if (p.includes("spurgeon")) {
+        return { voice: "en-GB-ThomasNeural", rate: "-3%", pitch: "-2Hz" };
+      } else if (p.includes("lewis")) {
+        return { voice: "en-GB-RyanNeural", rate: "-2%", pitch: "+0Hz" };
+      } else if (p.includes("luther")) {
+        return { voice: "en-US-ChristopherNeural", rate: "+0%", pitch: "-3Hz" };
+      } else if (p.includes("keller")) {
+        return { voice: "en-US-BrianNeural", rate: "-2%", pitch: "-1Hz" };
+      } else if (p.includes("graham")) {
+        return { voice: "en-US-EricNeural", rate: "+3%", pitch: "+1Hz" };
+      } else {
+        return { voice: "en-US-AndrewNeural", rate: "+0%", pitch: "+0Hz" };
+      }
+    } else {
+      if (p.includes("oprah") || p.includes("winfrey")) {
+        return { voice: "en-US-MichelleNeural", rate: "-3%", pitch: "-2Hz" };
+      } else if (p.includes("moore")) {
+        return { voice: "en-US-JennyNeural", rate: "+3%", pitch: "+2Hz" };
+      } else if (p.includes("meyer")) {
+        return { voice: "en-US-AriaNeural", rate: "+2%", pitch: "+0Hz" };
+      } else if (p.includes("shirer")) {
+        return { voice: "en-US-EmmaNeural", rate: "+2%", pitch: "+1Hz" };
+      } else if (p.includes("arthur")) {
+        return { voice: "en-GB-SoniaNeural", rate: "-4%", pitch: "-1Hz" };
+      } else if (p.includes("ten boom") || p.includes("corrie")) {
+        return { voice: "en-GB-LibbyNeural", rate: "-5%", pitch: "+0Hz" };
+      } else {
+        return { voice: "en-US-AvaNeural", rate: "+0%", pitch: "+0Hz" };
+      }
+    }
+  }
+
+  async function synthesizeNeuralVoicePCM(text: string, personaName: string, gender: string): Promise<string> {
+    const config = getNeuralVoiceConfig(personaName, gender);
+    const tts = new MsEdgeTTS();
+    await tts.setMetadata(config.voice, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3);
+    const { audioStream } = tts.toStream(text, { rate: config.rate, pitch: config.pitch });
+    const chunks: Buffer[] = [];
+
+    await new Promise<void>((resolve, reject) => {
+      audioStream.on("data", (chunk: Buffer) => chunks.push(chunk));
+      audioStream.on("end", () => resolve());
+      audioStream.on("error", reject);
+    });
+
+    const mp3Buffer = Buffer.concat(chunks);
+    const tmpPrefix = `/tmp/neural_tts_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`;
+    const inMp3 = `${tmpPrefix}.mp3`;
+    const outPcm = `${tmpPrefix}.raw`;
+
+    try {
+      fs.writeFileSync(inMp3, mp3Buffer);
+      await execAsync(`ffmpeg -y -i "${inMp3}" -f s16le -ar 24000 -ac 1 "${outPcm}"`);
+      const pcmBuffer = fs.readFileSync(outPcm);
+      return pcmBuffer.toString("base64");
+    } finally {
+      if (fs.existsSync(inMp3)) {
+        try { fs.unlinkSync(inMp3); } catch (_) {}
+      }
+      if (fs.existsSync(outPcm)) {
+        try { fs.unlinkSync(outPcm); } catch (_) {}
+      }
+    }
+  }
+
+  // 6. Text-To-Speech (TTS) Endpoint
   app.post("/api/tts", async (req, res) => {
     try {
       const { text, personaName = "Sanctuary Scholar", gender = "male" } = req.body;
@@ -1031,98 +1103,103 @@ Return ONLY valid JSON matching this schema.`;
         return res.json({ audioBase64: "" });
       }
 
-      let voiceName = gender === "male" ? "Charon" : "Kore";
-      let promptStyle = "Read aloud clearly, reverently, and with spiritual warmth:";
-      const lowerPersona = (personaName || "").toLowerCase();
-
-      if (gender === "male") {
-        if (lowerPersona.includes("osteen")) {
-          voiceName = "Puck";
-          promptStyle = "Read aloud in an upbeat, warm, smiling, encouraging, and optimistic tone:";
-        } else if (lowerPersona.includes("spurgeon")) {
-          voiceName = "Charon";
-          promptStyle = "Read aloud in a deep, resonant, regal, majestic, and classical 19th-century pulpit tone:";
-        } else if (lowerPersona.includes("lewis")) {
-          voiceName = "Fenrir";
-          promptStyle = "Read aloud in an articulate, thoughtful, scholarly, and warm Oxbridge professor cadence:";
-        } else if (lowerPersona.includes("luther")) {
-          voiceName = "Charon";
-          promptStyle = "Read aloud in a bold, passionate, powerful, and steadfast reformational tone:";
-        } else if (lowerPersona.includes("keller")) {
-          voiceName = "Fenrir";
-          promptStyle = "Read aloud in a reflective, intellectually rich, gentle, and warm pastoral tone:";
-        } else if (lowerPersona.includes("graham")) {
-          voiceName = "Puck";
-          promptStyle = "Read aloud in an earnest, authoritative, passionate, and clear evangelistic tone:";
-        } else {
-          voiceName = "Fenrir";
-          promptStyle = "Read aloud in a dignified, warm, reverent, and clear masculine scholar tone:";
-        }
-      } else {
-        if (lowerPersona.includes("oprah") || lowerPersona.includes("winfrey")) {
-          voiceName = "Aoede";
-          promptStyle = "Read aloud in an empathetic, rich, warm, heartfelt, and expressive feminine tone:";
-        } else if (lowerPersona.includes("moore")) {
-          voiceName = "Zephyr";
-          promptStyle = "Read aloud in a dynamic, passionate, energetic, and joyful feminine tone:";
-        } else if (lowerPersona.includes("meyer")) {
-          voiceName = "Zephyr";
-          promptStyle = "Read aloud in a direct, practical, confident, and spirited feminine tone:";
-        } else if (lowerPersona.includes("shirer")) {
-          voiceName = "Zephyr";
-          promptStyle = "Read aloud in a faith-filled, vibrant, energetic, and inspiring feminine tone:";
-        } else if (lowerPersona.includes("arthur")) {
-          voiceName = "Kore";
-          promptStyle = "Read aloud in a gentle, methodical, reverent, and calm feminine tone:";
-        } else if (lowerPersona.includes("ten boom") || lowerPersona.includes("corrie")) {
-          voiceName = "Aoede";
-          promptStyle = "Read aloud in a gracious, courageous, wise, and peaceful feminine tone:";
-        } else {
-          voiceName = "Kore";
-          promptStyle = "Read aloud in a graceful, warm, reverent, and clear feminine scholar tone:";
-        }
-      }
-
-      // Check cache first
-      const cacheKey = `${voiceName}::${promptStyle}::${cleanText}`;
+      const cacheKey = `${personaName}::${gender}::${cleanText}`;
       if (ttsAudioCache.has(cacheKey)) {
         return res.json({ audioBase64: ttsAudioCache.get(cacheKey) });
       }
 
-      const ai = getAiClient();
       let audioBase64 = "";
 
-      // Try primary model: gemini-2.5-flash-preview-tts
-      const candidateModels = ["gemini-2.5-flash-preview-tts", "gemini-3.1-flash-tts-preview"];
-      let lastError: any = null;
-
-      for (const model of candidateModels) {
-        try {
-          const response = await ai.models.generateContent({
-            model,
-            contents: `${promptStyle}\n\n"${cleanText}"`,
-            config: {
-              responseModalities: [Modality.AUDIO],
-              speechConfig: {
-                voiceConfig: {
-                  prebuiltVoiceConfig: { voiceName },
-                },
-              },
-            },
-          });
-
-          audioBase64 = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || "";
-          if (audioBase64) {
-            break;
-          }
-        } catch (err: any) {
-          lastError = err;
-          console.warn(`TTS generation with model ${model} failed:`, err?.message?.slice(0, 150));
-        }
+      // Tier 1: Primary Neural Persona Voice (Lifelike, human, authentic scholar voice without robotic artifacts)
+      try {
+        audioBase64 = await synthesizeNeuralVoicePCM(cleanText, personaName, gender);
+      } catch (neuralErr: any) {
+        console.warn(`Neural TTS synthesis attempt for ${personaName} failed, trying alternatives:`, neuralErr?.message || neuralErr);
       }
 
+      // Tier 2: Gemini TTS Models fallback
       if (!audioBase64) {
-        console.log(`Gemini TTS models unavailable (last: ${lastError?.message?.slice(0, 80)}). Synthesizing via acoustic voice DSP engine for ${personaName}...`);
+        let voiceName = gender === "male" ? "Charon" : "Kore";
+        let promptStyle = "Read aloud clearly, reverently, and with spiritual warmth:";
+        const lowerPersona = (personaName || "").toLowerCase();
+
+        if (gender === "male") {
+          if (lowerPersona.includes("osteen")) {
+            voiceName = "Puck";
+            promptStyle = "Read aloud in an upbeat, warm, smiling, encouraging, and optimistic tone:";
+          } else if (lowerPersona.includes("spurgeon")) {
+            voiceName = "Charon";
+            promptStyle = "Read aloud in a deep, resonant, regal, majestic, and classical 19th-century pulpit tone:";
+          } else if (lowerPersona.includes("lewis")) {
+            voiceName = "Fenrir";
+            promptStyle = "Read aloud in an articulate, thoughtful, scholarly, and warm Oxbridge professor cadence:";
+          } else if (lowerPersona.includes("luther")) {
+            voiceName = "Charon";
+            promptStyle = "Read aloud in a bold, passionate, powerful, and steadfast reformational tone:";
+          } else if (lowerPersona.includes("keller")) {
+            voiceName = "Fenrir";
+            promptStyle = "Read aloud in a reflective, intellectually rich, gentle, and warm pastoral tone:";
+          } else if (lowerPersona.includes("graham")) {
+            voiceName = "Puck";
+            promptStyle = "Read aloud in an earnest, authoritative, passionate, and clear evangelistic tone:";
+          } else {
+            voiceName = "Fenrir";
+            promptStyle = "Read aloud in a dignified, warm, reverent, and clear masculine scholar tone:";
+          }
+        } else {
+          if (lowerPersona.includes("oprah") || lowerPersona.includes("winfrey")) {
+            voiceName = "Aoede";
+            promptStyle = "Read aloud in an empathetic, rich, warm, heartfelt, and expressive feminine tone:";
+          } else if (lowerPersona.includes("moore")) {
+            voiceName = "Zephyr";
+            promptStyle = "Read aloud in a dynamic, passionate, energetic, and joyful feminine tone:";
+          } else if (lowerPersona.includes("meyer")) {
+            voiceName = "Zephyr";
+            promptStyle = "Read aloud in a direct, practical, confident, and spirited feminine tone:";
+          } else if (lowerPersona.includes("shirer")) {
+            voiceName = "Zephyr";
+            promptStyle = "Read aloud in a faith-filled, vibrant, energetic, and inspiring feminine tone:";
+          } else if (lowerPersona.includes("arthur")) {
+            voiceName = "Kore";
+            promptStyle = "Read aloud in a gentle, methodical, reverent, and calm feminine tone:";
+          } else if (lowerPersona.includes("ten boom") || lowerPersona.includes("corrie")) {
+            voiceName = "Aoede";
+            promptStyle = "Read aloud in a gracious, courageous, wise, and peaceful feminine tone:";
+          } else {
+            voiceName = "Kore";
+            promptStyle = "Read aloud in a graceful, warm, reverent, and clear feminine scholar tone:";
+          }
+        }
+
+        try {
+          const ai = getAiClient();
+          const candidateModels = ["gemini-3.1-flash-tts-preview", "gemini-2.5-flash-preview-tts"];
+          for (const model of candidateModels) {
+            try {
+              const response = await ai.models.generateContent({
+                model,
+                contents: `${promptStyle}\n\n"${cleanText}"`,
+                config: {
+                  responseModalities: [Modality.AUDIO],
+                  speechConfig: {
+                    voiceConfig: {
+                      prebuiltVoiceConfig: { voiceName },
+                    },
+                  },
+                },
+              });
+              audioBase64 = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || "";
+              if (audioBase64) break;
+            } catch (err: any) {
+              console.warn(`TTS generation with model ${model} failed:`, err?.message?.slice(0, 100));
+            }
+          }
+        } catch (_) {}
+      }
+
+      // Tier 3: Acoustic Voice synthesis fallback
+      if (!audioBase64) {
+        console.log(`Synthesizing via acoustic voice DSP engine for ${personaName}...`);
         try {
           audioBase64 = await synthesizeAcousticVoicePCM(cleanText, personaName, gender);
         } catch (synthErr) {
@@ -1131,7 +1208,6 @@ Return ONLY valid JSON matching this schema.`;
       }
 
       if (audioBase64) {
-        // Store in cache
         if (ttsAudioCache.size >= MAX_TTS_CACHE_ITEMS) {
           const oldestKey = ttsAudioCache.keys().next().value;
           if (oldestKey) ttsAudioCache.delete(oldestKey);
@@ -1140,7 +1216,7 @@ Return ONLY valid JSON matching this schema.`;
         return res.json({ audioBase64 });
       }
 
-      console.error("All TTS generation attempts failed. Last error:", lastError?.message || lastError);
+      console.error("All TTS generation attempts failed for persona:", personaName);
       return res.status(503).json({ error: "TTS generation temporarily unavailable" });
     } catch (error: any) {
       console.error("TTS API Error:", error);
