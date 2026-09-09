@@ -11,7 +11,8 @@ import {
   fastForwardScholarSpeech, 
   seekScholarSpeech, 
   subscribeScholarSpeechProgress, 
-  ScholarSpeechState 
+  ScholarSpeechState,
+  getEffectiveScholarVoiceInfo 
 } from '../lib/ttsHelper';
 import { 
   History, 
@@ -81,8 +82,18 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
 
   const isPremium = userProfile?.tier === 'premium' || userProfile?.role === 'admin';
 
+  const [profileSyncKey, setProfileSyncKey] = useState(0);
+
   useEffect(() => {
     fetchSessions();
+  }, []);
+
+  useEffect(() => {
+    const onProfileChange = () => {
+      setProfileSyncKey(k => k + 1);
+    };
+    window.addEventListener('scholar-profile-updated', onProfileChange);
+    return () => window.removeEventListener('scholar-profile-updated', onProfileChange);
   }, []);
 
   useEffect(() => {
@@ -211,7 +222,13 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
 
     if (!fullScript.trim()) return;
 
+    const effectiveInfo = getEffectiveScholarVoiceInfo(userProfile);
+    const sessionVoice = session.scholarVoice || (session.scholarGender === 'female' ? effectiveInfo.femaleScholarVoice : effectiveInfo.personaName);
+    const sessionGender = session.scholarGender || effectiveInfo.gender;
+
     speakWithScholarVoice(fullScript, {
+      personaName: sessionVoice,
+      gender: sessionGender,
       profile: userProfile,
       onStart: () => {
         setSpeakingSessionId(session.id || null);
@@ -318,7 +335,15 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                     <Sparkles className="w-3 h-3" /> Sanctuary Audio Playback
                   </span>
                   <span className="text-[10px] text-text-secondary">
-                    • {userProfile?.activeScholarGender === 'female' ? (userProfile?.femaleScholarVoice || 'Female Scholar') : (userProfile?.maleScholarVoice || 'Male Scholar')}
+                    • Voice: <strong className="text-accent font-semibold">{(() => {
+                      const activeSession = sessions.find(s => s.id === speakingSessionId);
+                      const effective = getEffectiveScholarVoiceInfo(userProfile);
+                      return activeSession?.scholarVoice || (activeSession?.scholarGender === 'female' ? effective.femaleScholarVoice : effective.personaName);
+                    })()}</strong> ({(() => {
+                      const activeSession = sessions.find(s => s.id === speakingSessionId);
+                      const effective = getEffectiveScholarVoiceInfo(userProfile);
+                      return (activeSession?.scholarGender || effective.gender) === 'female' ? 'Female Scholar' : 'Male Scholar';
+                    })()})
                   </span>
                 </div>
                 <h4 className="font-serif font-bold text-text-primary text-base truncate">

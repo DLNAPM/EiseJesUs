@@ -35,11 +35,55 @@ interface ActiveSession {
   progressInterval?: any;
   options?: {
     gender?: 'male' | 'female' | 'auto';
+    personaName?: string;
     profile?: UserProfile | null;
     onStart?: () => void;
     onEnd?: () => void;
     onError?: (err: any) => void;
     onProgress?: (state: ScholarSpeechState) => void;
+  };
+}
+
+export function getEffectiveScholarVoiceInfo(profile?: UserProfile | null): {
+  personaName: string;
+  gender: 'male' | 'female';
+  maleScholarVoice: string;
+  femaleScholarVoice: string;
+  activeScholarGender: 'male' | 'female' | 'auto';
+  scholarsVoicesEnabled: boolean;
+} {
+  let p: any = profile ? { ...profile } : {};
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('xejesus_user_scholar_voice_profile');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        p = {
+          ...parsed,
+          ...p,
+          maleScholarVoice: p?.maleScholarVoice || parsed.maleScholarVoice,
+          femaleScholarVoice: p?.femaleScholarVoice || parsed.femaleScholarVoice,
+          activeScholarGender: p?.activeScholarGender || parsed.activeScholarGender,
+          scholarsVoicesEnabled: p?.scholarsVoicesEnabled !== undefined ? p.scholarsVoicesEnabled : parsed.scholarsVoicesEnabled,
+        };
+      }
+    } catch (_) {}
+  }
+
+  const activeGender = p?.activeScholarGender || 'male';
+  const genderToUse: 'male' | 'female' = activeGender === 'female' ? 'female' : 'male';
+  const maleVoiceName = p?.maleScholarVoice || 'Joel Osteen';
+  const femaleVoiceName = p?.femaleScholarVoice || 'Oprah Winfrey';
+  const personaName = genderToUse === 'male' ? maleVoiceName : femaleVoiceName;
+  const scholarsVoicesEnabled = p?.scholarsVoicesEnabled !== false;
+
+  return {
+    personaName,
+    gender: genderToUse,
+    maleScholarVoice: maleVoiceName,
+    femaleScholarVoice: femaleVoiceName,
+    activeScholarGender: activeGender,
+    scholarsVoicesEnabled,
   };
 }
 
@@ -657,6 +701,7 @@ export function speakWithScholarVoice(
   text: string,
   options?: {
     gender?: 'male' | 'female' | 'auto';
+    personaName?: string;
     profile?: UserProfile | null;
     onStart?: () => void;
     onEnd?: () => void;
@@ -668,15 +713,16 @@ export function speakWithScholarVoice(
 
   if (!text || !text.trim()) return;
 
-  const profile = options?.profile;
-  const activeGender = options?.gender || profile?.activeScholarGender || 'male';
+  const voiceInfo = getEffectiveScholarVoiceInfo(options?.profile);
+  const activeGender = options?.gender && options.gender !== 'auto' 
+    ? options.gender 
+    : voiceInfo.gender;
   const genderToUse: 'male' | 'female' = activeGender === 'female' ? 'female' : 'male';
 
-  const maleVoiceName = profile?.maleScholarVoice || 'Joel Osteen';
-  const femaleVoiceName = profile?.femaleScholarVoice || 'Oprah Winfrey';
-  const personaName = genderToUse === 'male' ? maleVoiceName : femaleVoiceName;
+  const defaultVoice = genderToUse === 'male' ? voiceInfo.maleScholarVoice : voiceInfo.femaleScholarVoice;
+  const personaName = options?.personaName || defaultVoice;
 
-  const chunks = splitTextIntoChunks(text, 400, 750);
+  const chunks = splitTextIntoChunks(text, 250, 500);
   if (chunks.length === 0) return;
 
   const thisPlaybackId = activePlaybackId;
@@ -698,7 +744,7 @@ export function speakWithScholarVoice(
     rawText: text,
     personaName,
     gender: genderToUse,
-    isBrowserFallback: profile?.scholarsVoicesEnabled === false,
+    isBrowserFallback: voiceInfo.scholarsVoicesEnabled === false,
     chunks,
     chunkDurations: initialDurations,
     chunkPromises: new Map(),

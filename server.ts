@@ -867,6 +867,9 @@ Return ONLY valid JSON matching this schema.`;
   const MAX_TTS_CACHE_ITEMS = 300;
 
   // High-fidelity acoustic voice DSP synthesis fallback when Gemini TTS is quota-restricted
+  // In-memory audio cache for sub-phrases
+  const ttsPhraseCache = new Map<string, Buffer>();
+
   async function synthesizeAcousticVoicePCM(text: string, personaName: string, gender: string): Promise<string> {
     const p = (personaName || "").toLowerCase();
     let tl = "en-US";
@@ -875,66 +878,131 @@ Return ONLY valid JSON matching this schema.`;
     if (gender === "male") {
       if (p.includes("spurgeon")) {
         tl = "en-GB";
-        filter = "asetrate=24000*0.74,aresample=24000,atempo=1.28,equalizer=f=120:width_type=o:width=1.5:g=8,aecho=0.8:0.88:35:0.25";
+        filter = "asetrate=24000*0.82,aresample=24000,atempo=0.94,equalizer=f=180:width_type=o:width=1.8:g=8,aecho=0.8:0.88:30:0.2";
       } else if (p.includes("lewis")) {
         tl = "en-GB";
-        filter = "asetrate=24000*0.86,aresample=24000,atempo=1.12,equalizer=f=400:width_type=o:width=1.5:g=4,equalizer=f=2500:width_type=o:width=1:g=2";
+        filter = "asetrate=24000*0.88,aresample=24000,atempo=0.95,equalizer=f=350:width_type=o:width=1.5:g=4,equalizer=f=2400:width_type=o:width=1:g=2";
       } else if (p.includes("luther")) {
         tl = "en-GB";
-        filter = "asetrate=24000*0.70,aresample=24000,atempo=1.35,equalizer=f=100:width_type=o:width=1:g=9,equalizer=f=2000:width_type=o:width=1:g=3";
+        filter = "asetrate=24000*0.78,aresample=24000,atempo=0.96,equalizer=f=150:width_type=o:width=2:g=8,aecho=0.8:0.9:35:0.25";
       } else if (p.includes("keller")) {
         tl = "en-US";
-        filter = "asetrate=24000*0.88,aresample=24000,atempo=1.06,equalizer=f=250:width_type=o:width=1.5:g=5";
+        filter = "asetrate=24000*0.90,aresample=24000,atempo=0.93,equalizer=f=260:width_type=o:width=1.5:g=4";
       } else if (p.includes("graham")) {
         tl = "en-US";
-        filter = "asetrate=24000*0.93,aresample=24000,atempo=1.08,equalizer=f=2800:width_type=o:width=1:g=6";
+        filter = "asetrate=24000*0.94,aresample=24000,atempo=1.02,equalizer=f=1200:width_type=o:width=1.5:g=4";
       } else if (p.includes("osteen")) {
         tl = "en-US";
-        filter = "asetrate=24000*1.04,aresample=24000,atempo=1.03,equalizer=f=3000:width_type=o:width=1.5:g=4";
+        filter = "asetrate=24000*0.98,aresample=24000,atempo=1.02,equalizer=f=2800:width_type=o:width=1.5:g=3";
       } else {
         tl = "en-US";
-        filter = "asetrate=24000*0.90,aresample=24000,atempo=1.08,equalizer=f=300:width_type=o:width=1.5:g=3";
+        filter = "asetrate=24000*0.90,aresample=24000,atempo=0.96,equalizer=f=250:width_type=o:width=1.5:g=3";
       }
     } else {
       if (p.includes("oprah") || p.includes("winfrey")) {
         tl = "en-US";
-        filter = "asetrate=24000*0.86,aresample=24000,atempo=1.04,equalizer=f=220:width_type=o:width=1.5:g=7,equalizer=f=3500:width_type=o:width=1:g=2";
+        filter = "asetrate=24000*0.92,aresample=24000,atempo=0.94,equalizer=f=260:width_type=o:width=1.8:g=6,aecho=0.8:0.85:25:0.18";
       } else if (p.includes("moore")) {
         tl = "en-US";
-        filter = "asetrate=24000*1.15,aresample=24000,atempo=0.94,equalizer=f=3200:width_type=o:width=1:g=5";
+        filter = "asetrate=24000*1.06,aresample=24000,atempo=1.02,equalizer=f=2200:width_type=o:width=1.2:g=4";
       } else if (p.includes("meyer")) {
         tl = "en-US";
-        filter = "asetrate=24000*1.02,aresample=24000,atempo=1.02,equalizer=f=1800:width_type=o:width=1:g=5";
+        filter = "asetrate=24000*0.94,aresample=24000,atempo=0.99,equalizer=f=500:width_type=o:width=1.5:g=4";
       } else if (p.includes("shirer")) {
         tl = "en-US";
-        filter = "asetrate=24000*1.08,aresample=24000,atempo=0.98,equalizer=f=2600:width_type=o:width=1:g=5";
+        filter = "asetrate=24000*1.03,aresample=24000,atempo=0.99,equalizer=f=1800:width_type=o:width=1.3:g=4";
       } else if (p.includes("arthur")) {
         tl = "en-AU";
-        filter = "asetrate=24000*0.98,aresample=24000,atempo=0.92,equalizer=f=400:width_type=o:width=1.5:g=3";
+        filter = "asetrate=24000*0.96,aresample=24000,atempo=0.90,equalizer=f=380:width_type=o:width=1.5:g=3";
       } else if (p.includes("ten boom") || p.includes("corrie")) {
         tl = "en-GB";
-        filter = "asetrate=24000*0.98,aresample=24000,atempo=0.88,equalizer=f=300:width_type=o:width=2:g=5";
+        filter = "asetrate=24000*0.95,aresample=24000,atempo=0.86,equalizer=f=340:width_type=o:width=2:g=5";
       } else {
         tl = "en-US";
-        filter = "asetrate=24000*1.04,aresample=24000,atempo=1.00,equalizer=f=350:width_type=o:width=1.5:g=3";
+        filter = "asetrate=24000*1.00,aresample=24000,atempo=0.98,equalizer=f=350:width_type=o:width=1.5:g=3";
       }
     }
 
-    const tmpId = Math.random().toString(36).substring(2, 9);
-    const rawPath = `/tmp/raw_${tmpId}.mp3`;
-    const pcmPath = `/tmp/pcm_${tmpId}.raw`;
+    // Split text into digestible phrases under 120 chars for translate_tts
+    const clean = text.replace(/[\*\#\`\_]/g, "").replace(/\s+/g, " ").trim();
+    const sentences = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
+    const phrases: string[] = [];
+    for (const s of sentences) {
+      const trimmed = s.trim();
+      if (!trimmed) continue;
+      if (trimmed.length <= 120) {
+        phrases.push(trimmed);
+      } else {
+        const words = trimmed.split(" ");
+        let cur = "";
+        for (const w of words) {
+          if ((cur + " " + w).trim().length > 120) {
+            if (cur.trim()) phrases.push(cur.trim());
+            cur = w;
+          } else {
+            cur = (cur + " " + w).trim();
+          }
+        }
+        if (cur.trim()) phrases.push(cur.trim());
+      }
+    }
+
+    if (phrases.length === 0) return "";
+
+    const tmpPrefix = `/tmp/tts_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`;
+    const partFiles: string[] = [];
+    const listPath = `${tmpPrefix}_list.txt`;
+    const pcmPath = `${tmpPrefix}.raw`;
 
     try {
-      const encoded = encodeURIComponent(text.slice(0, 350));
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${tl}&client=tw-ob&q=${encoded}`;
-      const pyScript = `import urllib.request\nreq = urllib.request.Request("${url}", headers={"User-Agent": "Mozilla/5.0"})\nwith urllib.request.urlopen(req) as resp:\n    data = resp.read()\nwith open("${rawPath}", "wb") as f:\n    f.write(data)`;
-      await execAsync(`python3 -c '${pyScript.replace(/'/g, "\\'")}'`);
-      await execAsync(`ffmpeg -y -i "${rawPath}" -af "${filter}" -f s16le -ar 24000 -ac 1 "${pcmPath}"`);
+      for (let i = 0; i < phrases.length; i++) {
+        const phrase = phrases[i];
+        const cacheKey = `${tl}::${phrase}`;
+        let mp3Buffer = ttsPhraseCache.get(cacheKey);
+
+        if (!mp3Buffer) {
+          const encoded = encodeURIComponent(phrase);
+          const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=${tl}&client=tw-ob&q=${encoded}`;
+          const resp = await fetch(url, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            },
+          });
+          if (!resp.ok) {
+            throw new Error(`TTS phrase download failed HTTP ${resp.status}`);
+          }
+          mp3Buffer = Buffer.from(await resp.arrayBuffer());
+          if (ttsPhraseCache.size < 500) {
+            ttsPhraseCache.set(cacheKey, mp3Buffer);
+          }
+        }
+
+        const partPath = `${tmpPrefix}_${i}.mp3`;
+        fs.writeFileSync(partPath, mp3Buffer);
+        partFiles.push(partPath);
+      }
+
+      if (partFiles.length === 1) {
+        // Single part: run directly through ffmpeg
+        await execAsync(`ffmpeg -y -i "${partFiles[0]}" -af "${filter}" -f s16le -ar 24000 -ac 1 "${pcmPath}"`);
+      } else {
+        // Concat multiple parts
+        const listContent = partFiles.map(f => `file '${f}'`).join("\n");
+        fs.writeFileSync(listPath, listContent);
+        await execAsync(`ffmpeg -y -f concat -safe 0 -i "${listPath}" -af "${filter}" -f s16le -ar 24000 -ac 1 "${pcmPath}"`);
+      }
+
       const pcmBuf = fs.readFileSync(pcmPath);
       return pcmBuf.toString("base64");
     } finally {
-      if (fs.existsSync(rawPath)) {
-        try { fs.unlinkSync(rawPath); } catch (_) {}
+      // Clean up all temporary files safely
+      for (const f of partFiles) {
+        if (fs.existsSync(f)) {
+          try { fs.unlinkSync(f); } catch (_) {}
+        }
+      }
+      if (fs.existsSync(listPath)) {
+        try { fs.unlinkSync(listPath); } catch (_) {}
       }
       if (fs.existsSync(pcmPath)) {
         try { fs.unlinkSync(pcmPath); } catch (_) {}

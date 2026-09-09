@@ -27,9 +27,10 @@ const FEMALE_VOICE_PRESETS = [
 
 interface ProfileSettingsProps {
   onNavigatePage?: (page: 'privacy' | 'terms') => void;
+  onProfileUpdated?: (updated: Partial<UserProfile>) => void;
 }
 
-export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps) {
+export default function ProfileSettings({ onNavigatePage, onProfileUpdated }: ProfileSettingsProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [bibleWebsite, setBibleWebsite] = useState('');
   const [theme, setTheme] = useState('modern');
@@ -92,6 +93,18 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
           if (data.scholarsVoicesEnabled !== undefined) {
             setScholarsVoicesEnabled(data.scholarsVoicesEnabled);
           }
+
+          // Cache to localStorage for instant client-wide access
+          try {
+            localStorage.setItem('xejesus_user_scholar_voice_profile', JSON.stringify({
+              maleScholarVoice: data.maleScholarVoice || 'Joel Osteen',
+              femaleScholarVoice: data.femaleScholarVoice || 'Oprah Winfrey',
+              activeScholarGender: data.activeScholarGender || 'male',
+              scholarsVoicesEnabled: data.scholarsVoicesEnabled !== undefined ? data.scholarsVoicesEnabled : true
+            }));
+          } catch (_) {}
+
+          onProfileUpdated?.(data);
         }
       } catch (error) {
         handleFirestoreError(error, OperationType.GET, `users/${auth.currentUser.uid}`);
@@ -161,22 +174,44 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
     const finalMaleVoice = maleScholarVoice === 'Custom' ? (customMaleVoice.trim() || 'Custom Male Voice') : maleScholarVoice;
     const finalFemaleVoice = femaleScholarVoice === 'Custom' ? (customFemaleVoice.trim() || 'Custom Female Voice') : femaleScholarVoice;
 
+    const updatedData = {
+      uid: auth.currentUser.uid,
+      email: auth.currentUser.email,
+      displayName: auth.currentUser.displayName,
+      photoURL: auth.currentUser.photoURL,
+      bibleWebsite: bibleWebsite,
+      theme: theme as 'modern' | 'midnight' | 'parchment',
+      maleScholarVoice: finalMaleVoice,
+      femaleScholarVoice: finalFemaleVoice,
+      activeScholarGender: activeScholarGender,
+      scholarsVoicesEnabled: scholarsVoicesEnabled
+    };
+
     try {
-      await setDoc(doc(db, 'users', auth.currentUser.uid), {
-        uid: auth.currentUser.uid,
-        email: auth.currentUser.email,
-        displayName: auth.currentUser.displayName,
-        photoURL: auth.currentUser.photoURL,
-        bibleWebsite: bibleWebsite,
-        theme: theme,
-        maleScholarVoice: finalMaleVoice,
-        femaleScholarVoice: finalFemaleVoice,
-        activeScholarGender: activeScholarGender,
-        scholarsVoicesEnabled: scholarsVoicesEnabled
-      }, { merge: true });
+      await setDoc(doc(db, 'users', auth.currentUser.uid), updatedData, { merge: true });
       
       // Update theme in real-time
       document.documentElement.setAttribute('data-theme', theme === 'modern' ? '' : theme);
+
+      // Immediately cache to localStorage & notify system listeners
+      try {
+        localStorage.setItem('xejesus_user_scholar_voice_profile', JSON.stringify({
+          maleScholarVoice: finalMaleVoice,
+          femaleScholarVoice: finalFemaleVoice,
+          activeScholarGender: activeScholarGender,
+          scholarsVoicesEnabled: scholarsVoicesEnabled
+        }));
+        window.dispatchEvent(new CustomEvent('scholar-profile-updated', { 
+          detail: {
+            maleScholarVoice: finalMaleVoice,
+            femaleScholarVoice: finalFemaleVoice,
+            activeScholarGender: activeScholarGender,
+            scholarsVoicesEnabled: scholarsVoicesEnabled
+          } 
+        }));
+      } catch (_) {}
+
+      onProfileUpdated?.(updatedData);
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);

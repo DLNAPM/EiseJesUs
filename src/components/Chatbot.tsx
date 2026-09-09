@@ -46,7 +46,8 @@ import {
   fastForwardScholarSpeech, 
   seekScholarSpeech, 
   subscribeScholarSpeechProgress, 
-  ScholarSpeechState 
+  ScholarSpeechState,
+  getEffectiveScholarVoiceInfo
 } from '../lib/ttsHelper';
 
 
@@ -223,7 +224,13 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
 
     if (!fullScript.trim()) return;
 
+    const voiceInfo = getEffectiveScholarVoiceInfo(userProfile);
+    const sessionVoice = session.scholarVoice || (session.scholarGender === 'female' ? voiceInfo.femaleScholarVoice : voiceInfo.personaName);
+    const sessionGender = session.scholarGender || voiceInfo.gender;
+
     speakWithScholarVoice(fullScript, {
+      personaName: sessionVoice,
+      gender: sessionGender,
       profile: userProfile,
       onStart: () => {
         setSpeakingSessionId(session.id || null);
@@ -249,7 +256,11 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
 
     stopSpeech();
 
+    const voiceInfo = getEffectiveScholarVoiceInfo(userProfile);
+
     speakWithScholarVoice(text, {
+      personaName: voiceInfo.personaName,
+      gender: voiceInfo.gender,
       profile: userProfile,
       onStart: () => {
         setSpeakingMessageText(text);
@@ -336,10 +347,13 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
     const path = `users/${auth.currentUser.uid}/chat_sessions/${sessionId}`;
 
     try {
+      const voiceInfo = getEffectiveScholarVoiceInfo(userProfile);
       const sessionData: Partial<ChatSession> = {
         userId: auth.currentUser.uid,
         name: sessionName || `Study ${new Date().toLocaleDateString()}`,
         messages: messages,
+        scholarVoice: voiceInfo.personaName,
+        scholarGender: voiceInfo.gender,
         createdAt: currentSessionId ? undefined : serverTimestamp(),
         updatedAt: serverTimestamp(),
       };

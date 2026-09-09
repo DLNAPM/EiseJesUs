@@ -86,6 +86,8 @@ export interface ChatSession {
     role: 'user' | 'model';
     text: string;
   }[];
+  scholarVoice?: string;
+  scholarGender?: 'male' | 'female';
   createdAt: any;
   updatedAt?: any;
 }
