@@ -404,30 +404,57 @@ function pcmToWav(pcmBase64: string, sampleRate = 24000): Blob {
 // In-memory client-side audio cache for repeated chunks and instant previews
 const clientAudioCache = new Map<string, { wavBlob: Blob; audioUrl: string; duration: number }>();
 
-function splitTextIntoChunks(text: string, firstChunkMax = 400, standardMax = 750): string[] {
+function splitTextIntoChunks(text: string, firstChunkMax = 350, standardMax = 450): string[] {
   const clean = text
+    .replace(/&amp;/gi, ' and ')
+    .replace(/&lt;/gi, ' less than ')
+    .replace(/&gt;/gi, ' greater than ')
+    .replace(/&quot;/gi, '')
+    .replace(/&apos;/gi, '')
+    .replace(/&#39;/gi, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&/g, ' and ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/[<>]/g, ' ')
     .replace(/\*+/g, '')
     .replace(/#+/g, '')
     .replace(/`+/g, '')
     .replace(/_+/g, '')
     .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+    .replace(/["“”«»]/g, '')
+    .replace(/['‘’]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 
   if (!clean) return [];
 
-  const sentences = clean.match(/[^.!?\n]+[.!?\n]+/g) || [clean];
+  // Match sentences or clauses
+  const rawSentences = clean.match(/[^.!?\n]+[.!?\n]+/g) || [clean];
+  const atomicParts: string[] = [];
+
+  // If any sentence is excessively long, split by comma or semicolon
+  for (const s of rawSentences) {
+    if (s.length > standardMax) {
+      const subClauses = s.match(/[^,;:]+[,;:]?/g) || [s];
+      for (const sub of subClauses) {
+        if (sub.trim()) atomicParts.push(sub.trim());
+      }
+    } else {
+      if (s.trim()) atomicParts.push(s.trim());
+    }
+  }
+
   const chunks: string[] = [];
   let currentChunk = "";
   let maxLen = firstChunkMax;
 
-  for (const sentence of sentences) {
-    if ((currentChunk + sentence).length > maxLen && currentChunk.trim()) {
+  for (const part of atomicParts) {
+    if ((currentChunk + " " + part).trim().length > maxLen && currentChunk.trim()) {
       chunks.push(currentChunk.trim());
-      currentChunk = sentence;
+      currentChunk = part;
       maxLen = standardMax;
     } else {
-      currentChunk += sentence;
+      currentChunk = currentChunk ? `${currentChunk} ${part}` : part;
     }
   }
 
@@ -602,8 +629,14 @@ function fetchSessionChunk(session: ActiveSession, index: number): Promise<{ wav
 
     const promise = (async () => {
       try {
-        const pcmBase64 = await generateScholarTTS(chunkText, session.personaName, session.gender);
+        let pcmBase64 = await generateScholarTTS(chunkText, session.personaName, session.gender);
         if (activePlaybackId !== thisPlaybackId) return null;
+        if (!pcmBase64) {
+          // Retry once with a brief 200ms delay to prevent momentary network hiccup from dropping to browser robot fallback
+          await new Promise(r => setTimeout(r, 200));
+          if (activePlaybackId !== thisPlaybackId) return null;
+          pcmBase64 = await generateScholarTTS(chunkText, session.personaName, session.gender);
+        }
         if (!pcmBase64) return null;
 
         const wavBlob = pcmToWav(pcmBase64, 24000);

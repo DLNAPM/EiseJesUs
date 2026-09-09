@@ -223,10 +223,8 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
     if (!fullScript.trim()) return;
 
     const effectiveInfo = getEffectiveScholarVoiceInfo(userProfile);
-    const sessionVoice = session.scholarGender === 'female' 
-      ? effectiveInfo.femaleScholarVoice 
-      : (session.scholarGender === 'male' ? effectiveInfo.maleScholarVoice : (session.scholarVoice || effectiveInfo.personaName));
-    const sessionGender = session.scholarGender === 'female' ? 'female' : (session.scholarGender === 'male' ? 'male' : effectiveInfo.gender);
+    const sessionVoice = effectiveInfo.personaName;
+    const sessionGender = effectiveInfo.gender;
 
     speakWithScholarVoice(fullScript, {
       personaName: sessionVoice,
@@ -338,15 +336,11 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                   </span>
                   <span className="text-[10px] text-text-secondary">
                     • Voice: <strong className="text-accent font-semibold">{(() => {
-                      const activeSession = sessions.find(s => s.id === speakingSessionId);
                       const effective = getEffectiveScholarVoiceInfo(userProfile);
-                      return activeSession?.scholarGender === 'female' 
-                        ? effective.femaleScholarVoice 
-                        : (activeSession?.scholarGender === 'male' ? effective.maleScholarVoice : (activeSession?.scholarVoice || effective.personaName));
+                      return effective.personaName;
                     })()}</strong> ({(() => {
-                      const activeSession = sessions.find(s => s.id === speakingSessionId);
                       const effective = getEffectiveScholarVoiceInfo(userProfile);
-                      return (activeSession?.scholarGender || effective.gender) === 'female' ? 'Female Scholar' : 'Male Scholar';
+                      return effective.gender === 'female' ? 'Female Scholar' : 'Male Scholar';
                     })()})
                   </span>
                 </div>

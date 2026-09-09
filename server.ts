@@ -1049,17 +1049,62 @@ Return ONLY valid JSON matching this schema.`;
     }
   }
 
+  function sanitizeTextForTTS(text: string): string {
+    if (!text || typeof text !== "string") return "";
+    return text
+      // Replace XML entities first
+      .replace(/&amp;/gi, " and ")
+      .replace(/&lt;/gi, " less than ")
+      .replace(/&gt;/gi, " greater than ")
+      .replace(/&quot;/gi, "")
+      .replace(/&apos;/gi, "")
+      .replace(/&#39;/gi, "")
+      .replace(/&nbsp;/gi, " ")
+      // Replace raw XML characters
+      .replace(/&/g, " and ")
+      .replace(/<[^>]*>/g, " ") // Strip any HTML/XML tags
+      .replace(/[<>]/g, " ")
+      // Remove markdown formatting
+      .replace(/\*+/g, "")
+      .replace(/#+/g, "")
+      .replace(/`+/g, "")
+      .replace(/_+/g, "")
+      .replace(/~~+/g, "")
+      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
+      // Clean quotes and special punctuation that can interfere with SSML
+      .replace(/["“”«»]/g, "")
+      .replace(/['‘’]/g, "")
+      // Remove URLs
+      .replace(/https?:\/\/\S+/gi, "")
+      // Collapse whitespace
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   async function synthesizeNeuralVoicePCM(text: string, personaName: string, gender: string): Promise<string> {
     const config = getNeuralVoiceConfig(personaName, gender);
+    const sanitized = sanitizeTextForTTS(text);
+    if (!sanitized) return "";
+
     const tts = new MsEdgeTTS();
     await tts.setMetadata(config.voice, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3);
-    const { audioStream } = tts.toStream(text, { rate: config.rate, pitch: config.pitch });
+    const { audioStream } = tts.toStream(sanitized, { rate: config.rate, pitch: config.pitch });
     const chunks: Buffer[] = [];
 
     await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Neural TTS timeout after 15s"));
+      }, 15000);
+
       audioStream.on("data", (chunk: Buffer) => chunks.push(chunk));
-      audioStream.on("end", () => resolve());
-      audioStream.on("error", reject);
+      audioStream.on("end", () => {
+        clearTimeout(timeout);
+        resolve();
+      });
+      audioStream.on("error", (err) => {
+        clearTimeout(timeout);
+        reject(err);
+      });
     });
 
     const mp3Buffer = Buffer.concat(chunks);
@@ -1090,14 +1135,7 @@ Return ONLY valid JSON matching this schema.`;
         return res.status(400).json({ error: "Text is required for TTS" });
       }
 
-      const cleanText = text
-        .replace(/\*+/g, "")
-        .replace(/#+/g, "")
-        .replace(/`+/g, "")
-        .replace(/_+/g, "")
-        .replace(/\[(.*?)\]\(.*?\)/g, "$1")
-        .replace(/\s+/g, " ")
-        .trim();
+      const cleanText = sanitizeTextForTTS(text);
 
       if (!cleanText) {
         return res.json({ audioBase64: "" });

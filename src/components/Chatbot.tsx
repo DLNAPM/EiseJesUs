@@ -233,10 +233,8 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
     if (!fullScript.trim()) return;
 
     const voiceInfo = getEffectiveScholarVoiceInfo(userProfile);
-    const sessionVoice = session.scholarGender === 'female' 
-      ? voiceInfo.femaleScholarVoice 
-      : (session.scholarGender === 'male' ? voiceInfo.maleScholarVoice : (session.scholarVoice || voiceInfo.personaName));
-    const sessionGender = session.scholarGender === 'female' ? 'female' : (session.scholarGender === 'male' ? 'male' : voiceInfo.gender);
+    const sessionVoice = voiceInfo.personaName;
+    const sessionGender = voiceInfo.gender;
 
     speakWithScholarVoice(fullScript, {
       personaName: sessionVoice,
