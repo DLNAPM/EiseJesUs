@@ -112,6 +112,7 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
 
   const [, setVoiceSyncKey] = useState(0);
   const [voiceDropdownSessionId, setVoiceDropdownSessionId] = useState<string | null>(null);
+  const [voiceDropdownAnchorEl, setVoiceDropdownAnchorEl] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     const onSync = () => setVoiceSyncKey((k) => k + 1);
@@ -980,7 +981,7 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                         <div className="flex items-center gap-1 flex-shrink-0">
                           {/* Read Audibly Button & AI Voices Dropdown */}
                           <div className="relative inline-block" data-voice-dropdown="true">
-                            <div className="flex items-center">
+                            <div className="flex items-center gap-0.5">
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -994,7 +995,7 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                                       setIsPaused(true);
                                     }
                                   } else {
-                                    setVoiceDropdownSessionId(prev => prev === session.id ? null : (session.id || null));
+                                    speakSession(session);
                                   }
                                 }}
                                 className={cn(
@@ -1006,7 +1007,7 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                                 title={
                                   speakingSessionId === session.id 
                                     ? (isPaused ? "Resume Reading" : "Pause / Stop Reading") 
-                                    : "Press to choose AI Scholar Voice & listen"
+                                    : "Press to listen to this session"
                                 }
                               >
                                 {speakingSessionId === session.id ? (
@@ -1018,29 +1019,35 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                                   <>
                                     <Volume2 className="w-3.5 h-3.5" />
                                     <span className="text-[10px] uppercase tracking-wider">Listen</span>
-                                    <ChevronDown className={`w-3 h-3 ml-0.5 transition-transform ${voiceDropdownSessionId === session.id ? 'rotate-180' : ''}`} />
                                   </>
                                 )}
                               </button>
 
-                              {speakingSessionId === session.id && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setVoiceDropdownSessionId(prev => prev === session.id ? null : (session.id || null));
-                                  }}
-                                  className="ml-0.5 p-1.5 rounded-xl bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 text-xs transition-all cursor-pointer"
-                                  title="Change Sanctuary Scholar Voice"
-                                >
-                                  <ChevronDown className={`w-3 h-3 transition-transform ${voiceDropdownSessionId === session.id ? 'rotate-180' : ''}`} />
-                                </button>
-                              )}
+                              {/* Dedicated Scholar Voice Dropdown Trigger Button */}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setVoiceDropdownAnchorEl(e.currentTarget);
+                                  setVoiceDropdownSessionId(prev => prev === session.id ? null : (session.id || null));
+                                }}
+                                className={cn(
+                                  "p-1.5 rounded-xl text-xs transition-all cursor-pointer flex items-center gap-0.5 border",
+                                  voiceDropdownSessionId === session.id
+                                    ? "bg-accent text-bg-primary border-accent"
+                                    : "bg-accent/10 text-accent hover:bg-accent/20 border-accent/20"
+                                )}
+                                title="Change Sanctuary Scholar Voice"
+                              >
+                                <Mic className="w-3 h-3" />
+                                <ChevronDown className={`w-3 h-3 transition-transform ${voiceDropdownSessionId === session.id ? 'rotate-180' : ''}`} />
+                              </button>
                             </div>
 
                             <AnimatePresence>
                               {voiceDropdownSessionId === session.id && (
                                 <ScholarVoiceDropdown
+                                  anchorEl={voiceDropdownAnchorEl}
                                   currentVoiceName={getEffectiveScholarVoiceInfo(userProfile).personaName}
                                   currentGender={getEffectiveScholarVoiceInfo(userProfile).gender}
                                   onSelectVoice={(voiceName, gender) => {
@@ -1052,9 +1059,8 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                                   }}
                                   onClose={() => setVoiceDropdownSessionId(null)}
                                   align="right"
-                                  position="top"
                                   title="Sanctuary Scholar Voices"
-                                  subtitle={`Playing: "${session.name}"`}
+                                  subtitle={`Session: "${session.name}"`}
                                 />
                               )}
                             </AnimatePresence>

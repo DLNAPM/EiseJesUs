@@ -64,7 +64,9 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
   const [speakingSessionId, setSpeakingSessionId] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [voiceDropdownSessionId, setVoiceDropdownSessionId] = useState<string | null>(null);
+  const [voiceDropdownAnchorEl, setVoiceDropdownAnchorEl] = useState<HTMLElement | null>(null);
   const [isToolbarVoiceDropdownOpen, setIsToolbarVoiceDropdownOpen] = useState(false);
+  const [toolbarVoiceAnchorEl, setToolbarVoiceAnchorEl] = useState<HTMLElement | null>(null);
   const [speechState, setSpeechState] = useState<ScholarSpeechState>({
     isPlaying: false,
     isPaused: false,
@@ -393,7 +395,11 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                   <div className="relative inline-block" data-voice-dropdown="true">
                     <button
                       type="button"
-                      onClick={() => setIsToolbarVoiceDropdownOpen(!isToolbarVoiceDropdownOpen)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setToolbarVoiceAnchorEl(e.currentTarget);
+                        setIsToolbarVoiceDropdownOpen(!isToolbarVoiceDropdownOpen);
+                      }}
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/15 hover:bg-accent/25 border border-accent/30 text-[11px] font-bold text-accent transition-all cursor-pointer"
                       title="Change Sanctuary Scholar Voice"
                     >
@@ -405,6 +411,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                     <AnimatePresence>
                       {isToolbarVoiceDropdownOpen && (
                         <ScholarVoiceDropdown
+                          anchorEl={toolbarVoiceAnchorEl}
                           currentVoiceName={getEffectiveScholarVoiceInfo(userProfile).personaName}
                           currentGender={getEffectiveScholarVoiceInfo(userProfile).gender}
                           onSelectVoice={(voiceName, gender) => {
@@ -418,7 +425,6 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                           }}
                           onClose={() => setIsToolbarVoiceDropdownOpen(false)}
                           align="left"
-                          position="bottom"
                           title="Switch Scholar Voice"
                           subtitle="Change voice in real-time for active audio"
                         />
@@ -552,7 +558,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                     </div>
                     <div>
                       <h3 className="font-serif font-bold text-text-primary text-base leading-snug line-clamp-1">{session.name}</h3>
-                      <div className="flex items-center gap-2 text-[10px] text-text-secondary">
+                      <div className="flex items-center gap-2 text-[10px] text-text-secondary flex-wrap">
                         <span className="flex items-center gap-1">
                           <MessageSquare className="w-3 h-3 text-accent" />
                           {session.messages.length} exchanges
@@ -576,6 +582,21 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                             }
                           })()}
                         </span>
+                        <span>•</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setVoiceDropdownAnchorEl(e.currentTarget);
+                            setVoiceDropdownSessionId(prev => prev === session.id ? null : (session.id || null));
+                          }}
+                          className="inline-flex items-center gap-1 text-accent font-semibold hover:underline cursor-pointer bg-accent/10 px-2 py-0.5 rounded-lg border border-accent/20 transition-colors"
+                          title="Change Sanctuary Scholar Voice"
+                        >
+                          <Mic className="w-2.5 h-2.5" />
+                          <span>Voice: {getEffectiveScholarVoiceInfo(userProfile).personaName}</span>
+                          <ChevronDown className="w-2.5 h-2.5" />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -615,7 +636,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
 
                 {/* Read Audibly Button & Scholar Voice Dropdown */}
                 <div className="relative inline-block" data-voice-dropdown="true">
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-1">
                     <button 
                       type="button"
                       onClick={(e) => {
@@ -629,8 +650,8 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                             setIsPaused(true);
                           }
                         } else {
-                          // Toggle open the AI Scholar Voices drop-down list
-                          setVoiceDropdownSessionId(prev => prev === session.id ? null : (session.id || null));
+                          // Quick play or choose voice
+                          speakSession(session);
                         }
                       }}
                       className={`py-2 px-3 rounded-xl text-xs font-bold font-sans uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
@@ -641,7 +662,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                       title={
                         speakingSessionId === session.id 
                           ? (isPaused ? "Resume Reading" : "Pause / Stop Reading") 
-                          : "Press to choose AI Scholar Voice & listen to this session"
+                          : "Press to listen to this session"
                       }
                     >
                       {speakingSessionId === session.id ? (
@@ -653,31 +674,35 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                         <>
                           <Volume2 className="w-3.5 h-3.5" />
                           <span>Listen</span>
-                          <ChevronDown className={`w-3.5 h-3.5 ml-0.5 transition-transform ${voiceDropdownSessionId === session.id ? 'rotate-180' : ''}`} />
                         </>
                       )}
                     </button>
 
-                    {/* Quick Voice Switcher Chevron when currently speaking */}
-                    {speakingSessionId === session.id && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setVoiceDropdownSessionId(prev => prev === session.id ? null : (session.id || null));
-                        }}
-                        className="ml-1 p-2 rounded-xl bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 text-xs transition-all cursor-pointer"
-                        title="Change Sanctuary Scholar Voice"
-                      >
-                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${voiceDropdownSessionId === session.id ? 'rotate-180' : ''}`} />
-                      </button>
-                    )}
+                    {/* Dedicated Scholar Voice Dropdown Trigger Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setVoiceDropdownAnchorEl(e.currentTarget);
+                        setVoiceDropdownSessionId(prev => prev === session.id ? null : (session.id || null));
+                      }}
+                      className={`p-2 rounded-xl text-xs transition-all cursor-pointer flex items-center gap-1 border ${
+                        voiceDropdownSessionId === session.id
+                          ? 'bg-accent text-bg-primary border-accent'
+                          : 'bg-accent/10 hover:bg-accent/20 text-accent border-accent/20'
+                      }`}
+                      title="Sanctuary Scholar Voices list"
+                    >
+                      <Mic className="w-3.5 h-3.5" />
+                      <ChevronDown className={`w-3 h-3 transition-transform ${voiceDropdownSessionId === session.id ? 'rotate-180' : ''}`} />
+                    </button>
                   </div>
 
-                  {/* Dropdown Menu of AI Voices */}
+                  {/* Dropdown Menu of AI Voices - rendered into Portal at z-[99999] in front of all elements */}
                   <AnimatePresence>
                     {voiceDropdownSessionId === session.id && (
                       <ScholarVoiceDropdown
+                        anchorEl={voiceDropdownAnchorEl}
                         currentVoiceName={getEffectiveScholarVoiceInfo(userProfile).personaName}
                         currentGender={getEffectiveScholarVoiceInfo(userProfile).gender}
                         onSelectVoice={(voiceName, gender) => {
@@ -689,9 +714,8 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                         }}
                         onClose={() => setVoiceDropdownSessionId(null)}
                         align="left"
-                        position="top"
                         title="Sanctuary Scholar Voices"
-                        subtitle={`Playing: "${session.name}"`}
+                        subtitle={`Session: "${session.name}"`}
                       />
                     )}
                   </AnimatePresence>
