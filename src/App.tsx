@@ -193,6 +193,17 @@ export default function App() {
     document.documentElement.setAttribute('data-theme', theme === 'modern' ? '' : theme);
   }, [theme]);
 
+  useEffect(() => {
+    const handleVoiceProfileUpdate = (e: any) => {
+      const detail = e.detail;
+      if (detail) {
+        setUserProfile((prev) => (prev ? { ...prev, ...detail } : prev));
+      }
+    };
+    window.addEventListener('scholar-profile-updated', handleVoiceProfileUpdate);
+    return () => window.removeEventListener('scholar-profile-updated', handleVoiceProfileUpdate);
+  }, []);
+
   const toggleTheme = () => {
     setTheme(prev => {
       if (prev === 'modern') return 'midnight';

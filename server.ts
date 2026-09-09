@@ -878,48 +878,48 @@ Return ONLY valid JSON matching this schema.`;
     if (gender === "male") {
       if (p.includes("spurgeon")) {
         tl = "en-GB";
-        filter = "asetrate=24000*0.82,aresample=24000,atempo=0.94,equalizer=f=180:width_type=o:width=1.8:g=8,aecho=0.8:0.88:30:0.2";
+        filter = "asetrate=24000*0.68,aresample=24000,atempo=1.45,equalizer=f=160:width_type=o:width=1.8:g=6,aecho=0.8:0.88:28:0.18";
       } else if (p.includes("lewis")) {
         tl = "en-GB";
-        filter = "asetrate=24000*0.88,aresample=24000,atempo=0.95,equalizer=f=350:width_type=o:width=1.5:g=4,equalizer=f=2400:width_type=o:width=1:g=2";
+        filter = "asetrate=24000*0.72,aresample=24000,atempo=1.38,equalizer=f=260:width_type=o:width=1.5:g=4,equalizer=f=2200:width_type=o:width=1.2:g=2";
       } else if (p.includes("luther")) {
         tl = "en-GB";
-        filter = "asetrate=24000*0.78,aresample=24000,atempo=0.96,equalizer=f=150:width_type=o:width=2:g=8,aecho=0.8:0.9:35:0.25";
+        filter = "asetrate=24000*0.66,aresample=24000,atempo=1.48,equalizer=f=140:width_type=o:width=2:g=7,aecho=0.8:0.9:32:0.22";
       } else if (p.includes("keller")) {
         tl = "en-US";
-        filter = "asetrate=24000*0.90,aresample=24000,atempo=0.93,equalizer=f=260:width_type=o:width=1.5:g=4";
+        filter = "asetrate=24000*0.72,aresample=24000,atempo=1.36,equalizer=f=240:width_type=o:width=1.5:g=4";
       } else if (p.includes("graham")) {
         tl = "en-US";
-        filter = "asetrate=24000*0.94,aresample=24000,atempo=1.02,equalizer=f=1200:width_type=o:width=1.5:g=4";
+        filter = "asetrate=24000*0.73,aresample=24000,atempo=1.40,equalizer=f=1200:width_type=o:width=1.5:g=5";
       } else if (p.includes("osteen")) {
         tl = "en-US";
-        filter = "asetrate=24000*0.98,aresample=24000,atempo=1.02,equalizer=f=2800:width_type=o:width=1.5:g=3";
+        filter = "asetrate=24000*0.75,aresample=24000,atempo=1.34,equalizer=f=220:width_type=o:width=1.5:g=4,equalizer=f=2800:width_type=o:width=1.5:g=3";
       } else {
         tl = "en-US";
-        filter = "asetrate=24000*0.90,aresample=24000,atempo=0.96,equalizer=f=250:width_type=o:width=1.5:g=3";
+        filter = "asetrate=24000*0.72,aresample=24000,atempo=1.36,equalizer=f=220:width_type=o:width=1.5:g=4";
       }
     } else {
       if (p.includes("oprah") || p.includes("winfrey")) {
         tl = "en-US";
-        filter = "asetrate=24000*0.92,aresample=24000,atempo=0.94,equalizer=f=260:width_type=o:width=1.8:g=6,aecho=0.8:0.85:25:0.18";
+        filter = "asetrate=24000*0.92,aresample=24000,atempo=1.04,equalizer=f=260:width_type=o:width=1.8:g=5,aecho=0.8:0.85:22:0.15";
       } else if (p.includes("moore")) {
         tl = "en-US";
-        filter = "asetrate=24000*1.06,aresample=24000,atempo=1.02,equalizer=f=2200:width_type=o:width=1.2:g=4";
+        filter = "asetrate=24000*1.04,aresample=24000,atempo=1.01,equalizer=f=2200:width_type=o:width=1.2:g=3";
       } else if (p.includes("meyer")) {
         tl = "en-US";
-        filter = "asetrate=24000*0.94,aresample=24000,atempo=0.99,equalizer=f=500:width_type=o:width=1.5:g=4";
+        filter = "asetrate=24000*0.95,aresample=24000,atempo=1.03,equalizer=f=500:width_type=o:width=1.5:g=4";
       } else if (p.includes("shirer")) {
         tl = "en-US";
-        filter = "asetrate=24000*1.03,aresample=24000,atempo=0.99,equalizer=f=1800:width_type=o:width=1.3:g=4";
+        filter = "asetrate=24000*1.02,aresample=24000,atempo=1.01,equalizer=f=1800:width_type=o:width=1.3:g=3";
       } else if (p.includes("arthur")) {
         tl = "en-AU";
-        filter = "asetrate=24000*0.96,aresample=24000,atempo=0.90,equalizer=f=380:width_type=o:width=1.5:g=3";
+        filter = "asetrate=24000*0.96,aresample=24000,atempo=0.98,equalizer=f=380:width_type=o:width=1.5:g=3";
       } else if (p.includes("ten boom") || p.includes("corrie")) {
         tl = "en-GB";
-        filter = "asetrate=24000*0.95,aresample=24000,atempo=0.86,equalizer=f=340:width_type=o:width=2:g=5";
+        filter = "asetrate=24000*0.94,aresample=24000,atempo=0.94,equalizer=f=340:width_type=o:width=1.8:g=4";
       } else {
         tl = "en-US";
-        filter = "asetrate=24000*1.00,aresample=24000,atempo=0.98,equalizer=f=350:width_type=o:width=1.5:g=3";
+        filter = "asetrate=24000*1.00,aresample=24000,atempo=1.00,equalizer=f=350:width_type=o:width=1.5:g=2";
       }
     }
 

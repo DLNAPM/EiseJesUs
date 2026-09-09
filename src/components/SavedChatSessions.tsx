@@ -223,8 +223,10 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
     if (!fullScript.trim()) return;
 
     const effectiveInfo = getEffectiveScholarVoiceInfo(userProfile);
-    const sessionVoice = session.scholarVoice || (session.scholarGender === 'female' ? effectiveInfo.femaleScholarVoice : effectiveInfo.personaName);
-    const sessionGender = session.scholarGender || effectiveInfo.gender;
+    const sessionVoice = session.scholarGender === 'female' 
+      ? effectiveInfo.femaleScholarVoice 
+      : (session.scholarGender === 'male' ? effectiveInfo.maleScholarVoice : (session.scholarVoice || effectiveInfo.personaName));
+    const sessionGender = session.scholarGender === 'female' ? 'female' : (session.scholarGender === 'male' ? 'male' : effectiveInfo.gender);
 
     speakWithScholarVoice(fullScript, {
       personaName: sessionVoice,
@@ -338,7 +340,9 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                     • Voice: <strong className="text-accent font-semibold">{(() => {
                       const activeSession = sessions.find(s => s.id === speakingSessionId);
                       const effective = getEffectiveScholarVoiceInfo(userProfile);
-                      return activeSession?.scholarVoice || (activeSession?.scholarGender === 'female' ? effective.femaleScholarVoice : effective.personaName);
+                      return activeSession?.scholarGender === 'female' 
+                        ? effective.femaleScholarVoice 
+                        : (activeSession?.scholarGender === 'male' ? effective.maleScholarVoice : (activeSession?.scholarVoice || effective.personaName));
                     })()}</strong> ({(() => {
                       const activeSession = sessions.find(s => s.id === speakingSessionId);
                       const effective = getEffectiveScholarVoiceInfo(userProfile);

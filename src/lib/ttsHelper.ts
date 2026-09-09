@@ -44,6 +44,23 @@ interface ActiveSession {
   };
 }
 
+export function clearScholarAudioCache() {
+  clientAudioCache.forEach((entry) => {
+    if (entry?.audioUrl) {
+      try {
+        URL.revokeObjectURL(entry.audioUrl);
+      } catch (_) {}
+    }
+  });
+  clientAudioCache.clear();
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('scholar-profile-updated', () => {
+    clearScholarAudioCache();
+  });
+}
+
 export function getEffectiveScholarVoiceInfo(profile?: UserProfile | null): {
   personaName: string;
   gender: 'male' | 'female';
@@ -52,30 +69,26 @@ export function getEffectiveScholarVoiceInfo(profile?: UserProfile | null): {
   activeScholarGender: 'male' | 'female' | 'auto';
   scholarsVoicesEnabled: boolean;
 } {
-  let p: any = profile ? { ...profile } : {};
+  const p: any = profile ? { ...profile } : {};
+  let parsed: any = null;
   if (typeof window !== 'undefined') {
     try {
       const stored = localStorage.getItem('xejesus_user_scholar_voice_profile');
       if (stored) {
-        const parsed = JSON.parse(stored);
-        p = {
-          ...parsed,
-          ...p,
-          maleScholarVoice: p?.maleScholarVoice || parsed.maleScholarVoice,
-          femaleScholarVoice: p?.femaleScholarVoice || parsed.femaleScholarVoice,
-          activeScholarGender: p?.activeScholarGender || parsed.activeScholarGender,
-          scholarsVoicesEnabled: p?.scholarsVoicesEnabled !== undefined ? p.scholarsVoicesEnabled : parsed.scholarsVoicesEnabled,
-        };
+        parsed = JSON.parse(stored);
       }
     } catch (_) {}
   }
 
-  const activeGender = p?.activeScholarGender || 'male';
+  // Client-side stored preference takes immediate priority over cached profile props
+  const maleVoiceName = parsed?.maleScholarVoice || p?.maleScholarVoice || 'Joel Osteen';
+  const femaleVoiceName = parsed?.femaleScholarVoice || p?.femaleScholarVoice || 'Oprah Winfrey';
+  const activeGender = parsed?.activeScholarGender || p?.activeScholarGender || 'male';
   const genderToUse: 'male' | 'female' = activeGender === 'female' ? 'female' : 'male';
-  const maleVoiceName = p?.maleScholarVoice || 'Joel Osteen';
-  const femaleVoiceName = p?.femaleScholarVoice || 'Oprah Winfrey';
   const personaName = genderToUse === 'male' ? maleVoiceName : femaleVoiceName;
-  const scholarsVoicesEnabled = p?.scholarsVoicesEnabled !== false;
+  const scholarsVoicesEnabled = parsed?.scholarsVoicesEnabled !== undefined
+    ? parsed.scholarsVoicesEnabled
+    : (p?.scholarsVoicesEnabled !== undefined ? p.scholarsVoicesEnabled : true);
 
   return {
     personaName,

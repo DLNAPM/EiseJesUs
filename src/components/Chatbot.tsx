@@ -107,6 +107,14 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
     };
   }, []);
 
+  const [, setVoiceSyncKey] = useState(0);
+
+  useEffect(() => {
+    const onSync = () => setVoiceSyncKey((k) => k + 1);
+    window.addEventListener('scholar-profile-updated', onSync);
+    return () => window.removeEventListener('scholar-profile-updated', onSync);
+  }, []);
+
   const formatAudioTime = (seconds: number) => {
     if (isNaN(seconds) || seconds < 0) return '00:00';
     const mins = Math.floor(seconds / 60);
@@ -225,8 +233,10 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
     if (!fullScript.trim()) return;
 
     const voiceInfo = getEffectiveScholarVoiceInfo(userProfile);
-    const sessionVoice = session.scholarVoice || (session.scholarGender === 'female' ? voiceInfo.femaleScholarVoice : voiceInfo.personaName);
-    const sessionGender = session.scholarGender || voiceInfo.gender;
+    const sessionVoice = session.scholarGender === 'female' 
+      ? voiceInfo.femaleScholarVoice 
+      : (session.scholarGender === 'male' ? voiceInfo.maleScholarVoice : (session.scholarVoice || voiceInfo.personaName));
+    const sessionGender = session.scholarGender === 'female' ? 'female' : (session.scholarGender === 'male' ? 'male' : voiceInfo.gender);
 
     speakWithScholarVoice(fullScript, {
       personaName: sessionVoice,
@@ -525,6 +535,71 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
 
             {/* Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden relative">
+              {/* Active Scholar Voice Player Bar */}
+              <AnimatePresence>
+                {(speechState.isPlaying || speechState.isPaused) && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-accent/10 border-b border-accent/20 px-3.5 py-2 flex items-center justify-between gap-2 text-xs shrink-0 z-20"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-2 h-2 rounded-full bg-accent animate-pulse shrink-0" />
+                      <div className="truncate">
+                        <span className="font-bold text-accent font-sans uppercase tracking-wider text-[11px]">
+                          {getEffectiveScholarVoiceInfo(userProfile).personaName}
+                        </span>
+                        <span className="text-[10px] text-text-secondary ml-1.5 font-mono">
+                          {formatAudioTime(speechState.currentTime)} / {formatAudioTime(speechState.duration)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => rewindScholarSpeech(10)}
+                        title="Rewind 10s"
+                        className="p-1 hover:bg-accent/20 rounded-md text-accent transition-colors"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (speechState.isPaused) {
+                            resumeScholarSpeech();
+                          } else {
+                            pauseScholarSpeech();
+                          }
+                        }}
+                        title={speechState.isPaused ? "Resume" : "Pause"}
+                        className="p-1 bg-accent text-bg-primary rounded-md hover:opacity-90 transition-opacity"
+                      >
+                        {speechState.isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5 fill-current" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => fastForwardScholarSpeech(10)}
+                        title="Fast Forward 10s"
+                        className="p-1 hover:bg-accent/20 rounded-md text-accent transition-colors"
+                      >
+                        <RotateCw className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => stopScholarSpeech()}
+                        title="Stop Speech"
+                        className="p-1 hover:bg-red-500/20 rounded-md text-red-500 transition-colors ml-0.5"
+                      >
+                        <Square className="w-3.5 h-3.5 fill-current" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {view === 'chat' ? (
                 <>
                   {/* Messages */}
@@ -633,6 +708,43 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                       >
                         <Save className="w-3 h-3" />
                         Save Transcript
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (speakingMessageText === '__FULL_CONVERSATION__') {
+                            stopSpeech();
+                          } else {
+                            const fullText = messages
+                              .map(m => `${m.role === 'model' ? 'Sanctuary Scholar: ' : 'Pilgrim: '} ${m.text}`)
+                              .join('. ');
+                            stopSpeech();
+                            const voiceInfo = getEffectiveScholarVoiceInfo(userProfile);
+                            speakWithScholarVoice(fullText, {
+                              personaName: voiceInfo.personaName,
+                              gender: voiceInfo.gender,
+                              profile: userProfile,
+                              onStart: () => setSpeakingMessageText('__FULL_CONVERSATION__'),
+                              onEnd: () => setSpeakingMessageText(null),
+                              onError: () => setSpeakingMessageText(null),
+                            });
+                          }
+                        }}
+                        disabled={messages.length === 0}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/10 text-accent text-[10px] font-bold uppercase tracking-wider hover:bg-accent/20 transition-all disabled:opacity-30"
+                        title="Listen to full dialogue with current Scholar voice"
+                      >
+                        {speakingMessageText === '__FULL_CONVERSATION__' ? (
+                          <>
+                            <VolumeX className="w-3 h-3 text-red-500 animate-pulse" />
+                            <span>Stop Audio</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-3 h-3" />
+                            <span>Listen to Chat</span>
+                          </>
+                        )}
                       </button>
                       <button 
                         onClick={startNewChat}
