@@ -29,7 +29,8 @@ import {
   GitBranch,
   Image as ImageIcon,
   RotateCcw,
-  RotateCw
+  RotateCw,
+  ChevronDown
 } from 'lucide-react';
 import { getAuthService, getDbService, collection, query, where, orderBy, limit, getDocs, setDoc, doc, serverTimestamp, deleteDoc, handleFirestoreError, OperationType } from '../lib/firebase';
 import { chatWithSanctuary, generateLiteraryWorkExport, getThematicImagesForTopic } from '../services/geminiService';
@@ -47,8 +48,10 @@ import {
   seekScholarSpeech, 
   subscribeScholarSpeechProgress, 
   ScholarSpeechState,
-  getEffectiveScholarVoiceInfo
+  getEffectiveScholarVoiceInfo,
+  saveAndApplyScholarVoice
 } from '../lib/ttsHelper';
+import ScholarVoiceDropdown from './ScholarVoiceDropdown';
 
 
 interface Message {
@@ -108,11 +111,23 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
   }, []);
 
   const [, setVoiceSyncKey] = useState(0);
+  const [voiceDropdownSessionId, setVoiceDropdownSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     const onSync = () => setVoiceSyncKey((k) => k + 1);
     window.addEventListener('scholar-profile-updated', onSync);
     return () => window.removeEventListener('scholar-profile-updated', onSync);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-voice-dropdown]')) {
+        setVoiceDropdownSessionId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const formatAudioTime = (seconds: number) => {
@@ -211,8 +226,11 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
     setIsPaused(false);
   };
 
-  const speakSession = (session: ChatSession) => {
-    if (speakingSessionId === session.id) {
+  const speakSession = (
+    session: ChatSession,
+    overrideVoice?: { personaName: string; gender: 'male' | 'female' }
+  ) => {
+    if (!overrideVoice && speakingSessionId === session.id) {
       if (isPaused) {
         resumeScholarSpeech();
         setIsPaused(false);
@@ -233,8 +251,8 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
     if (!fullScript.trim()) return;
 
     const voiceInfo = getEffectiveScholarVoiceInfo(userProfile);
-    const sessionVoice = voiceInfo.personaName;
-    const sessionGender = voiceInfo.gender;
+    const sessionVoice = overrideVoice?.personaName || voiceInfo.personaName;
+    const sessionGender = overrideVoice?.gender || voiceInfo.gender;
 
     speakWithScholarVoice(fullScript, {
       personaName: sessionVoice,
@@ -254,6 +272,31 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
         setIsPaused(false);
       }
     });
+  };
+
+  const handleSelectScholarVoiceAndPlay = async (
+    session: ChatSession,
+    voiceName: string,
+    gender: 'male' | 'female'
+  ) => {
+    saveAndApplyScholarVoice(voiceName, gender, userProfile);
+    try {
+      const auth = getAuthService();
+      const db = getDbService();
+      if (auth?.currentUser && db) {
+        const payload = {
+          maleScholarVoice: gender === 'male' ? voiceName : (userProfile?.maleScholarVoice || 'Joel Osteen'),
+          femaleScholarVoice: gender === 'female' ? voiceName : (userProfile?.femaleScholarVoice || 'Oprah Winfrey'),
+          activeScholarGender: gender,
+          scholarsVoicesEnabled: true
+        };
+        await setDoc(doc(db, 'users', auth.currentUser.uid), payload, { merge: true });
+      }
+    } catch (err) {
+      console.warn("Could not sync voice to Firestore:", err);
+    }
+    setVoiceDropdownSessionId(null);
+    speakSession(session, { personaName: voiceName, gender });
   };
 
   const speakText = (text: string) => {
@@ -906,9 +949,10 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                       <div 
                         key={session.id}
                         className={cn(
-                          "group p-3 rounded-2xl border border-ui-border bg-ui-card hover:border-accent transition-all cursor-pointer flex items-center justify-between gap-2",
+                          "group p-3 rounded-2xl border border-ui-border bg-ui-card hover:border-accent transition-all cursor-pointer flex items-center justify-between gap-2 relative",
                           currentSessionId === session.id && "border-accent ring-1 ring-accent/20",
-                          speakingSessionId === session.id && "border-accent bg-accent/5 ring-1 ring-accent/30"
+                          speakingSessionId === session.id && "border-accent bg-accent/5 ring-1 ring-accent/30",
+                          voiceDropdownSessionId === session.id && "z-30"
                         )}
                         onClick={() => loadSession(session)}
                       >
@@ -934,33 +978,87 @@ export default function Chatbot({ userProfile, openSignal }: ChatbotProps) {
                         </div>
                         
                         <div className="flex items-center gap-1 flex-shrink-0">
-                          {/* Read Audibly Button */}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              speakSession(session);
-                            }}
-                            className={cn(
-                              "px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all",
-                              speakingSessionId === session.id
-                                ? "bg-accent text-bg-primary shadow-sm"
-                                : "bg-accent/10 text-accent hover:bg-accent/20"
-                            )}
-                            title={speakingSessionId === session.id ? (isPaused ? "Resume Reading" : "Pause / Stop Reading") : "Read Session Audibly"}
-                          >
-                            {speakingSessionId === session.id ? (
-                              <>
-                                <VolumeX className="w-3.5 h-3.5 animate-pulse" />
-                                <span className="text-[10px] uppercase tracking-wider">{isPaused ? 'Paused' : 'Stop'}</span>
-                              </>
-                            ) : (
-                              <>
-                                <Volume2 className="w-3.5 h-3.5" />
-                                <span className="text-[10px] uppercase tracking-wider">Listen</span>
-                              </>
-                            )}
-                          </button>
+                          {/* Read Audibly Button & AI Voices Dropdown */}
+                          <div className="relative inline-block" data-voice-dropdown="true">
+                            <div className="flex items-center">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (speakingSessionId === session.id) {
+                                    if (isPaused) {
+                                      resumeScholarSpeech();
+                                      setIsPaused(false);
+                                    } else {
+                                      pauseScholarSpeech();
+                                      setIsPaused(true);
+                                    }
+                                  } else {
+                                    setVoiceDropdownSessionId(prev => prev === session.id ? null : (session.id || null));
+                                  }
+                                }}
+                                className={cn(
+                                  "px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer",
+                                  speakingSessionId === session.id
+                                    ? "bg-accent text-bg-primary shadow-sm"
+                                    : "bg-accent/10 text-accent hover:bg-accent/20"
+                                )}
+                                title={
+                                  speakingSessionId === session.id 
+                                    ? (isPaused ? "Resume Reading" : "Pause / Stop Reading") 
+                                    : "Press to choose AI Scholar Voice & listen"
+                                }
+                              >
+                                {speakingSessionId === session.id ? (
+                                  <>
+                                    <VolumeX className="w-3.5 h-3.5 animate-pulse" />
+                                    <span className="text-[10px] uppercase tracking-wider">{isPaused ? 'Paused' : 'Stop'}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Volume2 className="w-3.5 h-3.5" />
+                                    <span className="text-[10px] uppercase tracking-wider">Listen</span>
+                                    <ChevronDown className={`w-3 h-3 ml-0.5 transition-transform ${voiceDropdownSessionId === session.id ? 'rotate-180' : ''}`} />
+                                  </>
+                                )}
+                              </button>
+
+                              {speakingSessionId === session.id && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setVoiceDropdownSessionId(prev => prev === session.id ? null : (session.id || null));
+                                  }}
+                                  className="ml-0.5 p-1.5 rounded-xl bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 text-xs transition-all cursor-pointer"
+                                  title="Change Sanctuary Scholar Voice"
+                                >
+                                  <ChevronDown className={`w-3 h-3 transition-transform ${voiceDropdownSessionId === session.id ? 'rotate-180' : ''}`} />
+                                </button>
+                              )}
+                            </div>
+
+                            <AnimatePresence>
+                              {voiceDropdownSessionId === session.id && (
+                                <ScholarVoiceDropdown
+                                  currentVoiceName={getEffectiveScholarVoiceInfo(userProfile).personaName}
+                                  currentGender={getEffectiveScholarVoiceInfo(userProfile).gender}
+                                  onSelectVoice={(voiceName, gender) => {
+                                    handleSelectScholarVoiceAndPlay(session, voiceName, gender);
+                                  }}
+                                  onQuickPlay={() => {
+                                    setVoiceDropdownSessionId(null);
+                                    speakSession(session);
+                                  }}
+                                  onClose={() => setVoiceDropdownSessionId(null)}
+                                  align="right"
+                                  position="top"
+                                  title="Sanctuary Scholar Voices"
+                                  subtitle={`Playing: "${session.name}"`}
+                                />
+                              )}
+                            </AnimatePresence>
+                          </div>
 
                           {/* Export PDF Button */}
                           <button

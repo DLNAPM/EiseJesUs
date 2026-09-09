@@ -100,6 +100,62 @@ export function getEffectiveScholarVoiceInfo(profile?: UserProfile | null): {
   };
 }
 
+export interface ScholarVoiceOption {
+  name: string;
+  style: string;
+  gender: 'male' | 'female';
+}
+
+export const SCHOLAR_MALE_VOICES: ScholarVoiceOption[] = [
+  { name: 'Joel Osteen', style: 'Warm, Inspirational & Encouraging', gender: 'male' },
+  { name: 'Charles Spurgeon', style: 'Classic Prince of Preachers & Regal', gender: 'male' },
+  { name: 'C.S. Lewis', style: 'Scholarly, Oxbridge & Intellectually Rich', gender: 'male' },
+  { name: 'Martin Luther', style: 'Bold, Resonant & Reformational', gender: 'male' },
+  { name: 'Tim Keller', style: 'Thoughtful, Exegetical & Urban', gender: 'male' },
+  { name: 'Billy Graham', style: 'Evangelistic, Authoritative & Clear', gender: 'male' }
+];
+
+export const SCHOLAR_FEMALE_VOICES: ScholarVoiceOption[] = [
+  { name: 'Oprah Winfrey', style: 'Empathetic, Warm & Resonant', gender: 'female' },
+  { name: 'Beth Moore', style: 'Passionate, Dynamic & Exegetical', gender: 'female' },
+  { name: 'Joyce Meyer', style: 'Direct, Practical & Uplifting', gender: 'female' },
+  { name: 'Priscilla Shirer', style: 'Faith-Filled, Energetic & Direct', gender: 'female' },
+  { name: 'Kay Arthur', style: 'Inductive, Reverent & Methodical', gender: 'female' },
+  { name: 'Corrie ten Boom', style: 'Gracious, Courageous & Wise', gender: 'female' }
+];
+
+export const ALL_SCHOLAR_VOICES: ScholarVoiceOption[] = [
+  ...SCHOLAR_MALE_VOICES,
+  ...SCHOLAR_FEMALE_VOICES
+];
+
+export function saveAndApplyScholarVoice(
+  voiceName: string,
+  gender: 'male' | 'female',
+  profile?: UserProfile | null
+): {
+  maleScholarVoice: string;
+  femaleScholarVoice: string;
+  activeScholarGender: 'male' | 'female';
+  scholarsVoicesEnabled: boolean;
+} {
+  const current = getEffectiveScholarVoiceInfo(profile);
+  const payload = {
+    maleScholarVoice: gender === 'male' ? voiceName : current.maleScholarVoice,
+    femaleScholarVoice: gender === 'female' ? voiceName : current.femaleScholarVoice,
+    activeScholarGender: gender,
+    scholarsVoicesEnabled: true
+  };
+
+  try {
+    localStorage.setItem('xejesus_user_scholar_voice_profile', JSON.stringify(payload));
+    clearScholarAudioCache();
+    window.dispatchEvent(new CustomEvent('scholar-profile-updated', { detail: payload }));
+  } catch (_) {}
+
+  return payload;
+}
+
 let activeSession: ActiveSession | null = null;
 
 export function subscribeScholarSpeechProgress(subscriber: ProgressSubscriber): () => void {

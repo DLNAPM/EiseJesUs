@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getAuthService, getDbService, collection, query, where, getDocs, deleteDoc, doc, handleFirestoreError, OperationType } from '../lib/firebase';
+import { getAuthService, getDbService, collection, query, where, getDocs, deleteDoc, doc, setDoc, handleFirestoreError, OperationType } from '../lib/firebase';
 import { ChatSession, UserProfile, LiteraryWorkExport } from '../types';
 import { generateLiteraryWorkExport, getThematicImagesForTopic } from '../services/geminiService';
 import { 
@@ -12,8 +12,10 @@ import {
   seekScholarSpeech, 
   subscribeScholarSpeechProgress, 
   ScholarSpeechState,
-  getEffectiveScholarVoiceInfo 
+  getEffectiveScholarVoiceInfo,
+  saveAndApplyScholarVoice 
 } from '../lib/ttsHelper';
+import ScholarVoiceDropdown from './ScholarVoiceDropdown';
 import { 
   History, 
   FileText, 
@@ -38,6 +40,9 @@ import {
   Square,
   Crown,
   ChevronRight,
+  ChevronDown,
+  Check,
+  Mic,
   RotateCcw,
   RotateCw
 } from 'lucide-react';
@@ -58,6 +63,8 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
   // Audio Speech States
   const [speakingSessionId, setSpeakingSessionId] = useState<string | null>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [voiceDropdownSessionId, setVoiceDropdownSessionId] = useState<string | null>(null);
+  const [isToolbarVoiceDropdownOpen, setIsToolbarVoiceDropdownOpen] = useState(false);
   const [speechState, setSpeechState] = useState<ScholarSpeechState>({
     isPlaying: false,
     isPaused: false,
@@ -86,6 +93,19 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
 
   useEffect(() => {
     fetchSessions();
+  }, []);
+
+  // Listen for click outside to close voice dropdowns
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-voice-dropdown]')) {
+        setVoiceDropdownSessionId(null);
+        setIsToolbarVoiceDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -201,8 +221,11 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
     setIsPaused(false);
   };
 
-  const speakSession = (session: ChatSession) => {
-    if (speakingSessionId === session.id) {
+  const speakSession = (
+    session: ChatSession, 
+    overrideVoice?: { personaName: string; gender: 'male' | 'female' }
+  ) => {
+    if (!overrideVoice && speakingSessionId === session.id) {
       if (isPaused) {
         resumeScholarSpeech();
         setIsPaused(false);
@@ -223,8 +246,8 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
     if (!fullScript.trim()) return;
 
     const effectiveInfo = getEffectiveScholarVoiceInfo(userProfile);
-    const sessionVoice = effectiveInfo.personaName;
-    const sessionGender = effectiveInfo.gender;
+    const sessionVoice = overrideVoice?.personaName || effectiveInfo.personaName;
+    const sessionGender = overrideVoice?.gender || effectiveInfo.gender;
 
     speakWithScholarVoice(fullScript, {
       personaName: sessionVoice,
@@ -243,6 +266,39 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
         setIsPaused(false);
       }
     });
+  };
+
+  const handleSelectScholarVoiceAndPlay = async (
+    session: ChatSession,
+    voiceName: string,
+    gender: 'male' | 'female'
+  ) => {
+    // 1. Save and apply preference locally, triggering UI refresh across components
+    saveAndApplyScholarVoice(voiceName, gender, userProfile);
+
+    // 2. Persist to Firestore if user is authenticated
+    try {
+      const auth = getAuthService();
+      const db = getDbService();
+      if (auth?.currentUser && db) {
+        const payload = {
+          maleScholarVoice: gender === 'male' ? voiceName : (userProfile?.maleScholarVoice || 'Joel Osteen'),
+          femaleScholarVoice: gender === 'female' ? voiceName : (userProfile?.femaleScholarVoice || 'Oprah Winfrey'),
+          activeScholarGender: gender,
+          scholarsVoicesEnabled: true
+        };
+        await setDoc(doc(db, 'users', auth.currentUser.uid), payload, { merge: true });
+      }
+    } catch (err) {
+      console.warn("Could not sync voice to Firestore:", err);
+    }
+
+    // 3. Close open dropdowns
+    setVoiceDropdownSessionId(null);
+    setIsToolbarVoiceDropdownOpen(false);
+
+    // 4. Immediately speak with the newly selected voice
+    speakSession(session, { personaName: voiceName, gender });
   };
 
   // Trigger Literary Work PDF Export
@@ -318,10 +374,10 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
         <motion.div 
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-4 sm:p-5 bg-ui-card border-2 border-accent/40 rounded-3xl shadow-xl mb-8 backdrop-blur-md relative overflow-hidden"
+          className="p-4 sm:p-5 bg-ui-card border-2 border-accent/40 rounded-3xl shadow-xl mb-8 backdrop-blur-md relative overflow-visible"
         >
           {/* Accent top gradient bar */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/80 to-accent" />
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent via-accent/80 to-accent rounded-t-3xl" />
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Left: Info */}
@@ -330,19 +386,45 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                 <Volume2 className="w-5 h-5 animate-pulse" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-[10px] font-sans font-bold uppercase tracking-widest text-accent flex items-center gap-1">
                     <Sparkles className="w-3 h-3" /> Sanctuary Audio Playback
                   </span>
-                  <span className="text-[10px] text-text-secondary">
-                    • Voice: <strong className="text-accent font-semibold">{(() => {
-                      const effective = getEffectiveScholarVoiceInfo(userProfile);
-                      return effective.personaName;
-                    })()}</strong> ({(() => {
-                      const effective = getEffectiveScholarVoiceInfo(userProfile);
-                      return effective.gender === 'female' ? 'Female Scholar' : 'Male Scholar';
-                    })()})
-                  </span>
+                  <div className="relative inline-block" data-voice-dropdown="true">
+                    <button
+                      type="button"
+                      onClick={() => setIsToolbarVoiceDropdownOpen(!isToolbarVoiceDropdownOpen)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-accent/15 hover:bg-accent/25 border border-accent/30 text-[11px] font-bold text-accent transition-all cursor-pointer"
+                      title="Change Sanctuary Scholar Voice"
+                    >
+                      <Mic className="w-3 h-3 text-accent" />
+                      <span>Voice: <strong>{getEffectiveScholarVoiceInfo(userProfile).personaName}</strong> ({getEffectiveScholarVoiceInfo(userProfile).gender === 'female' ? 'Female' : 'Male'})</span>
+                      <ChevronDown className={`w-3 h-3 transition-transform ${isToolbarVoiceDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {isToolbarVoiceDropdownOpen && (
+                        <ScholarVoiceDropdown
+                          currentVoiceName={getEffectiveScholarVoiceInfo(userProfile).personaName}
+                          currentGender={getEffectiveScholarVoiceInfo(userProfile).gender}
+                          onSelectVoice={(voiceName, gender) => {
+                            const activeSession = sessions.find(s => s.id === speakingSessionId);
+                            if (activeSession) {
+                              handleSelectScholarVoiceAndPlay(activeSession, voiceName, gender);
+                            } else {
+                              saveAndApplyScholarVoice(voiceName, gender, userProfile);
+                              setIsToolbarVoiceDropdownOpen(false);
+                            }
+                          }}
+                          onClose={() => setIsToolbarVoiceDropdownOpen(false)}
+                          align="left"
+                          position="bottom"
+                          title="Switch Scholar Voice"
+                          subtitle="Change voice in real-time for active audio"
+                        />
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
                 <h4 className="font-serif font-bold text-text-primary text-base truncate">
                   {sessions.find(s => s.id === speakingSessionId)?.name || 'Saved Session'}
@@ -460,7 +542,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
               key={session.id}
               className={`bg-ui-card border rounded-[2rem] p-6 shadow-sm flex flex-col justify-between transition-all group ${
                 speakingSessionId === session.id ? 'border-accent ring-2 ring-accent/20 bg-accent/5' : 'border-ui-border hover:border-accent/50'
-              }`}
+              } ${voiceDropdownSessionId === session.id ? 'z-30 relative' : 'relative'}`}
             >
               <div>
                 <div className="flex items-start justify-between gap-3 mb-3">
@@ -505,7 +587,7 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                         deleteSession(session.id!);
                       }
                     }}
-                    className="p-1.5 text-text-secondary/40 hover:text-red-500 transition-colors"
+                    className="p-1.5 text-text-secondary/40 hover:text-red-500 transition-colors cursor-pointer"
                     title="Delete Session"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -524,40 +606,101 @@ export default function SavedChatSessions({ userProfile, onSelectSession }: Save
                 {onSelectSession && (
                   <button 
                     onClick={() => onSelectSession(session)}
-                    className="flex-1 py-2 px-3 bg-ui-sidebar hover:bg-accent hover:text-bg-primary text-text-primary rounded-xl text-xs font-bold font-sans uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all"
+                    className="flex-1 py-2 px-3 bg-ui-sidebar hover:bg-accent hover:text-bg-primary text-text-primary rounded-xl text-xs font-bold font-sans uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
                     Open Chat
                   </button>
                 )}
 
-                {/* Read Audibly Button */}
-                <button 
-                  onClick={() => speakSession(session)}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold font-sans uppercase tracking-wider flex items-center gap-1.5 transition-all ${
-                    speakingSessionId === session.id 
-                      ? 'bg-accent text-bg-primary shadow-sm' 
-                      : 'bg-accent/10 text-accent hover:bg-accent/20'
-                  }`}
-                  title={speakingSessionId === session.id ? (isPaused ? "Resume Reading" : "Pause / Stop Reading") : "Read Session Audibly"}
-                >
-                  {speakingSessionId === session.id ? (
-                    <>
-                      <VolumeX className="w-3.5 h-3.5 animate-pulse" />
-                      <span>{isPaused ? 'Paused' : 'Stop'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Volume2 className="w-3.5 h-3.5" />
-                      <span>Listen</span>
-                    </>
-                  )}
-                </button>
+                {/* Read Audibly Button & Scholar Voice Dropdown */}
+                <div className="relative inline-block" data-voice-dropdown="true">
+                  <div className="flex items-center">
+                    <button 
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (speakingSessionId === session.id) {
+                          if (isPaused) {
+                            resumeScholarSpeech();
+                            setIsPaused(false);
+                          } else {
+                            pauseScholarSpeech();
+                            setIsPaused(true);
+                          }
+                        } else {
+                          // Toggle open the AI Scholar Voices drop-down list
+                          setVoiceDropdownSessionId(prev => prev === session.id ? null : (session.id || null));
+                        }
+                      }}
+                      className={`py-2 px-3 rounded-xl text-xs font-bold font-sans uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer ${
+                        speakingSessionId === session.id 
+                          ? 'bg-accent text-bg-primary shadow-sm' 
+                          : 'bg-accent/10 text-accent hover:bg-accent/20'
+                      }`}
+                      title={
+                        speakingSessionId === session.id 
+                          ? (isPaused ? "Resume Reading" : "Pause / Stop Reading") 
+                          : "Press to choose AI Scholar Voice & listen to this session"
+                      }
+                    >
+                      {speakingSessionId === session.id ? (
+                        <>
+                          <VolumeX className="w-3.5 h-3.5 animate-pulse" />
+                          <span>{isPaused ? 'Paused' : 'Stop'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 className="w-3.5 h-3.5" />
+                          <span>Listen</span>
+                          <ChevronDown className={`w-3.5 h-3.5 ml-0.5 transition-transform ${voiceDropdownSessionId === session.id ? 'rotate-180' : ''}`} />
+                        </>
+                      )}
+                    </button>
+
+                    {/* Quick Voice Switcher Chevron when currently speaking */}
+                    {speakingSessionId === session.id && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setVoiceDropdownSessionId(prev => prev === session.id ? null : (session.id || null));
+                        }}
+                        className="ml-1 p-2 rounded-xl bg-accent/15 text-accent hover:bg-accent/25 border border-accent/30 text-xs transition-all cursor-pointer"
+                        title="Change Sanctuary Scholar Voice"
+                      >
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${voiceDropdownSessionId === session.id ? 'rotate-180' : ''}`} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Dropdown Menu of AI Voices */}
+                  <AnimatePresence>
+                    {voiceDropdownSessionId === session.id && (
+                      <ScholarVoiceDropdown
+                        currentVoiceName={getEffectiveScholarVoiceInfo(userProfile).personaName}
+                        currentGender={getEffectiveScholarVoiceInfo(userProfile).gender}
+                        onSelectVoice={(voiceName, gender) => {
+                          handleSelectScholarVoiceAndPlay(session, voiceName, gender);
+                        }}
+                        onQuickPlay={() => {
+                          setVoiceDropdownSessionId(null);
+                          speakSession(session);
+                        }}
+                        onClose={() => setVoiceDropdownSessionId(null)}
+                        align="left"
+                        position="top"
+                        title="Sanctuary Scholar Voices"
+                        subtitle={`Playing: "${session.name}"`}
+                      />
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 {/* Export as Literary Work PDF Button */}
                 <button 
                   onClick={() => handleExportLiteraryWork(session)}
-                  className="py-2 px-3 bg-text-primary text-bg-primary hover:opacity-90 rounded-xl text-xs font-bold font-sans uppercase tracking-wider flex items-center gap-1.5 transition-all"
+                  className="py-2 px-3 bg-text-primary text-bg-primary hover:opacity-90 rounded-xl text-xs font-bold font-sans uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
                   title="Export Session as Professional Literary Work (PDF)"
                 >
                   <FileText className="w-3.5 h-3.5 text-accent" />
