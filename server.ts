@@ -154,7 +154,7 @@ You MUST systematically synthesize insights from all five core canonical, histor
 2. Source 2: Original Linguistic Lexicons & Roots — Original Hebrew, Aramaic, and Koine Greek word etymologies, root verbs, and theological nuances via Strong’s, BDB (Brown-Driver-Briggs), and BDAG (Bauer-Danker-Arndt-Gingrich) concordances and lexicons.
 3. Source 3: Patristic & Classical Exegesis — Early Church Fathers (St. Augustine, St. John Chrysostom, Athanasius, Irenaeus, Basil) and classical commentators (Matthew Henry, Charles Spurgeon, John Calvin, C.S. Lewis).
 4. Source 4: Historical & Archaeological Records — Flavius Josephus histories (Antiquities of the Jews, The Jewish War), Levant geography, Ancient Roman provincial/road logs, and archaeological excavations.
-5. Source 5: Contemporary Relevance & Real-World Application — Live web-grounded insights for evaluating modern news, world events, and contemporary discipleship while remaining immovably anchored in Scripture.
+5. Source 5: Systematic & Biblical Theologies & Practical Discipleship — Cohesive doctrinal theology (Covenant, Reformed, Arminian, Wesleyan frameworks) paired with contemporary discipleship and real-world ethical application.
 
 PRIMARY DIRECTIVES:
 - DIRECTLY AND SPECIFICALLY ANSWER the pilgrim's immediate question or prompt. Never deflect, give brief or vague answers, or repeat evasive phrases.
@@ -466,7 +466,7 @@ Your exegesis MUST systematically synthesize insights from all five core canonic
 - Source 2: Original Linguistic Lexicons & Roots (Original Hebrew, Aramaic, and Koine Greek word etymologies via Strong’s, BDB [Brown-Driver-Briggs], and BDAG [Bauer-Danker-Arndt-Gingrich] concordances and lexicons)
 - Source 3: Patristic & Classical Exegesis (Early Church Fathers like Augustine, Chrysostom, Athanasius, Irenaeus & classical commentators like Henry, Spurgeon, Calvin, C.S. Lewis)
 - Source 4: Historical & Archaeological Records (Flavius Josephus histories [Antiquities of the Jews, The Jewish War], Levant geography, and Ancient Roman road & archaeological logs)
-- Source 5: Real-Time Web Grounding & Modern Application (Contemporary discipleship, ethical discernment, and real-world application anchored in Scripture)
+- Source 5: Systematic & Biblical Theologies & Practical Discipleship (Major theological frameworks: Covenant, Dispensational, Reformed, Arminian, and Wesleyan perspectives paired with contemporary discipleship, ethical discernment, and real-world application anchored in Scripture)
 
 EXHAUSTIVE FIELD REQUIREMENTS:
 1. "godIntent" (Theological Intent):
@@ -857,6 +857,10 @@ Return ONLY valid JSON matching this schema.`;
     }
   });
 
+  // In-memory LRU Audio Cache for TTS (prevents rate limits and provides instant playback)
+  const ttsAudioCache = new Map<string, string>();
+  const MAX_TTS_CACHE_ITEMS = 300;
+
   // 6. Gemini Text-To-Speech (TTS)
   app.post("/api/tts", async (req, res) => {
     try {
@@ -865,7 +869,6 @@ Return ONLY valid JSON matching this schema.`;
         return res.status(400).json({ error: "Text is required for TTS" });
       }
 
-      const ai = getAiClient();
       const cleanText = text
         .replace(/\*+/g, "")
         .replace(/#+/g, "")
@@ -880,60 +883,107 @@ Return ONLY valid JSON matching this schema.`;
       }
 
       let voiceName = gender === "male" ? "Charon" : "Kore";
-      let promptStyle = `Speak clearly and reverently as ${personaName}:`;
-      const lowerPersona = personaName.toLowerCase();
+      let promptStyle = "Read aloud clearly, reverently, and with spiritual warmth:";
+      const lowerPersona = (personaName || "").toLowerCase();
 
       if (gender === "male") {
         if (lowerPersona.includes("osteen")) {
           voiceName = "Puck";
-          promptStyle = "Speak in a warm, encouraging, smiling, bright and optimistic tone as Joel Osteen:";
+          promptStyle = "Read aloud in an upbeat, warm, smiling, encouraging, and optimistic tone:";
         } else if (lowerPersona.includes("spurgeon")) {
           voiceName = "Charon";
-          promptStyle = "Speak in a majestic, deep, resonant, 19th-century British prince of preachers voice as Charles Spurgeon:";
+          promptStyle = "Read aloud in a deep, resonant, regal, majestic, and classical 19th-century pulpit tone:";
         } else if (lowerPersona.includes("lewis")) {
           voiceName = "Fenrir";
-          promptStyle = "Speak in an articulate, scholarly, warm Oxbridge professor cadence as C.S. Lewis:";
+          promptStyle = "Read aloud in an articulate, thoughtful, scholarly, and warm Oxbridge professor cadence:";
         } else if (lowerPersona.includes("luther")) {
           voiceName = "Charon";
-          promptStyle = "Speak in a bold, passionate, strong reformational voice as Martin Luther:";
+          promptStyle = "Read aloud in a bold, passionate, powerful, and steadfast reformational tone:";
         } else if (lowerPersona.includes("keller")) {
           voiceName = "Fenrir";
-          promptStyle = "Speak in a thoughtful, intellectually rich, warm urban pastor voice as Tim Keller:";
+          promptStyle = "Read aloud in a reflective, intellectually rich, gentle, and warm pastoral tone:";
         } else if (lowerPersona.includes("graham")) {
-          voiceName = "Charon";
-          promptStyle = "Speak with clear, authoritative, passionate evangelistic clarity as Billy Graham:";
+          voiceName = "Puck";
+          promptStyle = "Read aloud in an earnest, authoritative, passionate, and clear evangelistic tone:";
         } else {
           voiceName = "Fenrir";
-          promptStyle = `Speak in a distinctive, dignified male scholar voice as ${personaName}:`;
+          promptStyle = "Read aloud in a dignified, warm, reverent, and clear masculine scholar tone:";
         }
       } else {
         if (lowerPersona.includes("oprah") || lowerPersona.includes("winfrey")) {
-          voiceName = "Kore";
-          promptStyle = "Speak in a deeply empathetic, warm, resonant, expressive and rich tone as Oprah Winfrey:";
-        } else if (lowerPersona.includes("moore") || lowerPersona.includes("meyer") || lowerPersona.includes("shirer")) {
+          voiceName = "Aoede";
+          promptStyle = "Read aloud in an empathetic, rich, warm, heartfelt, and expressive feminine tone:";
+        } else if (lowerPersona.includes("moore")) {
           voiceName = "Zephyr";
-          promptStyle = `Speak in a passionate, energetic, warm exegetical voice as ${personaName}:`;
+          promptStyle = "Read aloud in a dynamic, passionate, energetic, and joyful feminine tone:";
+        } else if (lowerPersona.includes("meyer")) {
+          voiceName = "Zephyr";
+          promptStyle = "Read aloud in a direct, practical, confident, and spirited feminine tone:";
+        } else if (lowerPersona.includes("shirer")) {
+          voiceName = "Zephyr";
+          promptStyle = "Read aloud in a faith-filled, vibrant, energetic, and inspiring feminine tone:";
+        } else if (lowerPersona.includes("arthur")) {
+          voiceName = "Kore";
+          promptStyle = "Read aloud in a gentle, methodical, reverent, and calm feminine tone:";
+        } else if (lowerPersona.includes("ten boom") || lowerPersona.includes("corrie")) {
+          voiceName = "Aoede";
+          promptStyle = "Read aloud in a gracious, courageous, wise, and peaceful feminine tone:";
         } else {
           voiceName = "Kore";
-          promptStyle = `Speak in a distinctive, graceful female scholar voice as ${personaName}:`;
+          promptStyle = "Read aloud in a graceful, warm, reverent, and clear feminine scholar tone:";
         }
       }
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-tts-preview",
-        contents: [{ parts: [{ text: `${promptStyle}\n\n"${cleanText}"` }] }],
-        config: {
-          responseModalities: [Modality.AUDIO],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName },
-            },
-          },
-        },
-      });
+      // Check cache first
+      const cacheKey = `${voiceName}::${promptStyle}::${cleanText}`;
+      if (ttsAudioCache.has(cacheKey)) {
+        return res.json({ audioBase64: ttsAudioCache.get(cacheKey) });
+      }
 
-      const audioBase64 = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || "";
-      return res.json({ audioBase64 });
+      const ai = getAiClient();
+      let audioBase64 = "";
+
+      // Try primary model: gemini-2.5-flash-preview-tts
+      const candidateModels = ["gemini-2.5-flash-preview-tts", "gemini-3.1-flash-tts-preview"];
+      let lastError: any = null;
+
+      for (const model of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model,
+            contents: `${promptStyle}\n\n"${cleanText}"`,
+            config: {
+              responseModalities: [Modality.AUDIO],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: { voiceName },
+                },
+              },
+            },
+          });
+
+          audioBase64 = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data || "";
+          if (audioBase64) {
+            break;
+          }
+        } catch (err: any) {
+          lastError = err;
+          console.warn(`TTS generation with model ${model} failed:`, err?.message?.slice(0, 150));
+        }
+      }
+
+      if (audioBase64) {
+        // Store in cache
+        if (ttsAudioCache.size >= MAX_TTS_CACHE_ITEMS) {
+          const oldestKey = ttsAudioCache.keys().next().value;
+          if (oldestKey) ttsAudioCache.delete(oldestKey);
+        }
+        ttsAudioCache.set(cacheKey, audioBase64);
+        return res.json({ audioBase64 });
+      }
+
+      console.error("All TTS models failed to generate audio. Last error:", lastError?.message || lastError);
+      return res.status(503).json({ error: "TTS generation temporarily unavailable" });
     } catch (error: any) {
       console.error("TTS API Error:", error);
       return res.status(500).json({ error: "TTS generation failed" });

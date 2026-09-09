@@ -118,8 +118,8 @@ export default function ProfileSettings({ onNavigatePage }: ProfileSettingsProps
 
     const personaName = gender === 'male' ? effectiveMale : effectiveFemale;
     const sampleText = gender === 'male'
-      ? `Greetings, pilgrim. I am your male scholar voice persona, modeled in the spirit of ${personaName}. May grace, peace, and wisdom illuminate your spiritual pilgrimage.`
-      : `Greetings, pilgrim. I am your female scholar voice persona, modeled in the spirit of ${personaName}. May grace, peace, and wisdom illuminate your spiritual pilgrimage.`;
+      ? `Grace, peace, and wisdom to you, pilgrim. May the Lord bless you and keep you; may His face shine upon you and grant you peace on your spiritual pilgrimage.`
+      : `Grace, peace, and wisdom to you, pilgrim. The Lord is my shepherd, I shall not want; He leads me beside still waters and restores my soul on this spiritual pilgrimage.`;
 
     speakWithScholarVoice(sampleText, {
       gender,
